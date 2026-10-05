@@ -1,0 +1,207 @@
+RuleContainer Parcel.Handling
+
+  Rule books
+  Priority 1
+  If Parcel.Contents = "books"
+  Then Parcel.Handling := "standard" and Parcel.Drone.allowed := 1 and Packing.Content.fee := 0
+
+  Rule electronics
+  Priority 2
+  If Parcel.Contents = "electronics"
+  Then Parcel.Handling := "padded" and Parcel.Drone.allowed := 1 and Packing.Content.fee := 3
+
+  Rule flowers
+  Priority 3
+  If Parcel.Contents = "flowers"
+  Then Parcel.Handling := "upright" and Parcel.Drone.allowed := 0 and Packing.Content.fee := 4
+
+  Rule ice.cream
+  Priority 4
+  If Parcel.Contents = "ice cream"
+  Then Parcel.Handling := "chilled" and Parcel.Drone.allowed := 0 and Packing.Content.fee := 6
+
+
+RuleContainer Parcel.Size
+
+  Rule small
+  Priority 1
+  If Parcel.Size = "small"
+  Then Packing.Size.fee := 0
+
+  Rule medium
+  Priority 2
+  If Parcel.Size = "medium"
+  Then Packing.Size.fee := 2
+
+  Rule large
+  Priority 3
+  If Parcel.Size = "large"
+  Then Packing.Size.fee := 5
+
+
+RuleContainer Route.Classification
+
+  Rule neighbourhood
+  Priority 1
+  If Delivery.Distance.km <= 3
+  Then Route.Zone := "neighbourhood" and Route.Fee := 0
+
+  Rule across.town
+  Priority 2
+  If Delivery.Distance.km > 3 and Delivery.Distance.km <= 15
+  Then Route.Zone := "across town" and Route.Fee := 3
+
+  Rule regional
+  Priority 3
+  If Delivery.Distance.km > 15
+  Then Route.Zone := "regional" and Route.Fee := 8
+
+
+RuleContainer Weather.Assessment
+
+  Rule clear
+  Priority 1
+  If Weather.Now = "clear"
+  Then Flight.Available := 1 and Weather.Delay.minutes := 0
+
+  Rule rain
+  Priority 2
+  If Weather.Now = "rain"
+  Then Flight.Available := 0 and Weather.Delay.minutes := 20
+
+  Rule storm
+  Priority 3
+  If Weather.Now = "storm"
+  Then Flight.Available := 0 and Weather.Delay.minutes := 90
+
+
+RuleContainer Destination.Assessment
+
+  Rule home
+  Priority 1
+  If Recipient.Location = "home"
+  Then Delivery.Handoff := "ring the doorbell" and Destination.Drone.allowed := 1
+
+  Rule office
+  Priority 2
+  If Recipient.Location = "office"
+  Then Delivery.Handoff := "leave at reception" and Destination.Drone.allowed := 0
+
+  Rule locker
+  Priority 3
+  If Recipient.Location = "parcel locker"
+  Then Delivery.Handoff := "send a locker code" and Destination.Drone.allowed := 0
+
+
+RuleContainer Urgency.Assessment
+
+  Rule relaxed
+  Priority 1
+  If Delivery.Urgency = "relaxed"
+  Then Service.Priority := 1 and Service.Fee := 0 and Service.Wait.minutes := 120
+
+  Rule today
+  Priority 2
+  If Delivery.Urgency = "today"
+  Then Service.Priority := 2 and Service.Fee := 3 and Service.Wait.minutes := 45
+
+  Rule express
+  Priority 3
+  If Delivery.Urgency = "express"
+  Then Service.Priority := 3 and Service.Fee := 8 and Service.Wait.minutes := 0
+
+
+RuleContainer Vehicle.Selection
+
+  Rule begin.vehicle.selection
+  Priority 0
+  If Service.Priority >= 1
+  Then Vehicle.Selected := 0
+
+  Rule save.the.ice.cream
+  Priority 1
+  If Vehicle.Selected = 0 and Parcel.Handling = "chilled"
+  Then Delivery.Vehicle := "refrigerated van" and Vehicle.Fee := 12 and Vehicle.Travel.minutes := 45 and Delivery.Handoff := "hand over chilled parcel in person" and Vehicle.Selected := 1
+
+  Rule regional.journey
+  Priority 2
+  If Vehicle.Selected = 0 and Route.Zone = "regional"
+  Then Delivery.Vehicle := "regional van" and Vehicle.Fee := 10 and Vehicle.Travel.minutes := 90 and Vehicle.Selected := 1
+
+  Rule shelter.from.storm
+  Priority 3
+  If Vehicle.Selected = 0 and Weather.Now = "storm"
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selected := 1
+
+  Rule oversized.parcel
+  Priority 4
+  If Vehicle.Selected = 0 and Parcel.Size = "large"
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selected := 1
+
+  Rule very.fancy.drone
+  Priority 5
+  If Vehicle.Selected = 0 and Route.Zone = "neighbourhood" and Parcel.Size = "small" and Parcel.Drone.allowed = 1 and Destination.Drone.allowed = 1 and Flight.Available = 1 and Service.Priority = 3
+  Then Delivery.Vehicle := "drone" and Vehicle.Fee := 15 and Vehicle.Travel.minutes := 8 and Vehicle.Selected := 1
+
+  Rule locker.round
+  Priority 6
+  If Vehicle.Selected = 0 and Recipient.Location = "parcel locker"
+  Then Delivery.Vehicle := "locker shuttle" and Vehicle.Fee := 4 and Vehicle.Travel.minutes := 60 and Vehicle.Selected := 1
+
+  Rule local.bicycle
+  Priority 7
+  If Vehicle.Selected = 0 and Route.Zone = "neighbourhood" and Parcel.Size = "small"
+  Then Delivery.Vehicle := "bike courier" and Vehicle.Fee := 3 and Vehicle.Travel.minutes := 20 and Vehicle.Selected := 1
+
+  Rule van.fallback
+  Priority 8
+  If Vehicle.Selected = 0 and Service.Priority >= 1
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selected := 1
+
+
+RuleContainer Customer.Membership
+
+  Rule visitor
+  Priority 1
+  If Customer.Membership = "visitor"
+  Then Customer.Discount.credits := 0
+
+  Rule regular
+  Priority 2
+  If Customer.Membership = "regular"
+  Then Customer.Discount.credits := 1
+
+  Rule neighbourhood.hero
+  Priority 3
+  If Customer.Membership = "neighbourhood hero"
+  Then Customer.Discount.credits := 2
+
+
+RuleContainer Parcel.Cover
+
+  Rule ordinary
+  Priority 1
+  If Parcel.Declared.value <= 50
+  Then Cover.Level := "basic" and Cover.Fee := 0
+
+  Rule valuable
+  Priority 2
+  If Parcel.Declared.value > 50 and Parcel.Declared.value <= 250
+  Then Cover.Level := "extra" and Cover.Fee := 2
+
+  Rule treasure
+  Priority 3
+  If Parcel.Declared.value > 250
+  Then Cover.Level := "treasure" and Cover.Fee := 6
+
+
+RuleContainer Quote.Calculation
+
+  Rule ready.to.dispatch
+  Priority 1
+  If Service.Priority >= 1
+  Then Quote.Subtotal := Vehicle.Fee + Route.Fee + Packing.Content.fee + Packing.Size.fee + Service.Fee + Cover.Fee
+     and Quote.Discount := Customer.Discount.credits
+     and Quote.Total := Quote.Subtotal - Quote.Discount
+     and Delivery.Estimated.minutes := Vehicle.Travel.minutes + Service.Wait.minutes + Weather.Delay.minutes
+     and Delivery.Status := "ready to dispatch"

@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import { once } from 'node:events'
 import { before, after, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 
 let server
 let baseUrl
@@ -203,3 +204,34 @@ test('different loaded models do not retain each other’s choices', async () =>
   })
   assert.equal(response.result.value, 'custom')
 })
+
+const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+for (const [contents, size, distance, weather, recipient, urgency, membership, declaredValue, vehicle, total, minutes] of [
+  ['books', 'small', 2, 'clear', 'home', 'express', 'visitor', 25, 'drone', 23, 8],
+  ['flowers', 'small', 2, 'rain', 'home', 'today', 'regular', 75, 'bike courier', 11, 85],
+  ['ice cream', 'medium', 2, 'clear', 'parcel locker', 'express', 'neighbourhood hero', 20, 'refrigerated van', 26, 45],
+  ['electronics', 'small', 2, 'storm', 'home', 'express', 'visitor', 300, 'delivery van', 25, 130],
+  ['books', 'large', 30, 'clear', 'office', 'relaxed', 'neighbourhood hero', 25, 'regional van', 21, 210],
+  ['electronics', 'medium', 5, 'clear', 'parcel locker', 'today', 'regular', 100, 'locker shuttle', 16, 105],
+]) {
+  test(`parcel dispatcher demo selects ${vehicle}`, async () => {
+    const answers = {
+      'Parcel.Contents': contents, 'Parcel.Size': size, 'Delivery.Distance.km': distance,
+      'Weather.Now': weather, 'Recipient.Location': recipient, 'Delivery.Urgency': urgency,
+      'Customer.Membership': membership, 'Parcel.Declared.value': declaredValue,
+    }
+    const response = await run('evaluate', { source: parcelDemo, mode: 'once', context: {} }, (name, _, choices) => {
+      assert.ok(Object.hasOwn(answers, name), `Unexpected prompt: ${name}`)
+      if (typeof answers[name] === 'string') assert.ok(choices.includes(answers[name]))
+      else assert.deepEqual(choices, [])
+      return answers[name]
+    })
+    assert.equal(response.type, 'result', JSON.stringify(response))
+    const facts = response.result.context
+    assert.equal(facts['Delivery.Vehicle'], vehicle)
+    assert.ok(Math.abs(facts['Quote.Total'] - total) < 0.000001, `Expected ${total}, got ${facts['Quote.Total']}`)
+    assert.equal(facts['Delivery.Estimated.minutes'], minutes)
+    assert.equal(response.result.trace.length, 11)
+    assert.equal(response.prompts.length, 8)
+  })
+}
