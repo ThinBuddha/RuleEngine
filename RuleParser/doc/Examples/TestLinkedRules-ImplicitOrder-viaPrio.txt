@@ -1,0 +1,50 @@
+Rulecontainer Employee.Assessment
+
+  Rule	Employee.Assign.Salary
+  Priority	2
+  If		Employee.is.good
+  then	Employee.Salary.Is60K
+  
+  Rule 	Employee.Assess.quality
+  Priority	1
+  If		Employee.works.hard
+  Then	Employee.is.good
+  
+  Rule	Employees.Comparison
+  Priority	3
+  If		Employee1.works.harder.then.Employee2
+  Then	Employee1.Salary.is.bigger.then.Employee2.Salary // This will work, but it not very smart, since the system has no idea what you are talking about
+  // you might also compare Employee1.Salary with Employee2, so "type mismatches" are not recognized; and if Employee2 works harder then Employee1 you need to define another rule for that...
+  
+  /*
+  Rule	Employees.Comparison2
+  Priority	4
+  If		Employee1.works.harder.then.Employee2
+  Then	Employee1.Salary > Employee2.Salary // This seems odd, since it's not a fact but a condition, an "invariant", it's "too fuzzy"
+  
+  Rule	Employees.Comparison3
+  Priority	5
+  If		Employee1.works.harder.then.Employee2
+  Then	Employee1.Salary.Range = [70K, 100K] 
+  And		Employee2.Salary.Range = [30K, 70K] // This seems more justified, e1 earns more then e2 but it's implicit, we don't need to abuse the rules anymore to state that
+  // also now there's a real model behind it (and a defined type called "Range" for that matter) 
+  
+  // and we can add another rule -if we must- to make the "earn more" predicate explicit:
+  Rule	Employees.Comparison4
+  Priority	6
+  If		Employee1.Salary.Range > Employee2.Salary.Range
+  Then	Employee1.Salary.is.bigger.then.Employee2.Salary // it follows that this is a more "informal" statement, it is a "different order"-type of rule, "less factual",
+  // it's more of a "language thing"....an "enrichment" if you like, to talk "more casual" about a fact...
+  // As a matter of fact, these rules are a different aspect and belong "to the side" of things, they are "commentary rules" or "semantical rules" or whatever
+  // or call them "explainatory rules". These may be used in a rule trace to replace the conclusions/conditions of the "factual rule", to get a more readable, less formal explanation tree.
+  // and/or they are hints to the Interpreter how to map  a user's query onto a starting rule.
+  */
+  
+  /*
+  type SalaryRange = range of currency from 20K euro to 70K euro
+  type WeightRange = range of weight from 2g to 2kg
+  
+  enumerate salary.Range with 1K steps
+  apply T() on all from enumeration of salary.Range with 1K steps
+  save to file "my_file.txt" [all from] enumeration of salary.Range with 1K steps
+  */

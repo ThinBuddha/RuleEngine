@@ -1,0 +1,44 @@
+not a and 8*b < smallNumber -1 and c
+
+Cond
+  Not
+    CompExpr
+      Expr
+        Term
+          Factor
+            Id
+              a
+  LogicalOp
+    and
+  CompExpr
+    Expr
+      Term
+        Factor
+          Integer
+            8
+         MathOp
+          *
+         Factor
+          Id
+            b
+     Compare
+      <
+     Expr
+      Term
+        Factor
+          Id
+            smallNumber
+       MathOp
+        -
+       Term
+        Factor
+          Integer
+            1
+  LogicalOp
+    and
+  CompExpr
+    Expr
+      Term
+        Factor
+          Id
+            c

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Rules.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <AssemblyName>Rules.$(MSBuildProjectName)</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\RuleParser\RuleParser.csproj" />
+  </ItemGroup>
+
+</Project>

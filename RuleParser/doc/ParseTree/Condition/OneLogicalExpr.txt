@@ -1,0 +1,17 @@
+not a = true
+
+Cond
+  Not
+    CompExpr
+      Expr
+        Term
+          Factor
+            Id
+              a
+       Compare
+        =
+       Expr
+        Term
+          Factor
+            Id
+              true

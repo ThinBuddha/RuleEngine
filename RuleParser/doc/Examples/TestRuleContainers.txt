@@ -1,0 +1,27 @@
+RuleContainer Klanten
+  Rule productCode.2990
+  If Klant.Code = "TEST"
+  then Product.Code := 2990
+
+  Rule productCode.3850	
+  If Klant.Code <> "TEST"
+  then Product.Code := 3850
+  
+  
+RuleContainer Producten
+  Rule Extend.retentieperiode
+  If Product.Opties = 1
+  and Product.Code = 3850
+  then Product.Retentieperiode := Product.Retentieperiode * 2
+
+  
+Rulecontainer VoorSorteren
+  Rule process.afbreken
+  If Product.Registratiedatum.IsLangGeleden
+  then Product.Sorteerstatus := "niet meer sorteren"
+
+   
+RuleContainer NaSorteren
+  Rule waarneming.A8
+  If Product.SorteerId = "SI" 
+  then Collo.Waarneming := "A8"

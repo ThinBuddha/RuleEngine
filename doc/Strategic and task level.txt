@@ -1,0 +1,21 @@
+Strategy
+	
+	Task 1
+		RuleContainer 1
+		RuleContainer 2
+
+	Task 2
+		RuleContainer 6
+
+	Task 3
+		RuleContainer 4
+		RuleContainer 5
+		RuleContainer 3
+
+
+On strategy level, the highest of all levels of perception, we can dynamically create a task
+and place it in the task list at a destined position. The task can be assigned one or more rule containers.
+
+Initially, the order of tasks, rule containers and rules withing a container are defined by how they are stored in files.
+The strategy level is optional and can be used to reorder tasks and containers as the need arises to change the execution path
+of a problem solving process.

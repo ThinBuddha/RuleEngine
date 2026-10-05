@@ -1,0 +1,26 @@
+not a and b and c
+
+Cond
+  Not
+    CompExpr
+      Expr
+        Term
+          Factor
+            Id
+              a
+  LogicalOp
+    and
+  CompExpr
+    Expr
+      Term
+        Factor
+          Id
+            b
+  LogicalOp
+    and
+  CompExpr
+    Expr
+      Term
+        Factor
+          Id
+            c

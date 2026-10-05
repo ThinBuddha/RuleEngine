@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Rules.Parser</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="visualizer\**" />
+    <EmbeddedResource Remove="visualizer\**" />
+    <None Remove="visualizer\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Utilities\Utilities.csproj" />
+    <ProjectReference Include="..\Rules\Rules.csproj" />
+    <ProjectReference Include="..\Tokenizer\Tokenizer.csproj" />
+  </ItemGroup>
+
+</Project>

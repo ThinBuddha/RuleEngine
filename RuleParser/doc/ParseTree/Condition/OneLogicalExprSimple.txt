@@ -1,0 +1,10 @@
+not a
+
+Cond
+  Not
+    CompExpr
+      Expr
+        Term
+          Factor
+            Id
+              a

@@ -1,0 +1,26 @@
+RuleContainer		= "rulecontainer" Name [Description] { Rule }.
+
+Rule				= "rule" Name [Description] ["priority" Integer] ["weight" Integer] (SimpleRule | ProductionRule).
+SimpleRule			= Condition.  
+ProductionRule		= "if" Condition "then" Conclusion.
+Name				= Id.
+Description			= String.
+Condition			= CompareExpression { "and" CompareExpression }.
+CompareExpression	= Expression [ CompareOp Expression ].
+CompareOp			= "=" | "<>" | ">" | "<" | ">=" | "<=".
+Conclusion			= AssignExpression { "and" AssignExpression }.
+AssignExpression	= Id [ ":=" Expression ].
+
+Expression			= Term [ { PlusMinOp Term } ].
+PlusMinOp			= "+" | "-".
+Term				= MinOrNotFactor [ { MulDivOp MinOrNotFactor } ].
+MulDivOp			= "*" | "/".
+MinOrNotFactor		= [ "-" | "not" ] Factor.
+Factor				= "(" Expression ")" | Integer | Float | Id.
+
+Id					= letter { letter | digit } { "." {letter | digit } }.
+String				= '"' { character } '"'.
+Integer				= digit { digit }.
+Float				= digit { digit } "." { digit } [ "E" [ "+" | "-" ] digit { digit } ].
+
+

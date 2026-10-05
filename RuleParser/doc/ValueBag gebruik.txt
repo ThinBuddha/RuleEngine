@@ -1,0 +1,37 @@
+The ValueBag is a "poor man's model", in that it only allows for implicitly describing a limited domain for which we define rules.
+Example:
+
+  Rule 	Employee.Assess.quality
+  If		Employee.works.hard
+  Then	Employee.is.good
+
+The ValueBag contains the condition's and possibly the conclusion's expression as a single string value.
+To keep it readable a dot can be used to separate words without breaking up the expression.
+
+We can make a rule of thumb how to use the ValueBag to have a readable rule set 
+and possibly also to introduce some infering intelligence to derive a "real model" from the ValueBag's contents, but that's not described here.
+
+More complex rule sets that are in need of an explicit underlying model will probably find the ValueBag approach too limited.
+
+But it's a good first start.
+
+Rule of thumb:
+
+<Subject>.<Relation or action>.<Object>
+
+So allways 3 words and 2 dots to assert a relationship or action between two "entities" (subject and object).
+Standard relations are "is" and "has".
+When an operator is used, we can state a "property" expression as follows:
+
+    Employee.reputation = "good"
+
+because the ValueBag stores name/value pairs. 
+So for example, inside the ValueBag we can find:
+
+  ValueBag[ Employee.works.hard ] = false
+  ValueBag[ Employee.is.good ] = true 
+  ValueBag[ Employee.reputation ] = "good" 
+  ValueBag[ Employee.age ] = 35 
+
+The ValueBag just holds values, it has no idea what they mean. For example comparing  Employee.reputation with Employee.age
+will be allright by the ValueBag. In a more advanced stage, we would introduce modelling capabilites to at least define entities, properties and types.

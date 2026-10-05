@@ -1,0 +1,25 @@
+lenght * -(39/smallNumber)
+
+Expr
+  Term
+    Factor
+      Id
+        lenght
+     MathOp
+      *
+     Minus
+      Factor
+        Lhook
+          
+         Expr
+          Term
+            Factor
+              Integer
+                39
+             MathOp
+              /
+             Factor
+              Id
+                smallNumber
+         Rhook
+          
