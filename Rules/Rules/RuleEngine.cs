@@ -64,7 +64,7 @@ namespace Rules.Rules
                 }
             }
 
-            _evalResult.StopConditionValidated = _evalResult.RuleGotFired && (bool)_ruleContainer?.StopConditionExpr.Evaluate(context);
+            _evalResult.StopConditionValidated = _evalResult.RuleGotFired && (_ruleContainer.StopConditionExpr?.Evaluate(context) == true);
 
             return _evalResult;
         }
@@ -102,7 +102,7 @@ namespace Rules.Rules
                 }
             }
 
-            _evalResult.StopConditionValidated = _evalResult.RuleGotFired && (bool)_ruleContainer.StopConditionExpr?.Evaluate(context);
+            _evalResult.StopConditionValidated = _evalResult.RuleGotFired && (_ruleContainer.StopConditionExpr?.Evaluate(context) == true);
 
             return _evalResult;
         }

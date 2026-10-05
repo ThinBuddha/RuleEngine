@@ -12,6 +12,7 @@ The repository also contains an interactive command shell, a query interpreter, 
 
 - [Architecture](doc/architecture.md) explains the projects, runtime components, and evaluation flows.
 - [Rule language](doc/rule-language.md) describes the supported syntax with examples.
+- [Web workbench](Web/README.md) explains the Vue GUI and its browser runtime.
 
 ## Requirements
 
@@ -26,6 +27,15 @@ From the repository root:
 dotnet restore Rules.sln
 dotnet build Rules.sln
 dotnet test Rules.sln
+```
+
+The web workbench uses the API project as its logic boundary. Run the API and Vue development server separately:
+
+```powershell
+dotnet run --project Rules.WebApi\Rules.WebApi.csproj --urls http://localhost:5215
+cd Web
+npm install
+npm run dev
 ```
 
 The solution currently builds successfully. At the time of the .NET 10 migration, 77 of 86 tests passed. The remaining failures are behavior assertions in the parser and deduction engine; see [Current constraints](doc/architecture.md#current-constraints).
@@ -81,6 +91,8 @@ If a required value cannot be derived from another rule, the command shell asks 
 | `Rules` | Contains expressions, facts, rules, inference engines, traces, and task orchestration. |
 | `Interpreter/QueryInterpreter` | Converts a textual query into a comparison expression. |
 | `CommandShell` | Interactive console application. |
+| `Web` | Vue workbench providing the browser equivalent of the command-shell workflow. |
+| `Rules.WebApi` | ASP.NET Core API exposing parsing, evaluation, and calculation to `Web`. |
 | `TokenizerTest` | Tokenizer tests. |
 | `RuleParserTest` | Parser and builder tests. |
 | `RuleTest` | Expression and inference tests. |

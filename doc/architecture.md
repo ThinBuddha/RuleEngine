@@ -93,6 +93,23 @@ The console application wires the components together:
 
 When a rule needs an unknown fact, the shell prompts for a Boolean, integer, double, or string value.
 
+### `Web`
+
+`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP client; all parsing, inference, and calculation are delegated to `Rules.WebApi`.
+
+### `Rules.WebApi`
+
+`Rules.WebApi` is the ASP.NET Core API boundary for the GUI. It references `RuleParser`, `Rules`, and `Interpreter/QueryInterpreter` and exposes:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/health` | Service health check. |
+| `POST /api/rules/parse` | Parse rule source and return container/rule summaries. |
+| `POST /api/rules/evaluate` | Run fire-once, iteration, or deduction evaluation with supplied context and query. |
+| `POST /api/rules/calculate` | Parse and evaluate an expression against supplied context. |
+
+The API currently serializes requests per process because the existing `MessageSink` uses static callbacks. Missing facts are returned as API errors with a `missingFacts` list; the Vue client prompts for those values and retries with the updated context.
+
 ### Tests
 
 - `TokenizerTest` covers token recognition and lookahead behavior.

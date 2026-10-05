@@ -20,6 +20,8 @@ namespace Rules.Model
     {
         private readonly Dictionary<string, TConstantValue> _values = new Dictionary<string, TConstantValue>();
 
+        public IReadOnlyDictionary<string, TConstantValue> Values => _values;
+
         public void AddOrUpdateValue(string name, TConstantValue value)
         {
             _values[name] = value;
