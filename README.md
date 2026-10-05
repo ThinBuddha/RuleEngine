@@ -85,4 +85,3 @@ If a required value cannot be derived from another rule, the command shell asks 
 | `RuleParserTest` | Parser and builder tests. |
 | `RuleTest` | Expression and inference tests. |
 | `Interpreter` | Legacy interpreter project; not included in `Rules.sln`. |
-| `_Attick` | Archived historical source; not part of the active build. |
