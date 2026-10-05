@@ -25,9 +25,9 @@ public static class InteractiveEvaluation
             JsonSerializer.SerializeToUtf8Bytes(message, JsonOptions).AsMemory(),
             WebSocketMessageType.Text, true, cancellation);
 
-        async Task<JsonElement?> AskAsync(string name)
+        async Task<JsonElement?> AskAsync(UnknownValueRequest prompt)
         {
-            await SendAsync(new { type = "unknownValue", name });
+            await SendAsync(new { type = "unknownValue", name = prompt.Name, choices = prompt.Choices });
             var answer = await ReceiveAsync(socket, cancellation);
             if (answer.ValueKind != JsonValueKind.Object ||
                 !answer.TryGetProperty("type", out var type) || type.ValueKind != JsonValueKind.String ||

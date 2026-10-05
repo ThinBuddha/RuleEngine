@@ -1,27 +1,32 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { calculate, evaluate, parseRules, starterRules } from './runtime'
+import ValuePrompt from './ValuePrompt.vue'
+
+const valuePrompt = ref(null)
+const busy = ref(false)
 
 const source = ref(starterRules()); const mode = ref('once'); const query = ref('Travel.by.train'); const view = ref('workspace'); const containers = ref([]); const context = ref({}); const trace = ref([]); const rounds = ref(0); const result = ref(null); const error = ref(''); const status = ref('Ready'); const calcInput = ref('2 + 3 * 4'); const calcResult = ref(''); const picker = ref(null)
 const modes = [{ value: 'once', label: 'Fire once', hint: 'Priority order' }, { value: 'iteration', label: 'Iteration', hint: 'Forward chaining' }, { value: 'deduction', label: 'Deduction', hint: 'Backward chaining' }]
 const ruleCount = computed(() => containers.value.reduce((n, c) => n + c.rules.length, 0)); const factCount = computed(() => Object.keys(context.value).length); const modeLabel = computed(() => modes.find((m) => m.value === mode.value)?.label); const resultLabel = computed(() => result.value === null ? 'No query' : result.value ? 'Proven' : 'Not proven')
 function parseAnswer(answer) { const value = answer.trim(); if (/^(true|false)$/i.test(value)) return value.toLowerCase() === 'true'; if (value !== '' && Number.isFinite(Number(value))) return Number(value); return answer }
-function requestValue(id) {
-  const answer = window.prompt(`Value needed for ${id}`, context.value[id] ?? '')
+async function requestValue(id, choices, signal) {
+  const answer = await valuePrompt.value.ask(id, choices, signal)
   if (answer === null || answer.trim() === '') return null
-  const value = parseAnswer(answer)
+  const value = choices.length ? answer : parseAnswer(answer)
   context.value[id] = value
   return value
 }
 async function load() { try { containers.value = await parseRules(source.value); trace.value = []; result.value = null; error.value = ''; status.value = `Loaded ${containers.value.length} container${containers.value.length === 1 ? '' : 's'}`; view.value = 'rules' } catch (e) { error.value = e.message; status.value = 'Load failed' } }
-async function execute() { try { if (!containers.value.length) await load(); if (!containers.value.length) return; const run = await evaluate({ source: source.value, mode: mode.value, context: context.value, query: query.value }, requestValue); trace.value = run.trace; rounds.value = run.rounds; result.value = run.queryResult; context.value = run.context || context.value; error.value = ''; status.value = mode.value === 'deduction' ? `${resultLabel.value} · ${trace.value.length} rule${trace.value.length === 1 ? '' : 's'} used` : `Completed in ${rounds.value} pass${rounds.value === 1 ? '' : 'es'}`; view.value = 'trace' } catch (e) { error.value = e.message; status.value = 'Execution stopped' } }
+async function execute() { if (busy.value) return; busy.value = true; try { if (!containers.value.length) await load(); if (!containers.value.length) return; const run = await evaluate({ source: source.value, mode: mode.value, context: context.value, query: query.value }, requestValue); trace.value = run.trace; rounds.value = run.rounds; result.value = run.queryResult; context.value = run.context || context.value; error.value = ''; status.value = mode.value === 'deduction' ? `${resultLabel.value} · ${trace.value.length} rule${trace.value.length === 1 ? '' : 's'} used` : `Completed in ${rounds.value} pass${rounds.value === 1 ? '' : 'es'}`; view.value = 'trace' } catch (e) { error.value = e.message; status.value = 'Execution stopped' } finally { busy.value = false } }
 function readFile(event) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { source.value = String(reader.result || ''); void load() }; reader.readAsText(file); event.target.value = '' }
-function clearContext() { context.value = {}; result.value = null; status.value = 'Context cleared' }; function clearRules() { containers.value = []; trace.value = []; result.value = null; status.value = 'Rules cleared' }; async function calc() { try { const value = await calculate(calcInput.value, context.value, requestValue); calcResult.value = String(value); error.value = '' } catch (e) { error.value = e.message; calcResult.value = '' } }; function reset() { source.value = starterRules(); query.value = 'Travel.by.train'; clearContext(); void load() }
+function clearContext() { context.value = {}; result.value = null; status.value = 'Context cleared' }; function clearRules() { containers.value = []; trace.value = []; result.value = null; status.value = 'Rules cleared' }; async function calc() { if (busy.value) return; busy.value = true; try { const value = await calculate(calcInput.value, context.value, requestValue, containers.value.length ? source.value : undefined); calcResult.value = String(value); error.value = '' } catch (e) { error.value = e.message; calcResult.value = '' } finally { busy.value = false } }; function reset() { source.value = starterRules(); query.value = 'Travel.by.train'; clearContext(); void load() }
 void load()
 </script>
 
 <template>
   <div class="app-shell">
+    <ValuePrompt ref="valuePrompt" />
     <header class="topbar"><div class="brand"><div class="brand-mark"><i></i><i></i><i></i></div><div><strong>Rule Engine</strong><small>Workbench / Rules.WebApi client</small></div></div><div class="top-actions"><span class="status"><i></i>{{ status }}</span><button class="icon-btn" title="Reset demo" @click="reset">↺</button></div></header>
     <main class="layout">
       <aside class="sidebar"><span class="eyebrow">Workspace</span><nav><button :class="{ active: view === 'workspace' || view === 'rules' }" @click="view = 'workspace'">⌘ <span>Rule workspace</span></button><button :class="{ active: view === 'trace' }" @click="view = 'trace'">↳ <span>Evaluation trace</span><b v-if="trace.length">{{ trace.length }}</b></button><button :class="{ active: view === 'context' }" @click="view = 'context'">◈ <span>Fact context</span><b>{{ factCount }}</b></button><button :class="{ active: view === 'calculator' }" @click="view = 'calculator'">∑ <span>Calculator</span></button></nav><div class="sidebar-bottom"><div class="mini-card"><small>Loaded model</small><strong>{{ ruleCount }} <em>rules</em></strong><span>{{ containers.length }} container{{ containers.length === 1 ? '' : 's' }}</span></div><small class="version">GUI foundation · v0.1</small></div></aside>

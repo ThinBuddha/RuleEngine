@@ -70,4 +70,5 @@ public sealed record EvaluateRequest(
 
 public sealed record CalculateRequest(
     string Expression,
-    Dictionary<string, JsonElement>? Context);
+    Dictionary<string, JsonElement>? Context,
+    string? Source = null);

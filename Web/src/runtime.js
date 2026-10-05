@@ -46,10 +46,12 @@ function interactiveRequest(operation, body, getUserInput) {
     const url = new URL(api(`/rules/interactive/${operation}`), window.location.href)
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
     const socket = new WebSocket(url)
+    const promptLifetime = new AbortController()
     let settled = false
     function finish(error, result) {
       if (settled) return
       settled = true
+      promptLifetime.abort()
       socket.close()
       if (error) reject(error)
       else resolve(result)
@@ -59,7 +61,7 @@ function interactiveRequest(operation, body, getUserInput) {
       try {
         const message = JSON.parse(data)
         if (message.type === 'unknownValue') {
-          const value = await getUserInput(message.name)
+          const value = await getUserInput(message.name, message.choices || [], promptLifetime.signal)
           if (!settled) socket.send(JSON.stringify({ type: 'answer', value: value ?? null }))
         } else if (message.type === 'result') {
           finish(null, message.result)
@@ -85,8 +87,8 @@ export async function evaluate({ source, mode, context, query }, getUserInput) {
   return { trace: response.trace, rounds: response.rounds, queryResult: response.queryResult, context: response.context }
 }
 
-export async function calculate(expression, context, getUserInput) {
-  const body = { expression, context }
+export async function calculate(expression, context, getUserInput, source) {
+  const body = { expression, context, source }
   const response = getUserInput
     ? await interactiveRequest('calculate', body, getUserInput)
     : await request('/rules/calculate', body)

@@ -33,6 +33,8 @@ Run `npm run test:interactive` with Node.js 22 or newer to build the API and tes
 
 `src/runtime.js` calls `/api/rules/parse` over HTTP and uses WebSockets at `/api/rules/interactive/evaluate` and `/api/rules/interactive/calculate` for interactive execution. Unknown-value callbacks send a prompt to the browser and wait for its answer, then resume the same evaluation. Blank or cancelled answers return null to the engine. Sessions expire after 15 minutes. The HTTP evaluate/calculate endpoints remain available for noninteractive clients.
 
+Parsing derives `modelTypes`, mapping each string ID to distinct literals encountered in comparisons and assignments throughout the rule file. Interactive prompts include these `choices`; the GUI shows a select box when choices exist and a text field otherwise. Numeric-looking and Boolean-looking string choices remain strings. Empty literals are omitted because an empty answer means no value. Computed string fragments are not offered as complete values. Conflicting known scalar types for an ID are reported as syntax errors. The calculator can receive the loaded rule source through its optional `source` field to use the same choices.
+
 The Vite development server proxies HTTP and WebSocket requests to `Rules.WebApi` at `http://localhost:5215`. Production reverse proxies must also support WebSocket upgrades. The API target can be changed with `RULES_API_URL`; for a non-proxied build or preview, set `VITE_RULES_API_URL` to the API base including `/api`.
 
 Start the API and web client in separate terminals:

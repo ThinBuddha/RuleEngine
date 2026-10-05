@@ -7,10 +7,10 @@ using System.Text;
 namespace Rules.Model
 {
     /// <summary>
-    /// Generic parameter to pass on to the rules Evaluate() method, giving the rules a context to work on
+    /// Generic parameter to pass on to the rules Evaluate() method, giving the rules a context to work on.
     /// </summary>
     /// <remarks>
-    /// A <see cref="RuleContainer"/> can supply a <see cref="ValueBag"/> "model" to a rule when there is no model explicitly defined.
+    /// A <see cref="RuleContainer"/> can supply a <see cref="ValueBag"/> "model" to a rule when there is no model explicitly defined (real models are FUTURE use).
     /// Score calculating rules can return their score via the Score property.
     /// Rules can return a stop flag as final conclusion via the Stop property.
     /// The values in the <see cref="ValueBag"/> are objects and should be "immutable" or at least care should be taken not to

@@ -21,7 +21,7 @@ namespace Rules.Rules
     public class RuleEngine
     {
         private readonly RuleContainer _ruleContainer;
-        private readonly RuleEvaluateResult _evalResult = new RuleEvaluateResult { StopConditionValidated = false };
+        private readonly RuleEvaluateResult _evalResult = new() { StopConditionValidated = false };
         private TCompareExpression _query;
 
         public RuleEngine(RuleContainer ruleContainer)

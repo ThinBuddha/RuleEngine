@@ -12,23 +12,23 @@ public sealed class RuleRuntimeService
 {
     public ParseResponse Parse(string source)
     {
-        var containers = ParseContainers(source, out var parser);
+        var containers = ParseContainers(source, out var parser, out var modelTypes);
         return new ParseResponse(
             containers.Containers.Select(container => new ContainerSummary(
                 container.Name,
                 container.Rules.Select(rule => new RuleSummary(rule.Name, rule.Priority)).ToList())).ToList(),
-            parser.ParseTree);
+            parser.ParseTree, modelTypes.StringValues);
     }
 
-    public EvaluateResponse Evaluate(EvaluateRequest request, Func<string, JsonElement?>? getUserInput = null)
+    public EvaluateResponse Evaluate(EvaluateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
     {
-        var containers = ParseContainers(request.Source, out _);
+        var containers = ParseContainers(request.Source, out _, out var modelTypes);
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
         var evaluationType = ParseEvaluationType(request.Mode);
         TCompareExpression? query = null;
 
-        ConfigureUnknownValueResolution(context, missingFacts, getUserInput);
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, modelTypes);
         try
         {
             foreach (var container in containers.Containers)
@@ -79,12 +79,14 @@ public sealed class RuleRuntimeService
         }
     }
 
-    public CalculateResponse Calculate(CalculateRequest request, Func<string, JsonElement?>? getUserInput = null)
+    public CalculateResponse Calculate(CalculateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
     {
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
-        ConfigureUnknownValueResolution(context, missingFacts, getUserInput);
+        var modelTypes = new ModelTypes();
+        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out modelTypes);
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, modelTypes);
         try
         {
             var parser = new RuleParser(RulePart.Expression);
@@ -112,13 +114,22 @@ public sealed class RuleRuntimeService
         }
     }
 
-    private static RuleContainers ParseContainers(string source, out RuleParser parser)
+    private static RuleContainers ParseContainers(string source, out RuleParser parser, out ModelTypes modelTypes)
     {
         parser = new RuleParser(RulePart.RuleContainer);
         parser.Parse(source);
         if (parser.SyntaxErrors.Count > 0 || parser.Builder is not RulesBuilder builder || builder.RuleContainers is null)
         {
             throw new RuleSyntaxException(parser.SyntaxErrors);
+        }
+
+        try
+        {
+            modelTypes = ModelTypes.Derive(builder.RuleContainers);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new RuleSyntaxException(new[] { Tuple.Create(exception.Message, string.Empty) });
         }
 
         return builder.RuleContainers;
@@ -141,7 +152,7 @@ public sealed class RuleRuntimeService
     }
 
     private static void ConfigureUnknownValueResolution(ValueBag context, ISet<string> missingFacts,
-        Func<string, JsonElement?>? getUserInput)
+        Func<UnknownValueRequest, JsonElement?>? getUserInput, ModelTypes modelTypes)
     {
         TConstantValue? Resolve(TId subject, ValueBag _) 
         {
@@ -150,7 +161,7 @@ public sealed class RuleRuntimeService
                 return value;
             }
 
-            var answer = getUserInput?.Invoke(subject.Name);
+            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, modelTypes.GetStringValues(subject.Name)));
             if (answer is JsonElement input && input.ValueKind != JsonValueKind.Null &&
                 !(input.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(input.GetString())))
             {
@@ -208,7 +219,9 @@ public sealed class RuleRuntimeService
     };
 }
 
-public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree);
+public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices);
+public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree,
+    IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes);
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
 public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds, Dictionary<string, object?> Context);

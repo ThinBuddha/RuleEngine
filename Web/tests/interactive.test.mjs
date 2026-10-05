@@ -43,7 +43,7 @@ function run(operation, request, answer) {
         const message = JSON.parse(data)
         if (message.type === 'unknownValue') {
           prompts.push(message.name)
-          const value = await answer(message.name, socket)
+          const value = await answer(message.name, socket, message.choices)
           if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'answer', value }))
         } else {
           clearTimeout(timeout)
@@ -117,4 +117,89 @@ test('HTTP clients retain noninteractive missing-fact responses', async () => {
   })
   assert.equal(response.status, 400)
   assert.deepEqual((await response.json()).missingFacts, ['A'])
+})
+
+async function parse(source) {
+  const response = await fetch(`${baseUrl}/api/rules/parse`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source }),
+  })
+  return { status: response.status, body: await response.json() }
+}
+
+const stringRules = `RuleContainer Travel
+Rule short If Distance.to.travel = "small" Then Transport := "walk"
+Rule long If (Distance.to.travel) = "big" Then Transport := "train"
+Rule repeat If Distance.to.travel <> "small" Then Transport := "train"
+Rule numeric If Age > 18 Then Adult
+RuleContainer More
+Rule extra If Enabled Then Distance.to.travel := "medium"`
+
+test('model types collect distinct strings from comparisons and assignments across containers', async () => {
+  const response = await parse(stringRules)
+  assert.equal(response.status, 200, JSON.stringify(response.body))
+  assert.deepEqual(response.body.modelTypes, {
+    'Distance.to.travel': ['small', 'big', 'medium'], Transport: ['walk', 'train'],
+  })
+})
+
+test('interactive prompts carry only the choices belonging to the requested ID', async () => {
+  const response = await run('evaluate', { source: stringRules, mode: 'once', context: { Age: 20, Enabled: false } }, (name, _, choices) => {
+    assert.equal(name, 'Distance.to.travel')
+    assert.deepEqual(choices, ['small', 'big', 'medium'])
+    return 'big'
+  })
+  assert.equal(response.type, 'result', JSON.stringify(response))
+  assert.equal(response.result.context.Transport, 'train')
+})
+
+test('calculator uses the supplied rule model and preserves numeric-looking string choices', async () => {
+  const response = await run('calculate', {
+    expression: 'Code', context: {},
+    source: 'RuleContainer Test Rule first If Code = "123" Then Done Rule second If Code = "true" Then Done',
+  }, (_, __, choices) => {
+    assert.deepEqual(choices, ['123', 'true'])
+    return choices[0]
+  })
+  assert.equal(response.result.value, '123')
+})
+
+for (const conflicting of ['Value := 42', 'Value', 'Value := 1 + 2']) {
+  test(`mixed string and other types are syntax errors: ${conflicting}`, async () => {
+    const source = `RuleContainer Test Rule text If Flag Then Value := "small" Rule conflict If Flag Then ${conflicting}`
+    const response = await parse(source)
+    assert.equal(response.status, 400)
+    assert.match(response.body.error, /Conflicting types.*Value/)
+    const evaluation = await run('evaluate', { source, mode: 'once', context: {} }, () => assert.fail('Must reject before prompting'))
+    assert.equal(evaluation.type, 'error')
+    assert.ok(evaluation.syntaxErrors.length)
+  })
+}
+
+test('aliases share later string literals without mixing unrelated IDs', async () => {
+  const response = await parse('RuleContainer Test Rule alias If Flag Then Copy := Original Rule text If Original = "small" Then Other := "big"')
+  assert.equal(response.status, 200)
+  assert.deepEqual(response.body.modelTypes, { Copy: ['small'], Original: ['small'], Other: ['big'] })
+})
+
+test('computed string fragments do not become dropdown choices', async () => {
+  const response = await parse('RuleContainer Test Rule computed If Name + "suffix" = "full" Then Done')
+  assert.equal(response.status, 200)
+  assert.equal(response.body.modelTypes.Name, undefined)
+})
+
+test('computed expressions do not merge the types of independent operands', async () => {
+  const response = await parse('RuleContainer Test Rule types If Flag Then Prefix := "item" and Count := 2 Rule computed If Flag Then Label := Prefix + Count')
+  assert.equal(response.status, 200, JSON.stringify(response.body))
+  assert.deepEqual(response.body.modelTypes.Prefix, ['item'])
+  assert.equal(response.body.modelTypes.Count, undefined)
+  assert.deepEqual(response.body.modelTypes.Label, [])
+})
+
+test('different loaded models do not retain each other’s choices', async () => {
+  await parse(stringRules)
+  const response = await run('calculate', { expression: 'Distance.to.travel', context: {} }, (_, __, choices) => {
+    assert.deepEqual(choices, [])
+    return 'custom'
+  })
+  assert.equal(response.result.value, 'custom')
 })
