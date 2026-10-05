@@ -85,10 +85,11 @@ namespace Rules.Tasks
 
         public class TaskEvaluateResults
         {
-            public readonly List<TaskTrace> TaskTrace = new List<TaskTrace>();
+            public readonly List<TaskTrace> TaskTrace = new();
             public bool StopConditionValidated { get; set; }
             /// <summary>
-            /// True if a query got proven to be true, false if a query got proven to be false and null if it remains inconclusive due to missing data and/or missing rules
+            /// True if a query got proven to be true, false if a query got proven to be false and null if it remains
+            /// inconclusive due to missing data and/or missing rules.
             /// </summary>
             public bool? QueryResult { get; set; } 
 
