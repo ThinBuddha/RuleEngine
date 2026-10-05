@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:interactive": "dotnet build ../Rules.WebApi/Rules.WebApi.csproj && node --test tests/interactive.test.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

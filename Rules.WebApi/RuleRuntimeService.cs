@@ -10,8 +10,6 @@ namespace Rules.WebApi;
 
 public sealed class RuleRuntimeService
 {
-    private static readonly object EvaluationLock = new();
-
     public ParseResponse Parse(string source)
     {
         var containers = ParseContainers(source, out var parser);
@@ -22,7 +20,7 @@ public sealed class RuleRuntimeService
             parser.ParseTree);
     }
 
-    public EvaluateResponse Evaluate(EvaluateRequest request)
+    public EvaluateResponse Evaluate(EvaluateRequest request, Func<string, JsonElement?>? getUserInput = null)
     {
         var containers = ParseContainers(request.Source, out _);
         var context = CreateContext(request.Context);
@@ -30,93 +28,87 @@ public sealed class RuleRuntimeService
         var evaluationType = ParseEvaluationType(request.Mode);
         TCompareExpression? query = null;
 
-        lock (EvaluationLock)
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput);
+        try
         {
-            ConfigureUnknownValueResolution(context, missingFacts);
-            try
+            foreach (var container in containers.Containers)
             {
-                foreach (var container in containers.Containers)
-                {
-                    container.EvaluationType = evaluationType;
-                }
-
-                if (evaluationType == EvaluationType.Deduction)
-                {
-                    if (string.IsNullOrWhiteSpace(request.Query))
-                    {
-                        throw new RuleRuntimeException("A query is required for deduction mode", missingFacts);
-                    }
-
-                    var interpreter = new Interpreter();
-                    var queryResult = interpreter.QueryToExpression(request.Query);
-                    if (queryResult.Item2 is { Count: > 0 })
-                    {
-                        throw new RuleSyntaxException(queryResult.Item2);
-                    }
-
-                    query = queryResult.Item1;
-                }
-
-                var task = new TTask { RuleContainers = containers };
-                var result = task.Evaluate(context, query);
-
-                if (missingFacts.Count > 0)
-                {
-                    throw new RuleRuntimeException("Evaluation needs additional fact values", missingFacts);
-                }
-
-                return ToEvaluateResponse(result, context);
+                container.EvaluationType = evaluationType;
             }
-            catch (TExprException exception)
+
+            if (evaluationType == EvaluationType.Deduction)
             {
-                if (exception.Id is not null)
+                if (string.IsNullOrWhiteSpace(request.Query))
                 {
-                    missingFacts.Add(exception.Id.Name);
+                    throw new RuleRuntimeException("A query is required for deduction mode", missingFacts);
                 }
 
-                throw new RuleRuntimeException(exception.Message, missingFacts, exception);
+                var interpreter = new Interpreter();
+                var queryResult = interpreter.QueryToExpression(request.Query);
+                if (queryResult.Item2 is { Count: > 0 })
+                {
+                    throw new RuleSyntaxException(queryResult.Item2);
+                }
+
+                query = queryResult.Item1;
             }
-            finally
+
+            var task = new TTask { RuleContainers = containers };
+            var result = task.Evaluate(context, query);
+
+            if (missingFacts.Count > 0)
             {
-                MessageSink.NotifyUnknownValue = null;
-                MessageSink.GetUserInput = null;
+                throw new RuleRuntimeException("Evaluation needs additional fact values", missingFacts);
             }
+
+            return ToEvaluateResponse(result, context);
+        }
+        catch (TExprException exception)
+        {
+            if (exception.Id is not null)
+            {
+                missingFacts.Add(exception.Id.Name);
+            }
+
+            throw new RuleRuntimeException(exception.Message, missingFacts, exception);
+        }
+        finally
+        {
+            MessageSink.NotifyUnknownValue = null;
+            MessageSink.GetUserInput = null;
         }
     }
 
-    public CalculateResponse Calculate(CalculateRequest request)
+    public CalculateResponse Calculate(CalculateRequest request, Func<string, JsonElement?>? getUserInput = null)
     {
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
-        lock (EvaluationLock)
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput);
+        try
         {
-            ConfigureUnknownValueResolution(context, missingFacts);
-            try
+            var parser = new RuleParser(RulePart.Expression);
+            parser.Parse(request.Expression);
+            if (parser.SyntaxErrors.Count > 0 || parser.Builder.Result is not TExpression expression)
             {
-                var parser = new RuleParser(RulePart.Expression);
-                parser.Parse(request.Expression);
-                if (parser.SyntaxErrors.Count > 0 || parser.Builder.Result is not TExpression expression)
-                {
-                    throw new RuleSyntaxException(parser.SyntaxErrors);
-                }
+                throw new RuleSyntaxException(parser.SyntaxErrors);
+            }
 
-                return new CalculateResponse(ToJsonValue(expression.Evaluate(context)), ToContext(context));
-            }
-            catch (TExprException exception)
+            return new CalculateResponse(ToJsonValue(expression.Evaluate(context)), ToContext(context));
+        }
+        catch (TExprException exception)
+        {
+            if (exception.Id is not null)
             {
-                if (exception.Id is not null)
-                {
-                    missingFacts.Add(exception.Id.Name);
-                }
+                missingFacts.Add(exception.Id.Name);
+            }
 
-                throw new RuleRuntimeException(exception.Message, missingFacts, exception);
-            }
-            finally
-            {
-                MessageSink.NotifyUnknownValue = null;
-                MessageSink.GetUserInput = null;
-            }
+            throw new RuleRuntimeException(exception.Message, missingFacts, exception);
+        }
+        finally
+        {
+            MessageSink.NotifyUnknownValue = null;
+            MessageSink.GetUserInput = null;
         }
     }
 
@@ -148,13 +140,21 @@ public sealed class RuleRuntimeService
         return context;
     }
 
-    private static void ConfigureUnknownValueResolution(ValueBag context, ISet<string> missingFacts)
+    private static void ConfigureUnknownValueResolution(ValueBag context, ISet<string> missingFacts,
+        Func<string, JsonElement?>? getUserInput)
     {
         TConstantValue? Resolve(TId subject, ValueBag _) 
         {
             if (context.TryGetValue(subject.Name, out var value))
             {
                 return value;
+            }
+
+            var answer = getUserInput?.Invoke(subject.Name);
+            if (answer is JsonElement input && input.ValueKind != JsonValueKind.Null &&
+                !(input.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(input.GetString())))
+            {
+                return FromJsonValue(input);
             }
 
             missingFacts.Add(subject.Name);

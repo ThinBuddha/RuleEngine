@@ -165,8 +165,8 @@ namespace Rules.Rules
             Debug.WriteLine($"Have to derive value of {subject.Name}...");
             if (_ruleContainer.EvaluationType == EvaluationType.Deduction)
             {
-                // Is it the query itself? 
-                if (subject.Equals(_query.LeftExpr.Terms[0].Factors[0])) return null; // TODO: derive a TQuery from TCompareExpression (with this prop added)
+                // Is it the query itself? (non-boolean) If so, we cannot derive it, because it is the question asked by the user!
+                if (subject.Equals(_query.LeftExpr.Terms[0].Factors[0]) && _query.RightExpr is not null) return null; // TODO: derive a TQuery from TCompareExpression (with this prop added)
 
                 List<Rule> rules = GetRulesForQuery(subject);
                 if (rules.Count == 0)

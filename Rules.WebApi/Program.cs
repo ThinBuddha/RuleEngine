@@ -8,6 +8,9 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
 
 var app = builder.Build();
 app.UseCors();
+app.UseWebSockets();
+
+app.Map("/api/rules/interactive/{operation}", InteractiveEvaluation.HandleAsync);
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "Rules.WebApi" }));
 

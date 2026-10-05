@@ -27,9 +27,13 @@ npm run build
 
 The output is written to `dist/`.
 
+Run `npm run test:interactive` with Node.js 22 or newer to build the API and test interactive evaluation against a temporary local server, including answer types, declined answers, concurrent clients, and disconnects.
+
 ## Runtime boundary
 
-`src/runtime.js` is an HTTP client, not a second rule engine. It calls `/api/rules/parse`, `/api/rules/evaluate`, and `/api/rules/calculate`; the Vite development server proxies those requests to `Rules.WebApi` at `http://localhost:5215`. The API target can be changed with `RULES_API_URL`; for a non-proxied build or preview, set `VITE_RULES_API_URL` to the API base including `/api`.
+`src/runtime.js` calls `/api/rules/parse` over HTTP and uses WebSockets at `/api/rules/interactive/evaluate` and `/api/rules/interactive/calculate` for interactive execution. Unknown-value callbacks send a prompt to the browser and wait for its answer, then resume the same evaluation. Blank or cancelled answers return null to the engine. Sessions expire after 15 minutes. The HTTP evaluate/calculate endpoints remain available for noninteractive clients.
+
+The Vite development server proxies HTTP and WebSocket requests to `Rules.WebApi` at `http://localhost:5215`. Production reverse proxies must also support WebSocket upgrades. The API target can be changed with `RULES_API_URL`; for a non-proxied build or preview, set `VITE_RULES_API_URL` to the API base including `/api`.
 
 Start the API and web client in separate terminals:
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Rules.Expression;
 using Rules.Model;
+using System.Threading;
 
 namespace Rules
 {
@@ -13,7 +14,20 @@ namespace Rules
     /// </summary>
     public static class MessageSink
     {
-        public static NotifyUnknownValueEvent NotifyUnknownValue;
-        public static NotifyUnknownValueEvent GetUserInput;
+        // Keep callbacks local to the execution, including while a web user answers.
+        private static readonly AsyncLocal<NotifyUnknownValueEvent> _notifyUnknownValue = new AsyncLocal<NotifyUnknownValueEvent>();
+        private static readonly AsyncLocal<NotifyUnknownValueEvent> _getUserInput = new AsyncLocal<NotifyUnknownValueEvent>();
+
+        public static NotifyUnknownValueEvent NotifyUnknownValue
+        {
+            get => _notifyUnknownValue.Value;
+            set => _notifyUnknownValue.Value = value;
+        }
+
+        public static NotifyUnknownValueEvent GetUserInput
+        {
+            get => _getUserInput.Value;
+            set => _getUserInput.Value = value;
+        }
     }
 }

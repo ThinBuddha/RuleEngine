@@ -41,12 +41,54 @@ export async function parseRules(source) {
   return response.containers
 }
 
-export async function evaluate({ source, mode, context, query }) {
-  const response = await request('/rules/evaluate', { source, mode, query, context })
+function interactiveRequest(operation, body, getUserInput) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(api(`/rules/interactive/${operation}`), window.location.href)
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+    const socket = new WebSocket(url)
+    let settled = false
+    function finish(error, result) {
+      if (settled) return
+      settled = true
+      socket.close()
+      if (error) reject(error)
+      else resolve(result)
+    }
+    socket.onopen = () => socket.send(JSON.stringify(body))
+    socket.onmessage = async ({ data }) => {
+      try {
+        const message = JSON.parse(data)
+        if (message.type === 'unknownValue') {
+          const value = await getUserInput(message.name)
+          if (!settled) socket.send(JSON.stringify({ type: 'answer', value: value ?? null }))
+        } else if (message.type === 'result') {
+          finish(null, message.result)
+        } else if (message.type === 'error') {
+          finish(new Error(message.error))
+        } else {
+          finish(new Error('Unexpected Rules API response.'))
+        }
+      } catch (error) {
+        finish(error)
+      }
+    }
+    socket.onerror = () => finish(new Error('The Rules API connection failed.'))
+    socket.onclose = () => finish(new Error('The Rules API connection closed before evaluation completed.'))
+  })
+}
+
+export async function evaluate({ source, mode, context, query }, getUserInput) {
+  const body = { source, mode, query, context }
+  const response = getUserInput
+    ? await interactiveRequest('evaluate', body, getUserInput)
+    : await request('/rules/evaluate', body)
   return { trace: response.trace, rounds: response.rounds, queryResult: response.queryResult, context: response.context }
 }
 
-export async function calculate(expression, context) {
-  const response = await request('/rules/calculate', { expression, context })
+export async function calculate(expression, context, getUserInput) {
+  const body = { expression, context }
+  const response = getUserInput
+    ? await interactiveRequest('calculate', body, getUserInput)
+    : await request('/rules/calculate', body)
   return response.value
 }
