@@ -8,11 +8,12 @@ using Rules.Expression;
 namespace Rules.Tasks
 {
     /// <summary>
-    /// Contains one or more <see cref="RuleContainer"/>s and evaluates them sequentially.
-    /// An optional query will also be evaluated, after the <see cref="RuleContainer"/>s evaluation.
+    /// Evaluates forward containers sequentially. Deduction evaluates one query over
+    /// their rules, using a temporary combined container when there are multiple.
     /// </summary>
     /// <remarks>
-    /// Each <see cref="RuleContainer"/> is evaluated. 
+    /// An explicit evaluation type overrides the containers' configured types for this call.
+    /// Without one, the containers keep their existing evaluation behavior.
     /// As a "strategical measure", a <see cref="RuleContainer"/> can request to stop the rest of the process. 
     /// If the request is honored, the remaining <see cref="RuleContainer"/>s are skipped.
     /// To prevent confusion with the Threading.Task class, this class is prefixed with a 'T'.
@@ -21,13 +22,31 @@ namespace Rules.Tasks
     {
         public RuleContainers RuleContainers { get; set; }
 
-        public TaskEvaluateResults Evaluate(ValueBag context, TCompareExpression query = null)
+        public TaskEvaluateResults Evaluate(ValueBag context, TCompareExpression query = null,
+            EvaluationType? requestedType = null)
         {
+            // An explicit request takes precedence over the containers' configured modes.
+            bool deduction = requestedType == EvaluationType.Deduction ||
+                (requestedType == null && query != null &&
+                 RuleContainers.Containers.TrueForAll(container => container.EvaluationType == EvaluationType.Deduction));
+            if (deduction && RuleContainers.Containers.Count > 1)
+            {
+                return EvaluateCombinedDeduction(context, query);
+            }
+
             TaskEvaluateResults taskResults = new TaskEvaluateResults();
             RuleEvaluateResult rulesResult = null;
             foreach (RuleContainer container in RuleContainers.Containers)
             {
-                rulesResult = container.Evaluate(context, query);
+                rulesResult = requestedType switch
+                {
+                    EvaluationType.FireOnce => new RuleEngine(container).EvaluateOnce(context),
+                    EvaluationType.Iteration => new RuleEngine(container).EvaluateByIteration(context),
+                    EvaluationType.Deduction => new RuleEngine(container).EvaluateByDeduction(query, context),
+                    null => container.Evaluate(context, query),
+                    _ => throw new ArgumentOutOfRangeException(nameof(requestedType)),
+                };
+                taskResults.Evaluations.Add(new TaskTrace(container, rulesResult));
                 if (rulesResult.RuleGotFired)
                 {
                     taskResults.AddTask(container, rulesResult);
@@ -36,7 +55,7 @@ namespace Rules.Tasks
                     {
                         // We haven't got any logic to weigh the consequences on our level of perception,
                         // so we simply agree, for now...
-                        // A future improvement may be to (also) delegate this request to a Strategy layer
+                        // A FUTURE improvement may be to (also) delegate this request to a Strategy layer
                         break;
                     }
                 }
@@ -48,6 +67,34 @@ namespace Rules.Tasks
             }
 
             return taskResults;
+        }
+
+        private TaskEvaluateResults EvaluateCombinedDeduction(ValueBag context, TCompareExpression query)
+        {
+            const string combinedName = "All containers";
+            var combined = new RuleContainer { Name = combinedName, EvaluationType = EvaluationType.Deduction };
+            var origins = new Dictionary<Rule, string>(ReferenceEqualityComparer.Instance);
+            foreach (var container in RuleContainers.Containers)
+            {
+                foreach (var rule in container.Rules)
+                {
+                    combined.Rules.Add(rule);
+                    origins.TryAdd(rule, container.Name);
+                }
+            }
+            try
+            {
+                var result = new RuleEngine(combined, origins).EvaluateByDeduction(query, context);
+                var taskResults = new TaskEvaluateResults { QueryResult = result.ProvenByInduction };
+                taskResults.Evaluations.Add(new TaskTrace(combinedName, result));
+                if (result.RuleGotFired) taskResults.AddTask(combinedName, result);
+                return taskResults;
+            }
+            finally
+            {
+                // The combined container only borrows rule instances for this evaluation.
+                combined.Rules.Clear();
+            }
         }
 
         public void Clear()
@@ -62,18 +109,27 @@ namespace Rules.Tasks
         public class TaskTrace
         {
             public readonly RuleContainer RuleContainer;
+            public readonly string ContainerName;
             public readonly RuleEvaluateResult RuleResult;
 
             public TaskTrace(RuleContainer ruleContainer, RuleEvaluateResult ruleResult)
             {
                 RuleContainer = ruleContainer;
+                ContainerName = ruleContainer.Name;
+                RuleResult = ruleResult;
+            }
+
+            public TaskTrace(string containerName, RuleEvaluateResult ruleResult)
+            {
+                RuleContainer = new RuleContainer { Name = containerName, EvaluationType = EvaluationType.Deduction };
+                ContainerName = containerName;
                 RuleResult = ruleResult;
             }
 
             public override string ToString()
             {
                 return new StringBuilder()
-                  .Append($"RuleContainer \"{RuleContainer.Name}\" says:")
+                  .Append($"RuleContainer \"{ContainerName}\" says:")
                   .Append(Environment.NewLine)
                   .Append($"\t{RuleResult.RuleTrace.Count} rules were applied")
                   .Append(Environment.NewLine)
@@ -86,6 +142,8 @@ namespace Rules.Tasks
         public class TaskEvaluateResults
         {
             public readonly List<TaskTrace> TaskTrace = new();
+            // Includes evaluated containers with no fired rules, unlike the legacy trace.
+            public readonly List<TaskTrace> Evaluations = new();
             public bool StopConditionValidated { get; set; }
             /// <summary>
             /// True if a query got proven to be true, false if a query got proven to be false and null if it remains
@@ -110,6 +168,11 @@ namespace Rules.Tasks
             public void AddTask(RuleContainer ruleContainer, RuleEvaluateResult ruleResult)
             {
                 TaskTrace.Add(new TaskTrace(ruleContainer, ruleResult));
+            }
+
+            public void AddTask(string containerName, RuleEvaluateResult ruleResult)
+            {
+                TaskTrace.Add(new TaskTrace(containerName, ruleResult));
             }
         }
     }

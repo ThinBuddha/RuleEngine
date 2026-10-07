@@ -44,7 +44,7 @@ function run(operation, request, answer) {
         const message = JSON.parse(data)
         if (message.type === 'unknownValue') {
           prompts.push(message.name)
-          const value = await answer(message.name, socket, message.choices)
+          const value = await answer(message.name, socket, message.choices, message.why)
           if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'answer', value }))
         } else {
           clearTimeout(timeout)
@@ -159,6 +159,158 @@ async function parse(source) {
   })
   return { status: response.status, body: await response.json() }
 }
+
+function proofNodes(node) {
+  return [node, ...node.children.flatMap(proofNodes)]
+}
+
+function checkProof(proof, active = false) {
+  const nodes = proofNodes(proof.root)
+  assert.equal(new Set(nodes.map(node => node.id)).size, nodes.length)
+  for (const node of nodes) {
+    assert.equal(typeof node.kind, 'string')
+    assert.equal(typeof node.state, 'string')
+    if (node.evidenceId !== null) assert.ok(nodes.some(target => target.id === node.evidenceId))
+  }
+  if (active) assert.equal(nodes.find(node => node.id === proof.activeNodeId).state, 'WaitingForInput')
+  else assert.equal(proof.activeNodeId, null)
+  return nodes
+}
+
+const proofRules = 'RuleContainer Demo Rule outer If Intermediate and Extra Then Goal Rule inner If Input > 10 Then Intermediate'
+
+test('deduction finds a goal in a later container without asking for the goal', async () => {
+  const response = await run('evaluate', {
+    source: 'RuleContainer First Rule unrelated If Extra Then Other RuleContainer Second Rule goal If Input Then Goal',
+    mode: 'deduction', query: 'Goal', context: {},
+  }, (name, _, __, why) => {
+    assert.equal(name, 'Input')
+    assert.equal(why.container, 'All containers')
+    assert.deepEqual(proofNodes(why.root).filter(node => node.kind === 'Rule').map(node => node.text), ['Second/goal'])
+    return true
+  })
+  assert.equal(response.type, 'result', JSON.stringify(response))
+  assert.equal(response.result.queryResult, true)
+  assert.deepEqual(response.prompts, ['Input'])
+  assert.deepEqual(response.result.trace.map(item => item.container), ['Second'])
+  assert.equal(response.result.proofs.length, 1)
+  assert.equal(response.result.proofs[0].container, 'All containers')
+})
+
+test('deduction chains across containers and retains duplicate rule names with distinct origins', async () => {
+  const source = 'RuleContainer First Rule decide If Intermediate Then Goal ' +
+    'RuleContainer Second Rule decide If Input Then Intermediate'
+  const response = await run('evaluate', { source, mode: 'deduction', query: 'Goal', context: { Input: true } },
+    () => assert.fail('The input is already known'))
+  assert.equal(response.type, 'result', JSON.stringify(response))
+  assert.equal(response.result.queryResult, true)
+  assert.deepEqual(response.result.trace.map(item => [item.container, item.rule]), [
+    ['Second', 'decide'], ['First', 'decide'],
+  ])
+  assert.deepEqual(proofNodes(response.result.proofs[0].root)
+    .filter(node => node.kind === 'Rule').map(node => node.text), ['First/decide', 'Second/decide'])
+})
+
+test('deduction prompts carry stable Why snapshots and result carries the completed proof', async () => {
+  const snapshots = []
+  const response = await run('evaluate', { source: proofRules, mode: 'deduction', query: 'Goal', context: {} },
+    (name, _, choices, why) => {
+      assert.equal(why.container, 'Demo')
+      const nodes = checkProof(why, true)
+      assert.equal(nodes.find(node => node.id === why.activeNodeId).text, name)
+      snapshots.push(JSON.stringify(why))
+      if (name === 'Input') assert.deepEqual(nodes.filter(node => node.kind === 'Rule').map(node => node.text), ['Demo/outer', 'Demo/inner'])
+      else assert.ok(nodes.some(node => node.source === 'UserAnswer' && node.value === 12))
+      return name === 'Input' ? 12 : true
+    })
+  assert.equal(response.type, 'result')
+  assert.equal(response.result.proofs.length, 1)
+  const nodes = checkProof(response.result.proofs[0])
+  assert.equal(response.result.proofs[0].root.state, 'Succeeded')
+  assert.ok(nodes.some(node => node.source === 'UserAnswer' && node.value === true))
+  assert.equal(response.result.trace.length, 2)
+  assert.equal(snapshots.length, 2)
+  for (const saved of snapshots) checkProof(JSON.parse(saved), true)
+})
+
+for (const decline of [null, '']) {
+  test(`declined deduction answer ${JSON.stringify(decline)} returns an unknown proof`, async () => {
+    const response = await run('evaluate', { source: proofRules, mode: 'deduction', query: 'Goal', context: {} }, () => decline)
+    assert.equal(response.type, 'error')
+    assert.deepEqual(response.missingFacts, ['Input'])
+    assert.equal(response.proofs[0].root.state, 'Unknown')
+    assert.ok(checkProof(response.proofs[0]).some(node => node.source === 'UserAnswer' && node.state === 'Unknown'))
+  })
+}
+
+test('HTTP deduction returns one proof even when no rule fires and preserves Boolean false', async () => {
+  const request = { source: proofRules + ' RuleContainer Second Rule spare If Other Then Goal', mode: 'deduction', query: 'Goal', context: { Goal: false } }
+  const response = await fetch(`${baseUrl}/api/rules/evaluate`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request),
+  })
+  assert.equal(response.status, 200)
+  const result = await response.json()
+  assert.deepEqual(result.proofs.map(proof => proof.container), ['All containers'])
+  assert.deepEqual(result.trace, [])
+  assert.equal(result.rounds, 0)
+  for (const proof of result.proofs) {
+    assert.equal(proof.root.state, 'Failed')
+    assert.equal(proof.root.value, false)
+    checkProof(proof)
+  }
+  const interactive = await run('evaluate', request, () => assert.fail('Known goal must not prompt'))
+  assert.deepEqual(interactive.result, result)
+})
+
+test('HTTP missing facts retain a finalized partial deduction proof', async () => {
+  const response = await fetch(`${baseUrl}/api/rules/evaluate`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source: proofRules, mode: 'deduction', query: 'Goal', context: {} }),
+  })
+  assert.equal(response.status, 400)
+  const error = await response.json()
+  assert.deepEqual(error.missingFacts, ['Input'])
+  assert.equal(error.proofs[0].root.state, 'Unknown')
+  checkProof(error.proofs[0])
+})
+
+for (const mode of ['once', 'iteration', 'calculate']) {
+  test(`${mode} prompts do not expose a deduction snapshot`, async () => {
+    const response = await run(mode === 'calculate' ? mode : 'evaluate', mode === 'calculate'
+      ? { expression: 'Input', context: {} }
+      : { source: 'RuleContainer Demo Rule test If Input Then Goal', mode, context: {} },
+    (_, __, ___, why) => { assert.equal(why, null); return true })
+    assert.equal(response.type, 'result')
+    if (mode !== 'calculate') assert.deepEqual(response.result.proofs, [])
+  })
+}
+
+test('parallel deduction snapshots never contain another sessions answers', async () => {
+  let waiting = 0
+  let release
+  const barrier = new Promise(resolve => { release = resolve })
+  const responses = await Promise.all(['alpha', 'beta', 'gamma'].map(value => run('evaluate', {
+    source: `RuleContainer Demo Rule choose If Input = "${value}" Then Goal`, mode: 'deduction', query: 'Goal', context: {},
+  }, async (_, __, ___, why) => {
+    assert.equal(checkProof(why, true).find(node => node.kind === 'Condition').text, `Input = "${value}"`)
+    if (++waiting === 3) release()
+    await barrier
+    return value
+  })))
+  for (const [index, response] of responses.entries()) {
+    const answers = checkProof(response.result.proofs[0]).filter(node => node.source === 'UserAnswer')
+    assert.deepEqual(answers.map(node => node.value), [['alpha'], ['beta'], ['gamma']][index])
+  }
+})
+
+test('deep deduction snapshots serialize beyond the default JSON depth', async () => {
+  const source = 'RuleContainer Deep ' + Array.from({ length: 12 }, (_, i) =>
+    `Rule step${i} If Fact${i + 1} Then Fact${i}`).join(' ')
+  const response = await run('evaluate', { source, mode: 'deduction', query: 'Fact0', context: {} },
+    (_, __, ___, why) => { checkProof(why, true); return true })
+  assert.equal(response.type, 'result')
+  assert.equal(checkProof(response.result.proofs[0]).filter(node => node.kind === 'Rule').length, 12)
+})
 
 const stringRules = `RuleContainer Travel
 Rule short If Distance.to.travel = "small" Then Transport := "walk"

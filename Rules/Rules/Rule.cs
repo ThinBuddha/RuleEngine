@@ -131,17 +131,19 @@ namespace Rules.Rules
     public class RuleTrace
     {
         public readonly Rule Rule;
+        public readonly string ContainerName;
 
-        public RuleTrace(Rule rule)
+        public RuleTrace(Rule rule, string containerName = null)
         {
             Rule = rule;
+            ContainerName = containerName;
         }
 
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
 
-            builder.Append($"\tRule \"{Rule.Name}\" says:");
+            builder.Append($"\tRule \"{Rule.Name}\"{(ContainerName == null ? "" : $" in container \"{ContainerName}\"")} says:");
             builder.Append(Environment.NewLine);
             foreach (TAssignExpression conclusion in Rule.Conclusions)
             {
@@ -162,6 +164,7 @@ namespace Rules.Rules
 
     public class RuleEvaluateResult
     {
+        public DeductionProof Proof { get; internal set; }
         public readonly List<RuleTrace> RuleTrace = new List<RuleTrace>();
         public bool StopConditionValidated { get; set; }
         /// <summary>
@@ -189,12 +192,12 @@ namespace Rules.Rules
             return builder.ToString();
         }
 
-        public RuleTrace AddOrGetRule(Rule rule)
+        public RuleTrace AddOrGetRule(Rule rule, string containerName = null)
         {
-            RuleTrace ruleTrace = RuleTrace.Find(t => t.Rule.Equals(rule));
+            RuleTrace ruleTrace = RuleTrace.Find(t => ReferenceEquals(t.Rule, rule));
             if (ruleTrace == null)
             {
-                ruleTrace = new RuleTrace(rule);
+                ruleTrace = new RuleTrace(rule, containerName);
                 RuleTrace.Add(ruleTrace);
             }
             return ruleTrace;

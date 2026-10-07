@@ -31,11 +31,6 @@ public sealed class RuleRuntimeService
         ConfigureUnknownValueResolution(context, missingFacts, getUserInput, modelTypes);
         try
         {
-            foreach (var container in containers.Containers)
-            {
-                container.EvaluationType = evaluationType;
-            }
-
             if (evaluationType == EvaluationType.Deduction)
             {
                 if (string.IsNullOrWhiteSpace(request.Query))
@@ -54,11 +49,12 @@ public sealed class RuleRuntimeService
             }
 
             var task = new TTask { RuleContainers = containers };
-            var result = task.Evaluate(context, query);
+            var result = task.Evaluate(context, query, evaluationType);
 
             if (missingFacts.Count > 0)
             {
-                throw new RuleRuntimeException("Evaluation needs additional fact values", missingFacts);
+                throw new RuleRuntimeException("Evaluation needs additional fact values", missingFacts)
+                { Proofs = ToProofs(result) };
             }
 
             return ToEvaluateResponse(result, context);
@@ -161,7 +157,8 @@ public sealed class RuleRuntimeService
                 return value;
             }
 
-            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, modelTypes.GetStringValues(subject.Name)));
+            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, modelTypes.GetStringValues(subject.Name),
+                ProofSnapshot.From(context.GetDeductionProof())));
             if (answer is JsonElement input && input.ValueKind != JsonValueKind.Null &&
                 !(input.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(input.GetString())))
             {
@@ -189,10 +186,14 @@ public sealed class RuleRuntimeService
             result.QueryResult,
             result.TaskTrace.SelectMany(task => task.RuleResult.RuleTrace.Select(trace => new TraceEntry(
                 trace.Rule.Name,
-                task.RuleContainer.Name,
+                trace.ContainerName ?? task.ContainerName,
                 trace.Rule.Conditions.Select(condition => condition.ToString()).ToList()))).ToList(),
             result.TaskTrace.Count,
-            ToContext(context));
+            ToContext(context), ToProofs(result));
+
+    private static IReadOnlyList<ProofSnapshot> ToProofs(TTask.TaskEvaluateResults result) =>
+        result.Evaluations.Where(item => item.RuleResult.Proof is not null)
+            .Select(item => ProofSnapshot.From(item.RuleResult.Proof)!).ToArray();
 
     private static Dictionary<string, object?> ToContext(ValueBag context)
     {
@@ -219,12 +220,13 @@ public sealed class RuleRuntimeService
     };
 }
 
-public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices);
+public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices, ProofSnapshot? Why = null);
 public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree,
     IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes);
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
-public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds, Dictionary<string, object?> Context);
+public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds,
+    Dictionary<string, object?> Context, IReadOnlyList<ProofSnapshot> Proofs);
 public sealed record TraceEntry(string Rule, string Container, List<string> Conditions);
 public sealed record CalculateResponse(object Value, Dictionary<string, object?> Context);
 
@@ -248,4 +250,5 @@ public sealed class RuleRuntimeException : Exception
     }
 
     public List<string> MissingFacts { get; }
+    public IReadOnlyList<ProofSnapshot> Proofs { get; init; } = Array.Empty<ProofSnapshot>();
 }

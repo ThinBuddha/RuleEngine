@@ -14,9 +14,9 @@ namespace Rules.Rules
     /// </summary>
     public class RuleContainer
     {
-        public readonly List<Rule> Rules = new List<Rule>();
+        public readonly List<Rule> Rules = [];
 
-        public EvaluationType EvaluationType { get; set; }
+        public EvaluationType EvaluationType { get; set; } // TODO: investigate if this property makes sense at all. We already determine the evaluation type in the request.
         public string Name { get; set; }
         public string Description { get; set; }
 

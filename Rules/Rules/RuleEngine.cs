@@ -21,23 +21,30 @@ namespace Rules.Rules
     public class RuleEngine
     {
         private readonly RuleContainer _ruleContainer;
+        private readonly IReadOnlyDictionary<Rule, string> _ruleOrigins;
+        private EvaluationType _activeEvaluationType;
         private readonly RuleEvaluateResult _evalResult = new() { StopConditionValidated = false };
         private TCompareExpression _query;
 
-        public RuleEngine(RuleContainer ruleContainer)
+        public RuleEngine(RuleContainer ruleContainer, IReadOnlyDictionary<Rule, string> ruleOrigins = null)
         {
             _ruleContainer = ruleContainer;
+            _ruleOrigins = ruleOrigins;
         }
+
+        private string OriginOf(Rule rule) =>
+            _ruleOrigins != null && _ruleOrigins.TryGetValue(rule, out var name) ? name : _ruleContainer.Name;
 
         /// <remarks>
         /// Minimal 1 and maximal all rules are evaluated once, from "top" to "bottom".
         /// Rules can be ordered implicitly (literally from top to bottom) or via their priorities.
-        /// Inbetween breaks can be set in two ways:
+        /// Inbetween breaks can be set in two ways (FUTURE use):
         ///  - "tactical measure": stop and leave current container (by rule.Stop, only if the rule fired)
         ///  - "strategical measure": request to stop and leave the whole process (by container.StopRequested)
         /// </remarks>
         public RuleEvaluateResult EvaluateOnce(ValueBag context)
         {
+            _activeEvaluationType = EvaluationType.FireOnce;
             using var resolution = context.MessageSink.UseResolver(DeriveValue);
             _ruleContainer.Rules.Sort(); // The container and its rules belong to this evaluation, not a shared cache.
 
@@ -80,6 +87,7 @@ namespace Rules.Rules
         /// </remarks>
         public RuleEvaluateResult EvaluateByIteration(ValueBag context)
         {
+            _activeEvaluationType = EvaluationType.Iteration;
             using var resolution = context.MessageSink.UseResolver(DeriveValue);
             var firedRules = new HashSet<Rule>(ReferenceEqualityComparer.Instance);
             bool ruleGotFired = true;
@@ -124,16 +132,23 @@ namespace Rules.Rules
         /// <returns>True if the query could be resolved otherwise false</returns>
         public RuleEvaluateResult EvaluateByDeduction(TCompareExpression query, ValueBag context)
         {
+            _activeEvaluationType = EvaluationType.Deduction;
+            ArgumentNullException.ThrowIfNull(query);
             using var resolution = context.MessageSink.UseResolver(DeriveValue);
             Debug.Assert(query != null, "Cannot invoke evaluation by deduction if there is no query");
-            // TODO: setup How- and why tree for this query
+            var previousProof = context.ProofRecorder;
+            var recorder = new ProofRecorder(_ruleContainer.Name);
+            var root = recorder.Begin(ProofNodeKind.Query, query.ToString());
+            context.ProofRecorder = recorder;
             _query = query;
             try
             {
                 _evalResult.ProvenByInduction = _query.Evaluate(context);
+                root.Complete(_evalResult.ProvenByInduction.Value);
             }
             catch(TExprException ee)
             {
+                root.State(ee.CouldNotDetermineIdValue() ? ProofState.Unknown : ProofState.Error);
                 if (ee.CouldNotDetermineRootIdValue(query))
                 {
                     // This was the question asked by the user! So the question could not be proven as a statement.
@@ -148,6 +163,17 @@ namespace Rules.Rules
                 {
                     throw;
                 }
+            }
+            catch (Exception)
+            {
+                root.State(ProofState.Error);
+                throw;
+            }
+            finally
+            {
+                root.Dispose();
+                context.ProofRecorder = previousProof;
+                _evalResult.Proof = recorder.Snapshot();
             }
             return _evalResult;
         }
@@ -167,15 +193,21 @@ namespace Rules.Rules
         private TConstantValue DeriveValue(TId subject, ValueBag context)
         {
             Debug.WriteLine($"Have to derive value of {subject.Name}...");
-            if (_ruleContainer.EvaluationType == EvaluationType.Deduction)
+            if (_activeEvaluationType == EvaluationType.Deduction)
             {
                 // Is it the query itself? (non-boolean) If so, we cannot derive it, because it is the question asked by the user!
-                if (subject.Equals(_query.LeftExpr.Terms[0].Factors[0]) && _query.RightExpr is not null) return null; // TODO: derive a TQuery from TCompareExpression (with this prop added)
+                //@@if (subject.Equals(_query.LeftExpr.Terms[0].Factors[0]) && _query.RightExpr is not null) return null; // TODO: derive a TQuery from TCompareExpression (with this prop added)
 
                 List<Rule> rules = GetRulesForQuery(subject);
                 if (rules.Count == 0)
                 {
-                    return context.MessageSink.GetUserInput?.Invoke(subject, context);
+                    using var input = context.ProofRecorder?.Begin(ProofNodeKind.Evidence, subject.Name);
+                    input?.Source(EvidenceSource.UserAnswer);
+                    input?.State(ProofState.WaitingForInput);
+                    var answer = context.MessageSink.GetUserInput?.Invoke(subject, context);
+                    input?.Complete(answer);
+                    if (answer != null) context.ProofRecorder?.Remember(subject.Name, EvidenceSource.UserAnswer);
+                    return answer;
                 }
                 else
                 {
@@ -184,20 +216,25 @@ namespace Rules.Rules
                     while (!proven && i < rules.Count)
                     {
                         Rule rule = rules[i++];
+                        using var attempt = context.ProofRecorder?.Begin(ProofNodeKind.Rule, $"{OriginOf(rule)}/{rule.Name}");
                         proven = true;
                         foreach (TCompareExpression c in rule.Conditions)
                         {
-                            if (!c.Evaluate(context))
+                            using var condition = context.ProofRecorder?.Begin(ProofNodeKind.Condition, c.ToString());
+                            if (!proven)
                             {
-                                proven = false;
-                                break;
+                                condition?.State(ProofState.Skipped);
+                                continue;
                             }
+                            proven = c.Evaluate(context);
+                            condition?.Complete(proven);
                         }
                         if (proven)
                         {
                             rule.AssertConclusions(context);
-                            _evalResult.AddOrGetRule(rule);
+                            _evalResult.AddOrGetRule(rule, _ruleOrigins == null ? null : OriginOf(rule));
                         }
+                        attempt?.Complete(proven);
                     }
                     return proven ? context.GetValue(subject.Name) : null;
                 }

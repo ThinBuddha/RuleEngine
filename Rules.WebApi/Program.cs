@@ -3,6 +3,7 @@ using Rules.WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<RuleRuntimeService>();
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.MaxDepth = 256);
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
@@ -38,7 +39,7 @@ app.MapPost("/api/rules/evaluate", (EvaluateRequest request, RuleRuntimeService 
     }
     catch (RuleRuntimeException exception)
     {
-        return Results.BadRequest(new { error = exception.Message, missingFacts = exception.MissingFacts });
+        return Results.BadRequest(new { error = exception.Message, missingFacts = exception.MissingFacts, proofs = exception.Proofs });
     }
 });
 
@@ -54,7 +55,7 @@ app.MapPost("/api/rules/calculate", (CalculateRequest request, RuleRuntimeServic
     }
     catch (RuleRuntimeException exception)
     {
-        return Results.BadRequest(new { error = exception.Message, missingFacts = exception.MissingFacts });
+        return Results.BadRequest(new { error = exception.Message, missingFacts = exception.MissingFacts, proofs = exception.Proofs });
     }
 });
 

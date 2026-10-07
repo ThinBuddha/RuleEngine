@@ -22,6 +22,7 @@ namespace Rules.CommandShell
 
         private static RuleContainers _ruleContainers = new RuleContainers();
         private static TaskEvaluateResults _evalResult;
+        private static EvaluationType? _requestedEvaluationType;
 
         public static Interpreter _interpreter = new Interpreter();
 
@@ -36,7 +37,7 @@ namespace Rules.CommandShell
             {
                 WritePrompt();
                 command = Console.ReadLine();
-                if (IsEqualString(command, "quit"))
+                if (command == null || IsEqualString(command, "quit"))
                 {
                     break;
                 }
@@ -51,6 +52,7 @@ namespace Rules.CommandShell
                     {
                         case "er": ExecuteRules(); break;
                         case "rt": ShowRuleTrace(); break;
+                        case "how": ShowProofs(); break;
                         case "sm": ShowSummary(); break;
                         case "cn": ShowContents(); break;
                         case "cc": ClearContext(); break;
@@ -96,12 +98,15 @@ namespace Rules.CommandShell
 
         private static void ClearContext()
         {
+            _evalResult = null;
             _context.Clear();
             Console.WriteLine("The rule context was cleared");
         }
 
         private static void ClearRuleContainers()
         {
+            _evalResult = null;
+            _requestedEvaluationType = null;
             _task.Clear();
             _ruleContainers.Clear();
             Console.WriteLine("All rules in all rule containers were cleared");
@@ -113,8 +118,17 @@ namespace Rules.CommandShell
             // In future versions the rule logic will be behind API's and subject will be a json string
             if (subject.GetType() == typeof(TId))
             {
-                Console.Write($"{((TId)subject).Name}: ");
-                string answer = Console.ReadLine();
+                string answer;
+                while (true)
+                {
+                    Console.Write($"{subject.Name} (blank to skip, /why to explain): ");
+                    answer = Console.ReadLine();
+                    if (!IsEqualString(answer, "/why")) break;
+                    var proof = context.GetDeductionProof();
+                    if (proof == null) Console.WriteLine("No deduction explanation is available in this mode.");
+                    else ProofText.Write(proof, Console.Out);
+                }
+                if (string.IsNullOrWhiteSpace(answer)) return null;
                 if (IsEqualString(answer, "yes") || IsEqualString(answer, "y") || IsEqualString(answer, "true"))
                 {
                     return new TConstantNumValue(true);
@@ -141,6 +155,7 @@ namespace Rules.CommandShell
 
         private static void LoadRulesFile(string command)
         {
+            _evalResult = null;
             string file;
             if (IsEqualString("lr", command))
             {
@@ -156,13 +171,12 @@ namespace Rules.CommandShell
             Console.WriteLine("Choose the type of evaluation: 0 = Once, 1 = Iterate, 2 = Deduction (or anything else to use the rule container's default): ");
             EvaluationType evaluationType;
             bool useContainerEvalTypes = false;
-            var choice = Console.ReadKey();
-            switch (choice.Key)
+            var choice = Console.IsInputRedirected ? Console.ReadLine()?.Trim() : Console.ReadKey().KeyChar.ToString();
+            switch (choice)
             { 
-                case ConsoleKey.D0: evaluationType = EvaluationType.FireOnce; break;
-                case ConsoleKey.Enter: evaluationType = EvaluationType.FireOnce; break;
-                case ConsoleKey.D1: evaluationType = EvaluationType.Iteration; break;
-                case ConsoleKey.D2: evaluationType = EvaluationType.Deduction; break;
+                case "0": case "": case "\r": evaluationType = EvaluationType.FireOnce; break;
+                case "1": evaluationType = EvaluationType.Iteration; break;
+                case "2": evaluationType = EvaluationType.Deduction; break;
                 default: evaluationType = EvaluationType.FireOnce; useContainerEvalTypes = true; break;
             }
 
@@ -184,16 +198,7 @@ namespace Rules.CommandShell
                 {
                     Console.WriteLine("Successfully loaded file");
                     _ruleContainers = (parser.Builder as RulesBuilder).RuleContainers;
-                    if (!useContainerEvalTypes)
-                    {
-                        _ruleContainers.Containers.ForEach(c => c.EvaluationType = evaluationType);
-                    }
-                    if (_ruleContainers.Containers.FindAll(c => c.EvaluationType == EvaluationType.Deduction).Count > 1)
-                    {
-                        Console.WriteLine("Cannot apply a query to more then one rule container");
-                        _ruleContainers.Clear();
-                        return;
-                    }
+                    _requestedEvaluationType = useContainerEvalTypes ? null : evaluationType;
                 }
             }
             catch (Exception e)
@@ -219,8 +224,9 @@ namespace Rules.CommandShell
 
         private static void ExecuteRules()
         {
+            _evalResult = null;
             // TODO if -cc then _context.Clear();
-            // TODO if -m <mode> then overrule the mode defined in the Rulecontainer
+            // TODO if -m <mode> then choose a mode for this run.
             _task.RuleContainers = _ruleContainers;
             try
             {
@@ -230,7 +236,7 @@ namespace Rules.CommandShell
                 }
                 string query = string.Empty;
                 TCompareExpression compareExpr = null;
-                if (_task.RuleContainers.Containers[0].EvaluationType == EvaluationType.Deduction)
+                if ((_requestedEvaluationType ?? _task.RuleContainers.Containers[0].EvaluationType) == EvaluationType.Deduction)
                 {
                     query = ReadQuery();
                     QueryToExpression(query, out compareExpr, out string errors);
@@ -241,7 +247,7 @@ namespace Rules.CommandShell
                         QueryToExpression(query, out compareExpr, out errors);
                     }
                 }
-                _evalResult = _task.Evaluate(_context, compareExpr);
+                _evalResult = _task.Evaluate(_context, compareExpr, _requestedEvaluationType);
                 if (_evalResult.QueryResult != null)
                 {
                     Console.WriteLine($"The answer to your query is: {_evalResult.QueryResult}");
@@ -257,6 +263,20 @@ namespace Rules.CommandShell
             }
 
             ShowRuleTrace();
+            ShowProofs();
+        }
+
+        private static void ShowProofs()
+        {
+            bool found = false;
+            if (_evalResult != null)
+                foreach (var evaluation in _evalResult.Evaluations)
+                    if (evaluation.RuleResult.Proof != null)
+                    {
+                        found = true;
+                        ProofText.Write(evaluation.RuleResult.Proof, Console.Out);
+                    }
+            if (!found) Console.WriteLine("No deduction proof is available. Execute a deduction query first.");
         }
 
         private static void QueryToExpression(string query, out TCompareExpression compareExpr, out string errors)
@@ -306,6 +326,7 @@ namespace Rules.CommandShell
             Console.WriteLine("sm\t\t\tto show a summary of the currently loaded file contents");
             Console.WriteLine("cn\t\t\tto show the contents of the currently loaded file");
             Console.WriteLine("rt\t\t\tto show a trace of the last executed rules");
+            Console.WriteLine("how\t\t\tto show the last deduction proof; /why explains a pending value prompt");
             Console.WriteLine("cc\t\t\tto clear the current context (proven facts)");
             Console.WriteLine("cr\t\t\tto clear the current rules");
             Console.WriteLine("calc\t\t\tto calculate a number with an expression");

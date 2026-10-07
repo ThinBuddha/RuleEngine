@@ -10,7 +10,7 @@ This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell
 - inspect and clear the fact context;
 - calculate an expression against the current context.
 
-Fire once visits each rule once. Iteration revisits rules whose conditions have not yet matched, but each rule can fire only once per evaluation. It stops when a complete pass fires no new rules. Fired-rule tracking resets for each evaluation; facts remain in the browser context until cleared. Iteration processes each container in sequence and visits its rules in their current order, so conflicting assignments can still depend on rule order.
+The selected mode is sent with each evaluation request and takes precedence over any `RuleContainer.EvaluationType` value; it does not rewrite the loaded containers. Fire once visits each rule once. Iteration revisits rules whose conditions have not yet matched, but each rule can fire only once per evaluation. It stops when a complete pass fires no new rules. Fired-rule tracking resets for each evaluation; facts remain in the browser context until cleared. Iteration processes each container in sequence and visits its rules in their current order, so conflicting assignments can still depend on rule order.
 
 ## Run locally
 
@@ -32,6 +32,10 @@ The output is written to `dist/`.
 Run `npm run test:interactive` with Node.js 22 or newer to build the API and test interactive evaluation against a temporary local server, including answer types, declined answers, concurrent clients, and disconnects.
 
 ## Runtime boundary
+
+Deduction prompts include a **Why this question?** expander showing the partial proof with the current reasoning path opened and the requested fact highlighted. Opening it does not submit an answer. Completed evaluations show an expandable **Deduction explanation** below the existing trace. With multiple containers, deduction combines their rules temporarily and produces one tree for the query, including when no rule fired. Missing-fact errors also show partial proofs when available. Evidence links open and focus the supporting step. False, unknown, failed, and skipped steps are shown distinctly; failed alternatives are retained. Clear/reset/new runs discard old explanations. See the [snapshot JSON contract](../doc/api-proof-snapshots.md) for node fields, states, and evidence references.
+
+Run `npm run test:ui` for component-rendering/runtime tests, and `npm run test:shell` for command-shell explanation tests. These complement the API integration tests; they are not real-browser end-to-end tests.
 
 `src/runtime.js` calls `/api/rules/parse` over HTTP and uses WebSockets at `/api/rules/interactive/evaluate` and `/api/rules/interactive/calculate` for interactive execution. Unknown-value callbacks send a prompt to the browser and wait for its answer, then resume the same evaluation. Blank or cancelled answers return null to the engine. Sessions expire after 15 minutes. The HTTP evaluate/calculate endpoints remain available for noninteractive clients.
 

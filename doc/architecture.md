@@ -69,7 +69,7 @@ Its main concepts are:
 | `Rule` | Holds conditions, conclusions, priority, weight, and a stop flag. |
 | `RuleContainer` | Groups rules and selects an `EvaluationType`. |
 | `RuleEngine` | Evaluates one container using fire-once, iteration, or deduction. |
-| `TTask` | Evaluates multiple containers sequentially and aggregates their traces. |
+| `TTask` | Evaluates forward containers sequentially; runs one combined deduction query across their rules. |
 | `RuleEvaluateResult` | Reports fired rules, deduction status, and stop status. |
 
 The `T` prefix distinguishes this expression model from LINQ expression types and, for `TTask`, from `System.Threading.Tasks.Task`.
@@ -156,7 +156,7 @@ Rules are visited in their current container order. Dependencies can resolve ove
 
 #### Deduction
 
-The engine starts by evaluating a query. When it encounters an unknown identifier, it searches backwards for rules that conclude that identifier, evaluates their conditions recursively, and asserts the first proven conclusion. The result is:
+The task assembles a temporary container containing the rules from every deduction container, in file order, and evaluates the query once. This lets a rule in one original container depend on a conclusion in another. The temporary container borrows rule instances; the original containers are unchanged and the borrowed list is cleared after evaluation. When the engine encounters an unknown identifier, it searches backwards for rules that conclude that identifier, evaluates their conditions recursively, and asserts the first proven conclusion. Competing conclusions are tried in container order, then rule order. The result is:
 
 - `true` when the query is proven;
 - `false` when the root query is determined to be false or cannot be derived by the current implementation;
@@ -164,9 +164,25 @@ The engine starts by evaluating a query. When it encounters an unknown identifie
 
 `RuleEvaluateResult.RuleTrace` records the rules used to reach conclusions.
 
+#### Deduction explanations (core)
+
+`RuleEvaluateResult.Proof` contains an immutable `DeductionProof` snapshot after deduction. Its root is the query; descendant nodes record fact-resolution goals, rule attempts, conditions, evaluated operands, conclusions, and evidence. The existing flat `RuleTrace` remains available for compatibility. Forward evaluation does not create a deduction proof.
+
+The proof is recorded during evaluation, not reconstructed from fired rules. Failed alternatives are retained, and conditions skipped after a false condition are marked `Skipped` without evaluating them. A resolved Boolean fact with value `false` is successful evidence; a false condition is `Failed`; an unestablished fact is `Unknown`. In particular, the proof can be unknown where the legacy `ProvenByInduction` result reports false. Rule ordering, first-success selection, and the existing exception/result policy are unchanged.
+
+During an input callback, call `context.GetDeductionProof()` to obtain the Why-tree so far. `ActiveNodeId` identifies the evidence node waiting for input; its ancestors explain why that value is needed. The returned snapshot does not change after the callback returns. The completed snapshot on the result has no active node. Recording state is restored on exit, including exceptions and nested evaluations; outside evaluation the context normally returns null. An exception still propagates according to existing behavior rather than returning a new result object.
+
+Evidence identifies supplied facts, user answers, and rule conclusions. `EvidenceId` references an earlier node within the same proof when a value is reused. Consumers must retain these references when constructing a filtered How view: supporting evidence can originate in an earlier, unsuccessful rule attempt. Values are copied as scalar snapshots, so later fact assignments cannot alter recorded evidence. IDs are local to a proof, not globally unique. Facts retained from a previous run are treated as supplied facts; provenance is not persisted across separate evaluations.
+
+The API exposes these snapshots as `why` on interactive prompts and `proofs` on evaluation results and missing-fact errors; see [API proof snapshots](api-proof-snapshots.md). For deduction, `TTask.TaskEvaluateResults.Evaluations` contains the one combined evaluation even if no rule fired. The legacy `TaskTrace` still retains only evaluations with fired rules. The proof's container label is `All containers` for a combined evaluation; rule nodes and flat trace entries retain the original container names. Duplicate rule names in different containers remain distinct rule instances.
+
+The GUI displays expandable trees under the evaluation trace and a **Why this question?** view during input. The active ancestry opens automatically; evidence links expand and focus their targets. Failed attempts remain inspectable. Errors with partial proofs are displayed without retaining a previous run's explanation. Text is escaped, and values retain their scalar representation (quoted strings, numbers, and Booleans).
+
+The command shell prints deduction proofs after evaluation and on the `how` command. At a value prompt, `/why` prints the current proof and marks the active question, then asks for the same value again. Plain `why` remains an ordinary string answer. Blank input declines a value. Outside deduction, `/why` reports that no explanation is available. Clear/load/new runs invalidate the previous shell result. Cycle handling remains deferred; existing recursive-cycle limitations remain in place.
+
 ### Multiple containers
 
-`TTask` evaluates `RuleContainer` instances in their stored order using a shared context. A validated container stop condition can prevent later containers from running. In the current parser, evaluation types and container stop conditions are configured by the host rather than by rule-file syntax.
+`TTask.Evaluate(context, query, requestedType)` uses the requested type for that run, overriding every `RuleContainer.EvaluationType` without changing it. The Web API passes `EvaluateRequest.Mode` as this argument. Callers that omit it retain the container-configured behavior. For Fire once and Iteration, `TTask` evaluates containers in their stored order using a shared context. A validated container stop condition can prevent later containers from running. For Deduction, a single query is evaluated against a temporary combined rule set instead of querying each container in turn. Stop conditions are not part of the deduction path. In the current parser, evaluation types and container stop conditions are configured by the host rather than by rule-file syntax.
 
 ## Project dependencies
 

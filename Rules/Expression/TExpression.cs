@@ -1,5 +1,6 @@
 ﻿using Rules.Model;
 using System;
+using Rules.Rules;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
@@ -64,7 +65,7 @@ namespace Rules.Expression
 
         public bool Evaluate(ValueBag context)
         {
-            TConstantValue result = LeftExpr.Evaluate(context);
+            TConstantValue result = EvaluateOperand(LeftExpr, context);
             if (RightExpr != null)
             {
                 return ApplyOperator(result, context);
@@ -99,7 +100,7 @@ namespace Rules.Expression
 
         private bool ApplyOperator(TConstantValue leftResult, ValueBag context)
         {
-            TConstantValue rightResult = RightExpr.Evaluate(context);
+            TConstantValue rightResult = EvaluateOperand(RightExpr, context);
             return Operator switch
             {
                 TCompareOperator.Equal => leftResult.IsEqual(rightResult),
@@ -110,6 +111,14 @@ namespace Rules.Expression
                 TCompareOperator.SmallerOrEqual => leftResult.IsSmallerOrEqual(rightResult),
                 _ => throw new NotImplementedException(),
             };
+        }
+
+        private static TConstantValue EvaluateOperand(TExpression expression, ValueBag context)
+        {
+            using var operand = context.ProofRecorder?.Begin(ProofNodeKind.Operand, expression.ToString());
+            var value = expression.Evaluate(context);
+            operand?.Complete(value);
+            return value;
         }
     }
 
@@ -143,6 +152,7 @@ namespace Rules.Expression
 
         public void Evaluate(ValueBag context)
         {
+            using var proof = context.ProofRecorder?.Begin(ProofNodeKind.Conclusion, ToString());
             if (RightExpr == null)
             {
                 context.AddOrUpdateValue(LeftExpr, new TConstantNumValue(true));
@@ -152,6 +162,8 @@ namespace Rules.Expression
                 TConstantValue result = RightExpr.Evaluate(context);
                 context.AddOrUpdateValue(LeftExpr, result);
             }
+            proof?.Complete(context.GetValue(LeftExpr));
+            context.ProofRecorder?.Remember(LeftExpr, EvidenceSource.RuleConclusion);
         }
     }
 
@@ -341,6 +353,7 @@ namespace Rules.Expression
         public override TConstantValue Evaluate(ValueBag context)
         {
             TConstantValue result;
+            using var proof = context.ProofRecorder?.Begin(ProofNodeKind.Goal, ToString());
             if (!context.TryGetValue(Name, out TConstantValue currentValue))
             {
                 // There's no value known yet, we must derive it
@@ -351,6 +364,8 @@ namespace Rules.Expression
                 // Update the context with the now known value
                 context.AddOrUpdateValue(Name, currentValue);
             };
+
+            context.ProofRecorder?.Read(Name, currentValue);
 
             // Make sure the returning value is cloned, since of course we cannot continue evaluating with the value in the context
             result = currentValue.Clone();
@@ -367,6 +382,7 @@ namespace Rules.Expression
                     castedValue.Value.IntValue = -castedValue.Value.IntValue;
                 }
             }
+            proof?.Complete(result);
             return result;
         }
 

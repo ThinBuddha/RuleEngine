@@ -20,6 +20,10 @@ namespace Rules.Model
     {
         public MessageSink MessageSink { get; } = new MessageSink();
 
+        internal ProofRecorder ProofRecorder { get; set; }
+        /// <summary>The proof so far, including the active reason for an input request.</summary>
+        public DeductionProof GetDeductionProof() => ProofRecorder?.Snapshot();
+
         private readonly Dictionary<string, TConstantValue> _values = new Dictionary<string, TConstantValue>();
 
         public IReadOnlyDictionary<string, TConstantValue> Values => _values;

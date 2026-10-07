@@ -1,9 +1,11 @@
 <script setup>
 import { nextTick, onBeforeUnmount, ref } from 'vue'
+import ProofTree from './ProofTree.vue'
 
 const dialog = ref(null)
 const prompt = ref(null)
 const answer = ref('')
+const promptVersion = ref(0)
 let resolveAnswer
 let removeAbortListener
 
@@ -16,10 +18,11 @@ function finish(value = null) {
   resolve?.(value)
 }
 
-async function ask(name, choices, signal) {
+async function ask(name, choices, signal, why) {
   if (signal?.aborted) return null
   if (resolveAnswer) throw new Error('Another value is already being requested.')
-  prompt.value = { name, choices }
+  prompt.value = { name, choices, why }
+  promptVersion.value++
   answer.value = ''
   const result = new Promise((resolve) => { resolveAnswer = resolve })
   const cancel = () => finish()
@@ -44,6 +47,10 @@ defineExpose({ ask })
         <option v-for="choice in prompt.choices" :key="choice" :value="choice">{{ choice }}</option>
       </select>
       <input v-else id="fact-value" v-model="answer" autocomplete="off" autofocus>
+      <details v-if="prompt.why" :key="promptVersion" class="why">
+        <summary>Why this question?</summary>
+        <ProofTree :proof="prompt.why" />
+      </details>
       <div class="value-actions">
         <button type="button" class="outline-btn" @click="finish()">Cancel</button>
         <button type="submit" class="primary compact">Continue</button>
@@ -61,4 +68,7 @@ select, input { width: 100%; padding: 12px; border: 1px solid #34465d; border-ra
 select:focus, input:focus { outline: 2px solid #c8f169; }
 .value-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
 .value-actions .primary { margin: 0; }
+.value-dialog { width: min(820px, calc(100% - 32px)); max-height: 90vh; overflow: auto; }
+.why { margin-top: 18px; }
+.why > summary { cursor: pointer; color: #c8f169; }
 </style>

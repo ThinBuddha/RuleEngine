@@ -5,7 +5,7 @@ namespace Rules.WebApi;
 
 public static class InteractiveEvaluation
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web) { MaxDepth = 256 };
 
     public static async Task HandleAsync(HttpContext http, RuleRuntimeService runtime, string operation)
     {
@@ -27,7 +27,7 @@ public static class InteractiveEvaluation
 
         async Task<JsonElement?> AskAsync(UnknownValueRequest prompt)
         {
-            await SendAsync(new { type = "unknownValue", name = prompt.Name, choices = prompt.Choices });
+            await SendAsync(new { type = "unknownValue", name = prompt.Name, choices = prompt.Choices, why = prompt.Why });
             var answer = await ReceiveAsync(socket, cancellation);
             if (answer.ValueKind != JsonValueKind.Object ||
                 !answer.TryGetProperty("type", out var type) || type.ValueKind != JsonValueKind.String ||
@@ -53,7 +53,7 @@ public static class InteractiveEvaluation
         }
         catch (RuleRuntimeException exception)
         {
-            await SendAsync(new { type = "error", error = exception.Message, missingFacts = exception.MissingFacts });
+            await SendAsync(new { type = "error", error = exception.Message, missingFacts = exception.MissingFacts, proofs = exception.Proofs });
         }
         catch (JsonException)
         {

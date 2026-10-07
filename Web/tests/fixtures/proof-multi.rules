@@ -1,0 +1,4 @@
+RuleContainer First
+Rule outer If Intermediate Then Goal
+RuleContainer Second
+Rule inner If Input Then Intermediate
