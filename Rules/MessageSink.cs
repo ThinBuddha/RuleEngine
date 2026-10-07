@@ -1,33 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Rules.Expression;
 using Rules.Model;
-using System.Threading;
 
 namespace Rules
 {
     public delegate TConstantValue NotifyUnknownValueEvent(TId subject, ValueBag context);
 
     /// <summary>
-    /// Simple notifications between objects by means of delegates
+    /// Input callbacks owned by one evaluation context. Never shared between sessions.
     /// </summary>
-    public static class MessageSink
+    public sealed class MessageSink
     {
-        // Keep callbacks local to the execution, including while a web user answers.
-        private static readonly AsyncLocal<NotifyUnknownValueEvent> _notifyUnknownValue = new AsyncLocal<NotifyUnknownValueEvent>();
-        private static readonly AsyncLocal<NotifyUnknownValueEvent> _getUserInput = new AsyncLocal<NotifyUnknownValueEvent>();
+        public NotifyUnknownValueEvent NotifyUnknownValue { get; set; }
+        public NotifyUnknownValueEvent GetUserInput { get; set; }
 
-        public static NotifyUnknownValueEvent NotifyUnknownValue
+        internal IDisposable UseResolver(NotifyUnknownValueEvent resolver)
         {
-            get => _notifyUnknownValue.Value;
-            set => _notifyUnknownValue.Value = value;
+            var scope = new ResolverScope(this, NotifyUnknownValue);
+            NotifyUnknownValue = resolver;
+            return scope;
         }
 
-        public static NotifyUnknownValueEvent GetUserInput
+        private sealed class ResolverScope : IDisposable
         {
-            get => _getUserInput.Value;
-            set => _getUserInput.Value = value;
+            private readonly MessageSink _sink;
+            private readonly NotifyUnknownValueEvent _previous;
+
+            public ResolverScope(MessageSink sink, NotifyUnknownValueEvent previous)
+            {
+                _sink = sink;
+                _previous = previous;
+            }
+
+            public void Dispose() => _sink.NotifyUnknownValue = _previous;
         }
     }
 }

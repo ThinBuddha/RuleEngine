@@ -18,6 +18,8 @@ namespace Rules.Model
     /// </remarks>
     public class ValueBag
     {
+        public MessageSink MessageSink { get; } = new MessageSink();
+
         private readonly Dictionary<string, TConstantValue> _values = new Dictionary<string, TConstantValue>();
 
         public IReadOnlyDictionary<string, TConstantValue> Values => _values;

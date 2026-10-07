@@ -16,7 +16,7 @@ namespace Rules.Rules
     };
 
     /// <summary>
-    /// For each request, instantiate a <see cref="RuleEngine"/>
+    /// For each evaluation, instantiate a <see cref="RuleEngine"/> with its own rule graph and context.
     /// </summary>
     public class RuleEngine
     {
@@ -27,7 +27,6 @@ namespace Rules.Rules
         public RuleEngine(RuleContainer ruleContainer)
         {
             _ruleContainer = ruleContainer;
-            MessageSink.NotifyUnknownValue = DeriveValue;
         }
 
         /// <remarks>
@@ -39,7 +38,8 @@ namespace Rules.Rules
         /// </remarks>
         public RuleEvaluateResult EvaluateOnce(ValueBag context)
         {
-            _ruleContainer.Rules.Sort(); // TODO: as soon as we allow multiple users or multiple requests per user, we need to (shallow) copy the rules
+            using var resolution = context.MessageSink.UseResolver(DeriveValue);
+            _ruleContainer.Rules.Sort(); // The container and its rules belong to this evaluation, not a shared cache.
 
             foreach (Rule rule in _ruleContainer.Rules)
             {
@@ -80,6 +80,7 @@ namespace Rules.Rules
         /// </remarks>
         public RuleEvaluateResult EvaluateByIteration(ValueBag context)
         {
+            using var resolution = context.MessageSink.UseResolver(DeriveValue);
             var firedRules = new HashSet<Rule>(ReferenceEqualityComparer.Instance);
             bool ruleGotFired = true;
             while (ruleGotFired)
@@ -123,12 +124,9 @@ namespace Rules.Rules
         /// <returns>True if the query could be resolved otherwise false</returns>
         public RuleEvaluateResult EvaluateByDeduction(TCompareExpression query, ValueBag context)
         {
+            using var resolution = context.MessageSink.UseResolver(DeriveValue);
             Debug.Assert(query != null, "Cannot invoke evaluation by deduction if there is no query");
             // TODO: setup How- and why tree for this query
-            // the engine must contain an ID (hmm, must pass on it to every call then...) <== only this way can we route a call to the right engine's DeriveValue()
-            // ==> So, what is singular, what is per user and what is per query? (context(user), ruleContainer and rules(global), engine and trace(query)) that's v2.0 stuff,
-            // for now:
-            // ==> just one private howtree, period, so just one user, with just one query at a time, that's v1.0
             _query = query;
             try
             {
@@ -177,7 +175,7 @@ namespace Rules.Rules
                 List<Rule> rules = GetRulesForQuery(subject);
                 if (rules.Count == 0)
                 {
-                    return MessageSink.GetUserInput(subject, context);
+                    return context.MessageSink.GetUserInput?.Invoke(subject, context);
                 }
                 else
                 {
@@ -206,7 +204,7 @@ namespace Rules.Rules
             }
             else
             {
-                return MessageSink.GetUserInput(subject, context);
+                return context.MessageSink.GetUserInput?.Invoke(subject, context);
             }
         }
     }

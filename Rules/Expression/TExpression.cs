@@ -345,7 +345,7 @@ namespace Rules.Expression
             {
                 // There's no value known yet, we must derive it
                 // It's outside our scope, so we delegate it and wait for an answer
-                currentValue = MessageSink.NotifyUnknownValue(this, context);
+                currentValue = context.MessageSink.NotifyUnknownValue?.Invoke(this, context);
                 if (currentValue == null) throw new TExprException($"Cannot continue, getting value by notification failed for Id {Name}", this);
 
                 // Update the context with the now known value

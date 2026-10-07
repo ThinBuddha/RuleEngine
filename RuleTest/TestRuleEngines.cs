@@ -14,8 +14,9 @@ namespace RuleTest
 {
     public class TestRuleEngines
     {
-        private static readonly Interpreter _interpreter = new Interpreter();
-        private static readonly ValueBag _context = new ValueBag();
+        private readonly Interpreter _interpreter = new Interpreter();
+        private readonly ValueBag _context = new ValueBag();
+        private readonly UserAnswer _userAnswer = new UserAnswer();
 
        // BECOMES OBSOLETE
 
@@ -23,12 +24,12 @@ namespace RuleTest
         public void TestDeductionMultipleRules_Chaining_True()
         {
             // Mock user answers
-            UserAnswer.Initialize();
-            UserAnswer.AddAnswer("Outside.it.rains", true);
-            UserAnswer.AddAnswer("Stamina.of.person", "lousy");
-            UserAnswer.AddAnswer("Distance.to.travel", "big");
-            UserAnswer.AddAnswer("Person.has.car", true);
-            UserAnswer.AddAnswer("Travel.country", "Bulgaria");
+            _userAnswer.Initialize(_context);
+            _userAnswer.AddAnswer("Outside.it.rains", true);
+            _userAnswer.AddAnswer("Stamina.of.person", "lousy");
+            _userAnswer.AddAnswer("Distance.to.travel", "big");
+            _userAnswer.AddAnswer("Person.has.car", true);
+            _userAnswer.AddAnswer("Travel.country", "Bulgaria");
 
             // Setup the rules
             RuleContainers ruleContainers = TestHelper.GetTravelRules();
@@ -55,12 +56,12 @@ namespace RuleTest
         public void TestDeductionMultipleRules_Chaining_False()
         {
             // Mock user answers
-            UserAnswer.Initialize();
-            UserAnswer.AddAnswer("Outside.it.rains", true);
-            UserAnswer.AddAnswer("Person.has.umbrella", true);
-            UserAnswer.AddAnswer("Stamina.of.person", "lousy");
-            UserAnswer.AddAnswer("Distance.to.travel", "big");
-            UserAnswer.AddAnswer("Travel.country", "Bulgaria");
+            _userAnswer.Initialize(_context);
+            _userAnswer.AddAnswer("Outside.it.rains", true);
+            _userAnswer.AddAnswer("Person.has.umbrella", true);
+            _userAnswer.AddAnswer("Stamina.of.person", "lousy");
+            _userAnswer.AddAnswer("Distance.to.travel", "big");
+            _userAnswer.AddAnswer("Travel.country", "Bulgaria");
 
             // Setup the rules
             RuleContainers ruleContainers = TestHelper.GetTravelRules();

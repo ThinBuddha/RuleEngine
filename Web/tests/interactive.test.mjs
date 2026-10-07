@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 let server
 let baseUrl
 before(async () => {
-  const assembly = fileURLToPath(new URL('../../Rules.WebApi/bin/Debug/net10.0/Rules.WebApi.dll', import.meta.url))
+  const assembly = process.env.RULES_TEST_ASSEMBLY || fileURLToPath(new URL('../../Rules.WebApi/bin/Debug/net10.0/Rules.WebApi.dll', import.meta.url))
   server = spawn('dotnet', [assembly, '--urls', 'http://127.0.0.1:0'], { windowsHide: true })
   baseUrl = await new Promise((resolve, reject) => {
     let output = ''
@@ -103,6 +103,39 @@ test('another evaluation can complete while the first is waiting for input', asy
     return 2
   })
   assert.equal(first.result.value, 4)
+})
+
+test('parallel sessions isolate rules, choices, context, traces and declined answers', async () => {
+  const count = 9
+  let waiting = 0
+  let release
+  const allPrompting = new Promise(resolve => { release = resolve })
+  const responses = await Promise.all(Array.from({ length: count }, (_, index) => {
+    const value = `session-${index}`
+    return run('evaluate', {
+      source: `RuleContainer Shared Rule choose If Input = "${value}" Then Goal and Output := "${value}"`,
+      mode: ['once', 'iteration', 'deduction'][index % 3], query: 'Goal', context: { Owner: value },
+    }, async (name, _, choices) => {
+      assert.equal(name, 'Input')
+      assert.deepEqual(choices, [value])
+      if (++waiting === count) release()
+      await allPrompting
+      return index % 4 === 0 ? null : value
+    })
+  }))
+  for (const [index, response] of responses.entries()) {
+    if (index % 4 === 0) {
+      assert.equal(response.type, 'error')
+      assert.deepEqual(response.missingFacts, ['Input'])
+    } else {
+      assert.equal(response.type, 'result', JSON.stringify(response))
+      assert.deepEqual(response.result.context, {
+        Owner: `session-${index}`, Input: `session-${index}`, Goal: true, Output: `session-${index}`,
+      })
+      assert.equal(response.result.trace.length, 1)
+      assert.deepEqual(response.result.trace[0].conditions, [`Input = "session-${index}"`])
+    }
+  }
 })
 
 test('disconnecting at a prompt releases the evaluation', async () => {

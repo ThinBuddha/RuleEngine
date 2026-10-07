@@ -74,8 +74,8 @@ public sealed class RuleRuntimeService
         }
         finally
         {
-            MessageSink.NotifyUnknownValue = null;
-            MessageSink.GetUserInput = null;
+            context.MessageSink.NotifyUnknownValue = null;
+            context.MessageSink.GetUserInput = null;
         }
     }
 
@@ -109,8 +109,8 @@ public sealed class RuleRuntimeService
         }
         finally
         {
-            MessageSink.NotifyUnknownValue = null;
-            MessageSink.GetUserInput = null;
+            context.MessageSink.NotifyUnknownValue = null;
+            context.MessageSink.GetUserInput = null;
         }
     }
 
@@ -172,8 +172,8 @@ public sealed class RuleRuntimeService
             return null;
         }
 
-        MessageSink.NotifyUnknownValue = Resolve;
-        MessageSink.GetUserInput = Resolve;
+        context.MessageSink.NotifyUnknownValue = Resolve;
+        context.MessageSink.GetUserInput = Resolve;
     }
 
     private static EvaluationType ParseEvaluationType(string mode) => mode.Trim().ToLowerInvariant() switch

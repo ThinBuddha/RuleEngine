@@ -60,19 +60,19 @@ namespace RuleTest
     /// <summary>
     /// Mock user answers
     /// </summary>
-    public static class UserAnswer
+    public class UserAnswer
     {
-        private static readonly Dictionary<string, TConstantValue> _table = new Dictionary<string, TConstantValue>();
+        private readonly Dictionary<string, TConstantValue> _table = new Dictionary<string, TConstantValue>();
 
-        public static void Initialize()
+        public void Initialize(ValueBag context)
         {
             _table.Clear();
-            MessageSink.GetUserInput = (TId subject, ValueBag context) => { return _table.ContainsKey(subject.Name) ? _table[subject.Name] : null; };
-            MessageSink.NotifyUnknownValue = MessageSink.GetUserInput;
+            context.MessageSink.GetUserInput = (subject, _) => _table.TryGetValue(subject.Name, out var value) ? value.Clone() : null;
+            context.MessageSink.NotifyUnknownValue = context.MessageSink.GetUserInput;
         }
-        public static void AddAnswer(string Id, string value) => _table.Add(Id, new TConstantStringValue(value));
-        public static void AddAnswer(string Id, int value) => _table.Add(Id, new TConstantNumValue(value));
-        public static void AddAnswer(string Id, double value) => _table.Add(Id, new TConstantNumValue(value));
-        public static void AddAnswer(string Id, bool value) => _table.Add(Id, new TConstantNumValue(value));
+        public void AddAnswer(string Id, string value) => _table.Add(Id, new TConstantStringValue(value));
+        public void AddAnswer(string Id, int value) => _table.Add(Id, new TConstantNumValue(value));
+        public void AddAnswer(string Id, double value) => _table.Add(Id, new TConstantNumValue(value));
+        public void AddAnswer(string Id, bool value) => _table.Add(Id, new TConstantNumValue(value));
     }
 }

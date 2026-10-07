@@ -20,7 +20,7 @@ flowchart LR
     Missing[User or application callback] --> Context
 ```
 
-The implementation is synchronous and in-memory. There is no persistence layer, dependency-injection setup, service host, or external rules store.
+The core implementation is synchronous and in-memory. The web API supplies an ASP.NET Core host and dependency injection; there is no persistence layer or external rules store.
 
 ## Solution projects
 
@@ -95,7 +95,7 @@ When a rule needs an unknown fact, the shell prompts for a Boolean, integer, dou
 
 ### `Web`
 
-`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP client; all parsing, inference, and calculation are delegated to `Rules.WebApi`.
+`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP/WebSocket client; all parsing, inference, and calculation are delegated to `Rules.WebApi`.
 
 ### `Rules.WebApi`
 
@@ -107,8 +107,11 @@ When a rule needs an unknown fact, the shell prompts for a Boolean, integer, dou
 | `POST /api/rules/parse` | Parse rule source and return container/rule summaries. |
 | `POST /api/rules/evaluate` | Run fire-once, iteration, or deduction evaluation with supplied context and query. |
 | `POST /api/rules/calculate` | Parse and evaluate an expression against supplied context. |
+| WebSocket `/api/rules/interactive/{operation}` | Evaluate or calculate interactively, prompting for unknown facts on the same connection. |
 
-The API currently serializes requests per process because the existing `MessageSink` uses static callbacks. Missing facts are returned as API errors with a `missingFacts` list; the Vue client prompts for those values and retries with the updated context.
+`RuleRuntimeService` is request-scoped. Each evaluation creates its own parsed rule graph, engines, task, query, trace, model types, and `ValueBag`, including an instance-owned `MessageSink`. No mutable evaluation state or callbacks are shared between sessions, and requests do not need a global serialization lock. Each WebSocket conversation retains its evaluation state while waiting for answers and resumes that same evaluation. Noninteractive HTTP requests report unresolved facts in an error response.
+
+Facts persist between runs in the browser, not in a long-lived server-side engine. Each request reconstructs a fresh context from the supplied JSON. Containers within one evaluation intentionally share that context, but separate evaluations never share it, even for the same browser user.
 
 ### Tests
 
@@ -120,16 +123,18 @@ The API currently serializes requests per process because the existing `MessageS
 
 ### Facts and values
 
-`ValueBag` is a dictionary from identifier names to `TConstantValue`. Supported concrete values are numeric/Boolean (`TConstantNumValue`) and string (`TConstantStringValue`). Assigning a conclusion updates the bag; reading an absent identifier delegates value resolution through `MessageSink.NotifyUnknownValue`.
+`ValueBag` is a dictionary from identifier names to `TConstantValue`. Supported concrete values are numeric/Boolean (`TConstantNumValue`) and string (`TConstantStringValue`). Assigning a conclusion updates the bag; reading an absent identifier delegates value resolution through `context.MessageSink.NotifyUnknownValue`.
 
 A bare conclusion such as `Access.Allowed` stores Boolean `true`. An assignment such as `Price.Total := Price.Base * 1.21` evaluates the right-hand expression and stores its result.
 
 ### Unknown-value resolution
 
-`MessageSink` exposes two static delegates:
+Each `ValueBag` owns a `MessageSink` exposing two instance delegates:
 
 - `NotifyUnknownValue` is called by `TId.Evaluate` when a fact is absent.
 - `GetUserInput` is the fallback used by the rule engine and command shell.
+
+Embedding applications register callbacks on `context.MessageSink`, not on the `MessageSink` class. During evaluation, the engine temporarily installs its unknown-value resolver on that context and restores the previous resolver on exit, including when evaluation throws. Creating another engine or evaluating another context cannot replace these callbacks.
 
 For fire-once and iteration, an unknown value is requested from the application. During deduction, the engine first searches for rules whose conclusions assign the requested identifier. It asks the application only when no matching rule exists.
 
@@ -187,15 +192,14 @@ flowchart TD
 - Conditions support conjunction (`and`) only; there is no `or` operator.
 - The rule language does not declare an evaluation strategy. The command shell or embedding application sets it.
 - The model has `Stop`, weight, description, and container stop concepts, but the active parser does not fully populate all of them.
-- `MessageSink` uses mutable global delegates. Concurrent evaluations can overwrite callbacks and are not isolated.
-- `ValueBag` and rule collections are not thread-safe.
+- `ValueBag`, engines, and rule collections are not thread-safe and must not be shared between concurrent evaluations. The web API creates separate instances for each evaluation.
 - Identifier lookup in `ValueBag` is case-sensitive even though keyword tokenization is case-insensitive.
 - Numeric parsing and formatting depend partly on the process culture, while the tokenizer recognizes a dot as the decimal separator.
 - Iteration fires each rule at most once per evaluation; it does not reactivate fired rules when facts subsequently change.
 - Deduction is a first implementation: it follows the first provable rule path and does not build a complete proof tree or detect every cycle.
 - Equality is overridden on several domain types without corresponding `GetHashCode` implementations.
 - Formatter-based exception serialization triggers a .NET 10 obsolescence warning.
-- The current test baseline has nine deterministic parser/deduction assertion failures when representative failures are run in isolation. Running the entire suite can additionally expose shared static test-state contention.
+- There are existing parser/deduction assertion failures in the test baseline. Rule-engine tests use instance-owned contexts and answer callbacks to avoid static test-state contention.
 
 ## Legacy and experimental areas
 

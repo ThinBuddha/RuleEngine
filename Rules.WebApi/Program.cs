@@ -2,7 +2,7 @@ using System.Text.Json;
 using Rules.WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSingleton<RuleRuntimeService>();
+builder.Services.AddScoped<RuleRuntimeService>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 

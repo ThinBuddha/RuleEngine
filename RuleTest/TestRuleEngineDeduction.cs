@@ -31,21 +31,22 @@ namespace RuleTest
     public class TestRuleEngineDeduction
 
     {
-        private static readonly Interpreter _interpreter = new Interpreter();
-        private static readonly ValueBag _context = new ValueBag();
+        private readonly Interpreter _interpreter = new Interpreter();
+        private readonly ValueBag _context = new ValueBag();
+        private readonly UserAnswer _userAnswer = new UserAnswer();
 
         #region Simple tests
         [Fact]
         public void TestDeductionMultipleRules_NoChaining()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers
-            UserAnswer.AddAnswer("Outside.it.rains", true);
-            UserAnswer.AddAnswer("Person.has.umbrella", true);
-            UserAnswer.AddAnswer("Stamina.of.person", "great");
-            UserAnswer.AddAnswer("Distance.to.travel", "medium");
+            _userAnswer.AddAnswer("Outside.it.rains", true);
+            _userAnswer.AddAnswer("Person.has.umbrella", true);
+            _userAnswer.AddAnswer("Stamina.of.person", "great");
+            _userAnswer.AddAnswer("Distance.to.travel", "medium");
 
             // Setup the rules
             RuleContainers ruleContainers = TestHelper.GetTravelRules();
@@ -91,11 +92,11 @@ namespace RuleTest
         public void TestDeductionFinalRuleMissing()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers
-            UserAnswer.AddAnswer("App.Needed", "database");
-            UserAnswer.AddAnswer("Security.Level", "low"); // there is no rule for this, so Discs.MinNumber should remain undefined
+            _userAnswer.AddAnswer("App.Needed", "database");
+            _userAnswer.AddAnswer("Security.Level", "low"); // there is no rule for this, so Discs.MinNumber should remain undefined
 
             // Setup the rule
             string input = "RuleContainer System.Configuration Rule Discs.Minimal.2 If App.Needed = \"database\" and Security.Level = \"high\" then Discs.MinNumber := 2";
@@ -129,10 +130,10 @@ namespace RuleTest
         public void TestDeductionIntermediateRuleMissing()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers, not all answers will return a value (Security.Level remains unknown)
-            UserAnswer.AddAnswer("App.Needed", "database");
+            _userAnswer.AddAnswer("App.Needed", "database");
 
             // Setup the rule
             string input = "RuleContainer System.Configuration Rule Discs.Minimal.2 If App.Needed = \"database\" and Security.Level = \"high\" then Discs.MinNumber := 2";
@@ -159,11 +160,11 @@ namespace RuleTest
         public void TestDeduction_CompExpr_0100()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers
-            UserAnswer.AddAnswer("App.Needed", "database");
-            UserAnswer.AddAnswer("Security.Level", "high");
+            _userAnswer.AddAnswer("App.Needed", "database");
+            _userAnswer.AddAnswer("Security.Level", "high");
 
             // Setup the rule
             string input = "RuleContainer System.Configuration Rule Discs.Minimal.2 If App.Needed = \"database\" and Security.Level = \"high\" then Discs.MinNumber := 2";
@@ -188,11 +189,11 @@ namespace RuleTest
         public void TestDeduction_CompExpr_0010()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers
-            UserAnswer.AddAnswer("App.Needed", "database");
-            UserAnswer.AddAnswer("Security.Level", "high");
+            _userAnswer.AddAnswer("App.Needed", "database");
+            _userAnswer.AddAnswer("Security.Level", "high");
 
             // Setup the rule
             string input = "RuleContainer System.Configuration Rule Discs.Minimal.2 If App.Needed = \"database\" and Security.Level = \"high\" then Discs.MinNumber := 2";
@@ -219,10 +220,10 @@ namespace RuleTest
         public void TestDeduction_CompExpr_0001()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers (don't answer all questions)
-            UserAnswer.AddAnswer("App.Needed", "database");
+            _userAnswer.AddAnswer("App.Needed", "database");
 
             // Setup the rule
             string input = "RuleContainer System.Configuration Rule Discs.Minimal.2 If App.Needed = \"database\" and Security.Level = \"high\" then Discs.MinNumber := 2";
@@ -248,7 +249,7 @@ namespace RuleTest
         public void TestDeduction_CompExpr_1100()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
 
@@ -256,7 +257,7 @@ namespace RuleTest
         public void TestDeduction_CompExpr_1010()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
 
@@ -264,7 +265,7 @@ namespace RuleTest
         public void TestDeduction_CompExpr_1001()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
         #endregion
@@ -275,14 +276,14 @@ namespace RuleTest
         public void TestDeduction_LogicExpr_0100()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
             // Mock user answers
-            UserAnswer.AddAnswer("Outside.it.rains", true);
-            UserAnswer.AddAnswer("Stamina.of.person", "lousy");
-            UserAnswer.AddAnswer("Distance.to.travel", "big");
-            UserAnswer.AddAnswer("Person.has.car", true);
-            UserAnswer.AddAnswer("Travel.country", "Bulgaria");
+            _userAnswer.AddAnswer("Outside.it.rains", true);
+            _userAnswer.AddAnswer("Stamina.of.person", "lousy");
+            _userAnswer.AddAnswer("Distance.to.travel", "big");
+            _userAnswer.AddAnswer("Person.has.car", true);
+            _userAnswer.AddAnswer("Travel.country", "Bulgaria");
 
             // Setup the rules
             RuleContainers ruleContainers = TestHelper.GetTravelRules();
@@ -309,7 +310,7 @@ namespace RuleTest
         public void TestDeduction_LogicExpr_0010()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
 
@@ -317,7 +318,7 @@ namespace RuleTest
         public void TestDeduction_LogicExpr_0001()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
 
@@ -325,7 +326,7 @@ namespace RuleTest
         public void TestDeduction_LogicExpr_1100()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
 
@@ -333,7 +334,7 @@ namespace RuleTest
         public void TestDeduction_LogicExpr_1010()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
 
@@ -341,7 +342,7 @@ namespace RuleTest
         public void TestDeduction_LogicExpr_1001()
         {
             _context.Clear();
-            UserAnswer.Initialize();
+            _userAnswer.Initialize(_context);
 
         }
         #endregion

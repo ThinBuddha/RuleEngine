@@ -28,7 +28,7 @@ namespace Rules.CommandShell
         static void Main(string[] args)
         {
             // Set handler for when we receive a message to deliver user input 
-            MessageSink.GetUserInput = GetUserInput;
+            _context.MessageSink.GetUserInput = GetUserInput;
 
             ShowCommands();
             string command;
@@ -70,7 +70,7 @@ namespace Rules.CommandShell
         private static void EvaluateExpression(string commandParams = "")
         {
             // Set handler for when we receive a notification that we've got to deal with an unkown value
-            MessageSink.NotifyUnknownValue = DeriveValue;
+            _context.MessageSink.NotifyUnknownValue = DeriveValue;
 
             string input = string.IsNullOrEmpty(commandParams) ? Console.ReadLine() : commandParams;
             RuleParser parser = new RuleParser(RulePart.Expression);
@@ -91,7 +91,7 @@ namespace Rules.CommandShell
         {
             // We need to determine what the unknown value is
             // F.t.t.b. we are not so smart and delegate it to the user
-            return MessageSink.GetUserInput(subject, context);
+            return context.MessageSink.GetUserInput(subject, context);
         }
 
         private static void ClearContext()
