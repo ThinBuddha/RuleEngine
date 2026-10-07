@@ -138,7 +138,7 @@ namespace Rules.Rules
             {
                 if (ee.CouldNotDetermineRootIdValue(query))
                 {
-                    // This was the question asked by the user!
+                    // This was the question asked by the user! So the question could not be proven as a statement.
                     _evalResult.ProvenByInduction = false;
                 }
                 else if (ee.CouldNotDetermineIdValue())
