@@ -206,6 +206,72 @@ test('different loaded models do not retain each other’s choices', async () =>
 })
 
 const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+const clinicDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Moonbase-Clinic.txt', import.meta.url), 'utf8')
+for (const [query, answers, expected] of [
+  ['Assessment.Moonbloom', { 'Skin.Appearance': 'shimmering', 'Night.Sensation': 'tingling', 'Recent.Location': 'moon garden' }, true],
+  ['Assessment.Moonbloom', { 'Skin.Appearance': 'ordinary' }, false],
+  ['Assessment.Moonbloom', { 'Skin.Appearance': 'shimmering', 'Night.Sensation': 'calm' }, false],
+  ['Assessment.Moonbloom', { 'Skin.Appearance': 'shimmering', 'Night.Sensation': 'tingling', 'Recent.Location': 'living quarters' }, false],
+  ['Assessment.Echo.fever', { 'Voice.Effect': 'echoing', 'Ear.Sound': 'chiming', 'Recent.Location': 'resonator workshop' }, true],
+  ['Assessment.Echo.fever', { 'Voice.Effect': 'echoing', 'Ear.Sound': 'quiet' }, false],
+  ['Assessment.Starlight.depletion', { 'Energy.Level': 'low', 'Sleep.Pattern': 'fragmented', 'Shift.Hours': 10 }, true],
+  ['Assessment.Starlight.depletion', { 'Energy.Level': 'low', 'Sleep.Pattern': 'fragmented', 'Shift.Hours': 6 }, false],
+  ['Assessment.Starlight.depletion', { 'Energy.Level': 'steady' }, false],
+]) {
+  test(`fictional clinic ${query}: ${JSON.stringify(answers)}`, async () => {
+    const response = await run('evaluate', { source: clinicDemo, mode: 'deduction', query, context: {} }, (name, _, choices) => {
+      assert.ok(Object.hasOwn(answers, name), `Unnecessary or internal question: ${name}`)
+      if (typeof answers[name] === 'string') assert.ok(choices.includes(answers[name]))
+      return answers[name]
+    })
+    assert.equal(response.type, 'result', JSON.stringify(response))
+    assert.equal(response.result.queryResult, expected)
+    assert.deepEqual(response.prompts, Object.keys(answers))
+    assert.equal(response.result.context[query], expected ? true : undefined)
+    if (expected) {
+      assert.equal(response.result.trace.length, 3)
+      assert.ok(response.result.context['Assessment.Explanation'])
+    }
+  })
+}
+
+test('declining a clinic observation stays unknown rather than disproving the hypothesis', async () => {
+  const response = await run('evaluate', { source: clinicDemo, mode: 'deduction', query: 'Assessment.Moonbloom', context: {} }, () => null)
+  assert.equal(response.type, 'error')
+  assert.deepEqual(response.missingFacts, ['Skin.Appearance'])
+})
+
+const computerDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Computer-Assembly.txt', import.meta.url), 'utf8')
+for (const [profile, price] of [['office', 420], ['gaming', 1040], ['creator', 1630]]) {
+  for (const mode of ['once', 'iteration']) {
+    test(`computer assembly builds ${profile} in ${mode} mode`, async () => {
+      const response = await run('evaluate', { source: computerDemo, mode, context: {} }, (name, _, choices) => {
+        assert.equal(name, 'Build.Profile', 'Only the customer profile should require input')
+        assert.deepEqual(choices, ['office', 'gaming', 'creator'])
+        return profile
+      })
+      assert.equal(response.type, 'result', JSON.stringify(response))
+      assert.deepEqual(response.prompts, ['Build.Profile'])
+      const facts = response.result.context
+      const iterative = mode === 'iteration'
+      assert.equal(facts['Build.Status'], iterative ? 'ready for delivery' : 'collecting components')
+      assert.equal(facts['Platform.Status'], iterative ? 'ready' : 'pending')
+      assert.equal(facts['System.Status'], iterative ? 'assembled' : 'pending')
+      assert.equal(facts['Tests.Status'], iterative ? 'passed' : 'pending')
+      assert.equal(facts['Software.Status'], iterative ? 'installed' : 'pending')
+      assert.equal(facts['Build.Total.credits'], price + (iterative ? 80 : 0))
+      assert.equal(facts['Build.Component.count'], 7)
+      const components = facts['Build.Component.list'].split('; ').filter(Boolean)
+      assert.equal(components.length, 7)
+      assert.equal(new Set(components).size, 7)
+      assert.equal(response.result.trace.length, iterative ? 13 : 8)
+      if (iterative) assert.deepEqual(response.result.trace.slice(-5).map(entry => entry.rule), [
+        'assemble.platform', 'assemble.system', 'test.computer', 'install.software', 'release.computer',
+      ])
+    })
+  }
+}
+
 test('executing again reuses facts; clearing context requests fresh answers', async () => {
   const source = 'RuleContainer Test Rule choose If Size = "small" Then Price := 3 Rule other If Size = "big" Then Price := 8'
   const first = await run('evaluate', { source, mode: 'once', context: {} }, () => 'small')

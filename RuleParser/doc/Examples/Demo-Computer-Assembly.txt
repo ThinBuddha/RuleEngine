@@ -1,0 +1,200 @@
+RuleContainer Computer.Order
+
+  Rule initialize.build
+  Priority 1
+  If Build.Profile <> ""
+  Then Build.Status := "collecting components"
+     and CPU.Status := "pending"
+     and Memory.Status := "pending"
+     and Graphics.Status := "pending"
+     and Storage.Status := "pending"
+     and Power.Status := "pending"
+     and Chassis.Status := "pending"
+     and Cooling.Status := "pending"
+     and Platform.Status := "pending"
+     and System.Status := "pending"
+     and Tests.Status := "pending"
+     and Software.Status := "pending"
+     and Build.Component.list := ""
+     and Build.Component.count := 0
+     and Build.Total.credits := 0
+
+
+RuleContainer Computer.Assembly
+
+  Rule release.computer
+  Priority 1
+  If Software.Status = "installed" and Tests.Status = "passed"
+  Then Build.Status := "ready for delivery"
+
+  Rule install.software
+  Priority 2
+  If Tests.Status = "passed"
+  Then Software.Status := "installed"
+     and Software.Package := "Demo Desktop OS"
+     and Build.Total.credits := Build.Total.credits + 80
+
+  Rule test.computer
+  Priority 3
+  If System.Status = "assembled" and Cooling.Status = "installed"
+  Then Tests.Status := "passed"
+
+  Rule assemble.system
+  Priority 4
+  If Platform.Status = "ready" and Graphics.Status = "installed" and Storage.Status = "installed" and Power.Status = "installed"
+  Then System.Status := "assembled"
+
+  Rule assemble.platform
+  Priority 5
+  If CPU.Status = "installed" and Memory.Status = "installed" and Chassis.Status = "installed"
+  Then Platform.Status := "ready"
+
+  Rule install.cpu.office
+  Priority 6
+  If Build.Profile = "office"
+  Then CPU.Model := "Office CPU"
+     and CPU.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Office CPU; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 120
+
+
+  Rule install.cpu.gaming
+  Priority 7
+  If Build.Profile = "gaming"
+  Then CPU.Model := "Gaming CPU"
+     and CPU.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Gaming CPU; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 260
+
+
+  Rule install.cpu.creator
+  Priority 8
+  If Build.Profile = "creator"
+  Then CPU.Model := "Creator CPU"
+     and CPU.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Creator CPU; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 420
+
+
+  Rule install.memory.office
+  Priority 9
+  If Build.Profile = "office"
+  Then Memory.Model := "16 GB RAM"
+     and Memory.Status := "installed"
+     and Build.Component.list := Build.Component.list + "16 GB RAM; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 60
+
+
+  Rule install.memory.gaming
+  Priority 10
+  If Build.Profile = "gaming"
+  Then Memory.Model := "32 GB RAM"
+     and Memory.Status := "installed"
+     and Build.Component.list := Build.Component.list + "32 GB RAM; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 100
+
+
+  Rule install.memory.creator
+  Priority 11
+  If Build.Profile = "creator"
+  Then Memory.Model := "64 GB RAM"
+     and Memory.Status := "installed"
+     and Build.Component.list := Build.Component.list + "64 GB RAM; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 180
+
+
+  Rule install.graphics.office
+  Priority 12
+  If Build.Profile = "office"
+  Then Graphics.Model := "Integrated graphics"
+     and Graphics.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Integrated graphics; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 0
+
+
+  Rule install.graphics.gaming
+  Priority 13
+  If Build.Profile = "gaming"
+  Then Graphics.Model := "Gaming graphics card"
+     and Graphics.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Gaming graphics card; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 400
+
+
+  Rule install.graphics.creator
+  Priority 14
+  If Build.Profile = "creator"
+  Then Graphics.Model := "Creator graphics card"
+     and Graphics.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Creator graphics card; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 700
+
+
+  Rule install.storage.standard
+  Priority 15
+  If Build.Profile <> ""
+  Then Storage.Model := "1 TB SSD"
+     and Storage.Status := "installed"
+     and Build.Component.list := Build.Component.list + "1 TB SSD; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 80
+
+
+  Rule install.power.office
+  Priority 16
+  If Build.Profile = "office"
+  Then Power.Model := "400 W power supply"
+     and Power.Status := "installed"
+     and Build.Component.list := Build.Component.list + "400 W power supply; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 50
+
+
+  Rule install.power.gaming
+  Priority 17
+  If Build.Profile = "gaming"
+  Then Power.Model := "650 W power supply"
+     and Power.Status := "installed"
+     and Build.Component.list := Build.Component.list + "650 W power supply; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 90
+
+
+  Rule install.power.creator
+  Priority 18
+  If Build.Profile = "creator"
+  Then Power.Model := "850 W power supply"
+     and Power.Status := "installed"
+     and Build.Component.list := Build.Component.list + "850 W power supply; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 140
+
+
+  Rule install.chassis.standard
+  Priority 19
+  If Build.Profile <> ""
+  Then Chassis.Model := "Quiet tower case"
+     and Chassis.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Quiet tower case; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 70
+
+
+  Rule install.cooling.standard
+  Priority 20
+  If Build.Profile <> ""
+  Then Cooling.Model := "Tower air cooler"
+     and Cooling.Status := "installed"
+     and Build.Component.list := Build.Component.list + "Tower air cooler; "
+     and Build.Component.count := Build.Component.count + 1
+     and Build.Total.credits := Build.Total.credits + 40
+

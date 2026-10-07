@@ -1,0 +1,87 @@
+RuleContainer Moonbase.Clinic
+
+  Rule assess.moonbloom
+  If Syndrome.Glow.status = "matched" and Exposure.Moonpollen.status = "matched"
+  Then Assessment.Moonbloom
+     and Assessment.Finding := "fictional moonbloom pattern"
+     and Assessment.Explanation := "Shimmering skin and night tingling after a moon-garden visit"
+
+  Rule assess.echo.fever
+  If Syndrome.Echo.status = "matched" and Exposure.Resonator.status = "matched"
+  Then Assessment.Echo.fever
+     and Assessment.Finding := "fictional echo-fever pattern"
+     and Assessment.Explanation := "An echoing voice and chiming ears after a resonator-workshop visit"
+
+  Rule assess.starlight.depletion
+  If Syndrome.Rest.status = "matched" and Workload.Status = "extended"
+  Then Assessment.Starlight.depletion
+     and Assessment.Finding := "fictional starlight-depletion pattern"
+     and Assessment.Explanation := "Low energy and fragmented sleep after an extended station shift"
+
+  Rule glow.pattern
+  If Skin.Appearance = "shimmering" and Night.Sensation = "tingling"
+  Then Syndrome.Glow.status := "matched"
+
+  Rule glow.absent
+  If Skin.Appearance = "ordinary"
+  Then Syndrome.Glow.status := "unmatched"
+
+  Rule glow.incomplete
+  If Night.Sensation = "calm"
+  Then Syndrome.Glow.status := "unmatched"
+
+  Rule moonpollen.exposure
+  If Recent.Location = "moon garden"
+  Then Exposure.Moonpollen.status := "matched"
+
+  Rule moonpollen.not.in.workshop
+  If Recent.Location = "resonator workshop"
+  Then Exposure.Moonpollen.status := "unmatched"
+
+  Rule moonpollen.not.in.quarters
+  If Recent.Location = "living quarters"
+  Then Exposure.Moonpollen.status := "unmatched"
+
+  Rule echo.pattern
+  If Voice.Effect = "echoing" and Ear.Sound = "chiming"
+  Then Syndrome.Echo.status := "matched"
+
+  Rule echo.absent
+  If Voice.Effect = "ordinary"
+  Then Syndrome.Echo.status := "unmatched"
+
+  Rule echo.incomplete
+  If Ear.Sound = "quiet"
+  Then Syndrome.Echo.status := "unmatched"
+
+  Rule resonator.exposure
+  If Recent.Location = "resonator workshop"
+  Then Exposure.Resonator.status := "matched"
+
+  Rule resonator.not.in.garden
+  If Recent.Location = "moon garden"
+  Then Exposure.Resonator.status := "unmatched"
+
+  Rule resonator.not.in.quarters
+  If Recent.Location = "living quarters"
+  Then Exposure.Resonator.status := "unmatched"
+
+  Rule rest.pattern
+  If Energy.Level = "low" and Sleep.Pattern = "fragmented"
+  Then Syndrome.Rest.status := "matched"
+
+  Rule rest.energy.normal
+  If Energy.Level = "steady"
+  Then Syndrome.Rest.status := "unmatched"
+
+  Rule rest.sleep.normal
+  If Sleep.Pattern = "settled"
+  Then Syndrome.Rest.status := "unmatched"
+
+  Rule workload.extended
+  If Shift.Hours > 8
+  Then Workload.Status := "extended"
+
+  Rule workload.standard
+  If Shift.Hours <= 8
+  Then Workload.Status := "standard"
