@@ -2,7 +2,7 @@
 
 A fictional dispatcher with 35 rules in 10 sequential containers. It chooses a vehicle, handling instructions, parcel cover, an estimated delivery time, and a price in imaginary credits. All prices and timings are invented for this demo.
 
-Import `Demo-Parcel-Dispatcher.txt` into the workbench, choose **Fire once**, and execute. Clear the fact context before trying a different scenario. This file is designed for Fire once: it uses ordered stages and `Vehicle.Selection.status` ("pending" or "selected") to make the first matching vehicle rule win. Do not use Iteration; its always-applicable classification rules would keep firing. Deduction does not resolve dependencies across these containers.
+Import `Demo-Parcel-Dispatcher.txt` into the workbench, choose **Fire once** or **Iteration**, and execute. Clear the fact context before trying a different scenario. The file uses ordered stages and `Vehicle.Selection.status` ("pending" or "selected") to make the first matching vehicle rule win. Iteration retries unmatched rules but skips each rule after it fires, so classification and vehicle-selection initialization run only once per evaluation. Both modes produce the same results for this demo. Deduction does not resolve dependencies across these containers.
 
 ## What to show
 

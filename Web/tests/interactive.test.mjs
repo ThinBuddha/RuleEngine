@@ -228,24 +228,26 @@ for (const [contents, size, distance, weather, recipient, urgency, membership, d
   ['books', 'large', 30, 'clear', 'office', 'relaxed', 'neighbourhood hero', 25, 'regional van', 21, 210],
   ['electronics', 'medium', 5, 'clear', 'parcel locker', 'today', 'regular', 100, 'locker shuttle', 16, 105],
 ]) {
-  test(`parcel dispatcher demo selects ${vehicle}`, async () => {
-    const answers = {
-      'Parcel.Contents': contents, 'Parcel.Size': size, 'Delivery.Distance.km': distance,
-      'Weather.Now': weather, 'Recipient.Location': recipient, 'Delivery.Urgency': urgency,
-      'Customer.Membership': membership, 'Parcel.Declared.value': declaredValue,
-    }
-    const response = await run('evaluate', { source: parcelDemo, mode: 'once', context: {} }, (name, _, choices) => {
-      assert.ok(Object.hasOwn(answers, name), `Unexpected prompt: ${name}`)
-      if (typeof answers[name] === 'string') assert.ok(choices.includes(answers[name]))
-      else assert.deepEqual(choices, [])
-      return answers[name]
+  for (const mode of ['once', 'iteration']) {
+    test(`parcel dispatcher demo selects ${vehicle} in ${mode} mode`, async () => {
+      const answers = {
+        'Parcel.Contents': contents, 'Parcel.Size': size, 'Delivery.Distance.km': distance,
+        'Weather.Now': weather, 'Recipient.Location': recipient, 'Delivery.Urgency': urgency,
+        'Customer.Membership': membership, 'Parcel.Declared.value': declaredValue,
+      }
+      const response = await run('evaluate', { source: parcelDemo, mode, context: {} }, (name, _, choices) => {
+        assert.ok(Object.hasOwn(answers, name), `Unexpected prompt: ${name}`)
+        if (typeof answers[name] === 'string') assert.ok(choices.includes(answers[name]))
+        else assert.deepEqual(choices, [])
+        return answers[name]
+      })
+      assert.equal(response.type, 'result', JSON.stringify(response))
+      const facts = response.result.context
+      assert.equal(facts['Delivery.Vehicle'], vehicle)
+      assert.ok(Math.abs(facts['Quote.Total'] - total) < 0.000001, `Expected ${total}, got ${facts['Quote.Total']}`)
+      assert.equal(facts['Delivery.Estimated.minutes'], minutes)
+      assert.equal(response.result.trace.length, 11)
+      assert.equal(response.prompts.length, 8)
     })
-    assert.equal(response.type, 'result', JSON.stringify(response))
-    const facts = response.result.context
-    assert.equal(facts['Delivery.Vehicle'], vehicle)
-    assert.ok(Math.abs(facts['Quote.Total'] - total) < 0.000001, `Expected ${total}, got ${facts['Quote.Total']}`)
-    assert.equal(facts['Delivery.Estimated.minutes'], minutes)
-    assert.equal(response.result.trace.length, 11)
-    assert.equal(response.prompts.length, 8)
-  })
+  }
 }

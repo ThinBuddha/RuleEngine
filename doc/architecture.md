@@ -143,9 +143,11 @@ This mode is order-sensitive: an earlier rule can create a fact consumed by a la
 
 #### Iteration
 
-The engine repeatedly visits all rules until a pass fires no rules. This is intended as forward chaining where rule order should matter less.
+The engine repeatedly visits rules that have not yet fired until a complete pass fires no new rules. A rule whose conditions are initially false can therefore fire after another rule establishes the required facts.
 
-The current implementation does not track whether a conclusion changed the context. Consequently, a rule whose condition remains true can keep reporting that it fired, preventing termination. Treat this mode as experimental until a stable change-detection or activation mechanism is added.
+`EvaluateByIteration` keeps a local set of fired rule instances. It checks this set before evaluating a rule, so neither its conditions nor its conclusions run again after it fires. Each rule fires at most once per call, even if its conditions remain true or its conclusions change no facts. Tracking resets on the next evaluation. This is fired-rule tracking, not context-change detection: later changes do not reactivate an already-fired rule.
+
+Rules are visited in their current container order. Dependencies can resolve over subsequent passes, but conflicting assignments can still depend on order. With a fixed set of N rules, there are at most N passes that fire new rules, followed by a final pass that fires none.
 
 #### Deduction
 
@@ -189,7 +191,7 @@ flowchart TD
 - `ValueBag` and rule collections are not thread-safe.
 - Identifier lookup in `ValueBag` is case-sensitive even though keyword tokenization is case-insensitive.
 - Numeric parsing and formatting depend partly on the process culture, while the tokenizer recognizes a dot as the decimal separator.
-- Iteration can fail to terminate when an always-true rule continues to fire.
+- Iteration fires each rule at most once per evaluation; it does not reactivate fired rules when facts subsequently change.
 - Deduction is a first implementation: it follows the first provable rule path and does not build a complete proof tree or detect every cycle.
 - Equality is overridden on several domain types without corresponding `GetHashCode` implementations.
 - Formatter-based exception serialization triggers a .NET 10 obsolescence warning.

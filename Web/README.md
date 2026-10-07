@@ -10,6 +10,8 @@ This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell
 - inspect and clear the fact context;
 - calculate an expression against the current context.
 
+Fire once visits each rule once. Iteration revisits rules whose conditions have not yet matched, but each rule can fire only once per evaluation. It stops when a complete pass fires no new rules. Fired-rule tracking resets for each evaluation; facts remain in the browser context until cleared. Iteration processes each container in sequence and visits its rules in their current order, so conflicting assignments can still depend on rule order.
+
 ## Run locally
 
 Install the dependencies and start Vite:

@@ -3,7 +3,7 @@
 RuleEngine is an experimental production-rule system written in C# and targeting .NET 10. It can parse a small textual rule language, evaluate expressions against a fact context, and execute rules using one of three inference strategies:
 
 - **Fire once**: visit each rule once in priority order.
-- **Iteration**: repeatedly visit rules, providing a basic forward-chaining mode.
+- **Iteration**: retry unmatched rules until no new rule fires; each rule fires at most once per evaluation.
 - **Deduction**: work backwards from a query, providing a basic backward-chaining mode.
 
 The repository also contains an interactive command shell, a query interpreter, and xUnit test projects.

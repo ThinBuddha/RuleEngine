@@ -11,7 +11,7 @@ namespace Rules.Rules
     public enum EvaluationType
     {
         FireOnce,    // Each rule can be visited maximal one time 
-        Iteration,   // Each rule can be visited many times ("forward chaining")
+        Iteration,   // Retry rules until no new rule fires; each rule fires at most once per evaluation.
         Deduction    // Each rule can be visited many times, starting with the conclusion ("backward chaining")
     };
 
@@ -70,23 +70,29 @@ namespace Rules.Rules
         }
 
         /// <remarks>
-        /// Minimal 1 and maximal all rules are evaluated once or multiple times, where the order doesn't matter.
-        /// Iteration goes on until no more rules are fired.
+        /// Retry rules whose conditions have not yet matched (forward chaining).
+        /// Each rule can fire at most once during this call. Already-fired rules are
+        /// skipped entirely, including their conditions and conclusions.
+        /// Iteration ends after a full pass in which no new rule fires.
+        /// Rules are visited in container order; conflicting conclusions can still depend on that order.
         /// Inbetween break can be set in one way:
         ///  - "strategical measure": request to stop and leave the whole process (by container.StopRequested)
         /// </remarks>
         public RuleEvaluateResult EvaluateByIteration(ValueBag context)
         {
+            var firedRules = new HashSet<Rule>(ReferenceEqualityComparer.Instance);
             bool ruleGotFired = true;
             while (ruleGotFired)
             {
                 ruleGotFired = false;
                 foreach (Rule rule in _ruleContainer.Rules)
                 {
+                    if (firedRules.Contains(rule)) continue;
                     try
                     {
                         if (rule.Evaluate(context))
                         {
+                            firedRules.Add(rule);
                             RuleTrace ruleTrace = _evalResult.AddOrGetRule(rule);
                             ruleGotFired = true;
                         }
