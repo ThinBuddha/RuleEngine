@@ -206,6 +206,20 @@ test('different loaded models do not retain each other’s choices', async () =>
 })
 
 const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+test('executing again reuses facts; clearing context requests fresh answers', async () => {
+  const source = 'RuleContainer Test Rule choose If Size = "small" Then Price := 3 Rule other If Size = "big" Then Price := 8'
+  const first = await run('evaluate', { source, mode: 'once', context: {} }, () => 'small')
+  assert.equal(first.type, 'result')
+  const second = await run('evaluate', { source, mode: 'once', context: first.result.context }, () => assert.fail('Known facts should not prompt'))
+  assert.equal(second.type, 'result')
+  assert.deepEqual(second.prompts, [])
+  assert.equal(second.result.context.Price, 3)
+  const fresh = await run('evaluate', { source, mode: 'once', context: {} }, () => 'big')
+  assert.equal(fresh.type, 'result')
+  assert.deepEqual(fresh.prompts, ['Size'])
+  assert.equal(fresh.result.context.Price, 8)
+})
+
 for (const [contents, size, distance, weather, recipient, urgency, membership, declaredValue, vehicle, total, minutes] of [
   ['books', 'small', 2, 'clear', 'home', 'express', 'visitor', 25, 'drone', 23, 8],
   ['flowers', 'small', 2, 'rain', 'home', 'today', 'regular', 75, 'bike courier', 11, 85],

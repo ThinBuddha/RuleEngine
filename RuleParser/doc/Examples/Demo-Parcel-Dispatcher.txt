@@ -3,22 +3,22 @@ RuleContainer Parcel.Handling
   Rule books
   Priority 1
   If Parcel.Contents = "books"
-  Then Parcel.Handling := "standard" and Parcel.Drone.allowed := 1 and Packing.Content.fee := 0
+  Then Parcel.Handling := "standard" and Parcel.Drone.status := "allowed" and Packing.Content.fee := 0
 
   Rule electronics
   Priority 2
   If Parcel.Contents = "electronics"
-  Then Parcel.Handling := "padded" and Parcel.Drone.allowed := 1 and Packing.Content.fee := 3
+  Then Parcel.Handling := "padded" and Parcel.Drone.status := "allowed" and Packing.Content.fee := 3
 
   Rule flowers
   Priority 3
   If Parcel.Contents = "flowers"
-  Then Parcel.Handling := "upright" and Parcel.Drone.allowed := 0 and Packing.Content.fee := 4
+  Then Parcel.Handling := "upright" and Parcel.Drone.status := "disallowed" and Packing.Content.fee := 4
 
   Rule ice.cream
   Priority 4
   If Parcel.Contents = "ice cream"
-  Then Parcel.Handling := "chilled" and Parcel.Drone.allowed := 0 and Packing.Content.fee := 6
+  Then Parcel.Handling := "chilled" and Parcel.Drone.status := "disallowed" and Packing.Content.fee := 6
 
 
 RuleContainer Parcel.Size
@@ -62,17 +62,17 @@ RuleContainer Weather.Assessment
   Rule clear
   Priority 1
   If Weather.Now = "clear"
-  Then Flight.Available := 1 and Weather.Delay.minutes := 0
+  Then Flight.Status := "available" and Weather.Delay.minutes := 0
 
   Rule rain
   Priority 2
   If Weather.Now = "rain"
-  Then Flight.Available := 0 and Weather.Delay.minutes := 20
+  Then Flight.Status := "unavailable" and Weather.Delay.minutes := 20
 
   Rule storm
   Priority 3
   If Weather.Now = "storm"
-  Then Flight.Available := 0 and Weather.Delay.minutes := 90
+  Then Flight.Status := "unavailable" and Weather.Delay.minutes := 90
 
 
 RuleContainer Destination.Assessment
@@ -80,17 +80,17 @@ RuleContainer Destination.Assessment
   Rule home
   Priority 1
   If Recipient.Location = "home"
-  Then Delivery.Handoff := "ring the doorbell" and Destination.Drone.allowed := 1
+  Then Delivery.Handoff := "ring the doorbell" and Destination.Drone.status := "allowed"
 
   Rule office
   Priority 2
   If Recipient.Location = "office"
-  Then Delivery.Handoff := "leave at reception" and Destination.Drone.allowed := 0
+  Then Delivery.Handoff := "leave at reception" and Destination.Drone.status := "disallowed"
 
   Rule locker
   Priority 3
   If Recipient.Location = "parcel locker"
-  Then Delivery.Handoff := "send a locker code" and Destination.Drone.allowed := 0
+  Then Delivery.Handoff := "send a locker code" and Destination.Drone.status := "disallowed"
 
 
 RuleContainer Urgency.Assessment
@@ -116,47 +116,47 @@ RuleContainer Vehicle.Selection
   Rule begin.vehicle.selection
   Priority 0
   If Service.Priority >= 1
-  Then Vehicle.Selected := 0
+  Then Vehicle.Selection.status := "pending"
 
   Rule save.the.ice.cream
   Priority 1
-  If Vehicle.Selected = 0 and Parcel.Handling = "chilled"
-  Then Delivery.Vehicle := "refrigerated van" and Vehicle.Fee := 12 and Vehicle.Travel.minutes := 45 and Delivery.Handoff := "hand over chilled parcel in person" and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Parcel.Handling = "chilled"
+  Then Delivery.Vehicle := "refrigerated van" and Vehicle.Fee := 12 and Vehicle.Travel.minutes := 45 and Delivery.Handoff := "hand over chilled parcel in person" and Vehicle.Selection.status := "selected"
 
   Rule regional.journey
   Priority 2
-  If Vehicle.Selected = 0 and Route.Zone = "regional"
-  Then Delivery.Vehicle := "regional van" and Vehicle.Fee := 10 and Vehicle.Travel.minutes := 90 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Route.Zone = "regional"
+  Then Delivery.Vehicle := "regional van" and Vehicle.Fee := 10 and Vehicle.Travel.minutes := 90 and Vehicle.Selection.status := "selected"
 
   Rule shelter.from.storm
   Priority 3
-  If Vehicle.Selected = 0 and Weather.Now = "storm"
-  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Weather.Now = "storm"
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selection.status := "selected"
 
   Rule oversized.parcel
   Priority 4
-  If Vehicle.Selected = 0 and Parcel.Size = "large"
-  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Parcel.Size = "large"
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selection.status := "selected"
 
   Rule very.fancy.drone
   Priority 5
-  If Vehicle.Selected = 0 and Route.Zone = "neighbourhood" and Parcel.Size = "small" and Parcel.Drone.allowed = 1 and Destination.Drone.allowed = 1 and Flight.Available = 1 and Service.Priority = 3
-  Then Delivery.Vehicle := "drone" and Vehicle.Fee := 15 and Vehicle.Travel.minutes := 8 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Route.Zone = "neighbourhood" and Parcel.Size = "small" and Parcel.Drone.status = "allowed" and Destination.Drone.status = "allowed" and Flight.Status = "available" and Service.Priority = 3
+  Then Delivery.Vehicle := "drone" and Vehicle.Fee := 15 and Vehicle.Travel.minutes := 8 and Vehicle.Selection.status := "selected"
 
   Rule locker.round
   Priority 6
-  If Vehicle.Selected = 0 and Recipient.Location = "parcel locker"
-  Then Delivery.Vehicle := "locker shuttle" and Vehicle.Fee := 4 and Vehicle.Travel.minutes := 60 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Recipient.Location = "parcel locker"
+  Then Delivery.Vehicle := "locker shuttle" and Vehicle.Fee := 4 and Vehicle.Travel.minutes := 60 and Vehicle.Selection.status := "selected"
 
   Rule local.bicycle
   Priority 7
-  If Vehicle.Selected = 0 and Route.Zone = "neighbourhood" and Parcel.Size = "small"
-  Then Delivery.Vehicle := "bike courier" and Vehicle.Fee := 3 and Vehicle.Travel.minutes := 20 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Route.Zone = "neighbourhood" and Parcel.Size = "small"
+  Then Delivery.Vehicle := "bike courier" and Vehicle.Fee := 3 and Vehicle.Travel.minutes := 20 and Vehicle.Selection.status := "selected"
 
   Rule van.fallback
   Priority 8
-  If Vehicle.Selected = 0 and Service.Priority >= 1
-  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selected := 1
+  If Vehicle.Selection.status = "pending" and Service.Priority >= 1
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selection.status := "selected"
 
 
 RuleContainer Customer.Membership

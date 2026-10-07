@@ -2,9 +2,11 @@
 
 A fictional dispatcher with 35 rules in 10 sequential containers. It chooses a vehicle, handling instructions, parcel cover, an estimated delivery time, and a price in imaginary credits. All prices and timings are invented for this demo.
 
-Import `Demo-Parcel-Dispatcher.txt` into the workbench, choose **Fire once**, and execute. Clear the fact context before trying a different scenario. This file is designed for Fire once: it uses ordered stages and a `Vehicle.Selected` flag to make the first matching vehicle rule win. Do not use Iteration; its always-applicable classification rules would keep firing. Deduction does not resolve dependencies across these containers.
+Import `Demo-Parcel-Dispatcher.txt` into the workbench, choose **Fire once**, and execute. Clear the fact context before trying a different scenario. This file is designed for Fire once: it uses ordered stages and `Vehicle.Selection.status` ("pending" or "selected") to make the first matching vehicle rule win. Do not use Iteration; its always-applicable classification rules would keep firing. Deduction does not resolve dependencies across these containers.
 
 ## What to show
+
+An unasserted Boolean fact remains unknown; absence does not mean false. This demo therefore represents both outcomes explicitly with string statuses: `Parcel.Drone.status` and `Destination.Drone.status` are "allowed" or "disallowed", and `Flight.Status` is "available" or "unavailable". It does not encode Boolean facts as numbers or use negated conclusions. Numeric fees, priorities, distances, and times remain numeric.
 
 The input prompts offer choices for parcel contents, size, weather, recipient location, urgency, and membership. Distance in kilometres and declared parcel value use numeric input; enter nonnegative numbers.
 
