@@ -40,9 +40,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rules
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.NotNull(evalResult.QueryResult);
             Assert.True(evalResult.QueryResult);
@@ -72,9 +71,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rules
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.NotNull(evalResult.QueryResult);
             Assert.False(evalResult.QueryResult);

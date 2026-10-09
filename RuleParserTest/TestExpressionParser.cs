@@ -155,11 +155,6 @@ namespace RuleParserTest
         [Fact]
         public void TestExpression13()
         {
-            // TODO: dit maakt een TExpression aan met daarin 1 Term die leeg is...dus evaluatie levert uiteraard assertion op in TTerm.Evaluate()
-            // waarom maakt ie in de TTerm geen TFactor aan?
-            // Bijv. "(-4 * 50)" gaat wel goed, maar "-(4 * 50) ook niet; het zit dus in het patroon "-("...
-            // Expr(Term(Minus(Factor(LHOOK()....Op de een of andere manier haalt die LHook() de hele daar bovenliggende Factor( weg! 
-            // => It seems like ParseTree.Add(LHook) should also add something in the builder stack, right now it is skipped by the builder...?
             string input = "-(-4 * 50)";
 
             RuleParser parser = new RuleParser(RulePart.Expression);
@@ -171,6 +166,22 @@ namespace RuleParserTest
             Assert.True(parser.Builder.Result is TExpression);
             TExpression expr = (TExpression)parser.Builder.Result;
             Assert.True(expr.Terms[0].Factors.Count == 1, "Expression not correctly compiled, missing TFactor");
+            Assert.Equal(200, ((TConstantNumValue)expr.Evaluate(null)).Value.IntValue);
+        }
+
+        [Theory]
+        [InlineData("(-4 * 50)", -200)]
+        [InlineData("-(4 * 50)", -200)]
+        [InlineData("2 * -(4 + 1)", -10)]
+        [InlineData("-(4 + 1) + 3", -2)]
+        public void UnaryMinusBeforeParenthesesProducesAUsableFactor(string input, int expected)
+        {
+            var parser = new RuleParser(RulePart.Expression);
+            parser.Parse(input);
+
+            Assert.Empty(parser.SyntaxErrors);
+            var expression = Assert.IsType<TExpression>(parser.Builder.Result);
+            Assert.Equal(expected, Assert.IsType<TConstantNumValue>(expression.Evaluate(null)).Value.IntValue);
         }
     }
 

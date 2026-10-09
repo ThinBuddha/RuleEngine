@@ -16,10 +16,9 @@ namespace RuleTest
             string source, ValueBag context, string query = "Goal")
         {
             var containers = TestHelper.ParseRules(source);
-            containers.Containers.ForEach(container => container.EvaluationType = EvaluationType.Deduction);
             TestHelper.QueryToExpression(query, new Interpreter(), out var expression, out var errors);
             Assert.Empty(errors);
-            return (new TTask { RuleContainers = containers }.Evaluate(context, expression), containers);
+            return (new TTask { RuleContainers = containers }.Evaluate(context, EvaluationType.Deduction, expression), containers);
         }
 
         private static IEnumerable<ProofNode> Nodes(ProofNode node)

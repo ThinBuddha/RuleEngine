@@ -10,13 +10,14 @@ using Rules.Model;
 namespace Rules.Rules
 {
     /// <summary>
-    /// Contains one or more <see cref="Rule"/>s and evaluates them according to an <see cref="EvaluationType"/>.
+    /// Contains one or more <see cref="Rule"/>s.
     /// </summary>
     public class RuleContainer
     {
         public readonly List<Rule> Rules = [];
 
-        public EvaluationType EvaluationType { get; set; } // TODO: investigate if this property makes sense at all. We already determine the evaluation type in the request.
+        [Obsolete("Choose the evaluation type for each call to Evaluate instead.")]
+        public EvaluationType EvaluationType { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
@@ -27,16 +28,22 @@ namespace Rules.Rules
         /// </summary>
         public TCompareExpression StopConditionExpr { get; set; } // TODO: pass on to engine.eval()
 
-        public RuleEvaluateResult Evaluate(ValueBag context, TCompareExpression query = null)
+        public RuleEvaluateResult Evaluate(ValueBag context, EvaluationType evaluationType, TCompareExpression query = null)
         {
-            return EvaluationType switch
+            return evaluationType switch
             {
                 EvaluationType.FireOnce => new RuleEngine(this).EvaluateOnce(context),
                 EvaluationType.Iteration => new RuleEngine(this).EvaluateByIteration(context),
                 EvaluationType.Deduction => new RuleEngine(this).EvaluateByDeduction(query, context),
-                _ => throw new Exception($"Unknown EvaluationType {EvaluationType}"),
+                _ => throw new ArgumentOutOfRangeException(nameof(evaluationType)),
             };
-        }     
+        }
+
+        [Obsolete("Pass the evaluation type to Evaluate instead.")]
+        public RuleEvaluateResult Evaluate(ValueBag context, TCompareExpression query = null)
+        {
+            return Evaluate(context, EvaluationType, query);
+        }
 
         public override string ToString()
         {

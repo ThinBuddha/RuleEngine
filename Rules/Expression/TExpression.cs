@@ -171,6 +171,12 @@ namespace Rules.Expression
     {
         public List<TTerm> Terms { get; } = new List<TTerm>();
         public List<TPlusMinOperator> Operators { get; } = new List<TPlusMinOperator>();
+        private bool _isNegated;
+
+        public override void ApplyMinusSign()
+        {
+            _isNegated = !_isNegated;
+        }
 
         public void AddTerm(TTerm term)
         {
@@ -191,6 +197,7 @@ namespace Rules.Expression
         {
             StringBuilder result = new StringBuilder();
 
+            if (_isNegated) result.Append("-(");
             if (Operators.Count > 0) result.Append("(");
             for (int i = 0; i < Terms.Count; i++)
             {
@@ -204,6 +211,7 @@ namespace Rules.Expression
                 }
             }
             if (Operators.Count > 0) result.Append(")");
+            if (_isNegated) result.Append(")");
             return result.ToString();
         }
 
@@ -231,6 +239,11 @@ namespace Rules.Expression
                     result = ApplyOperator(result, Terms[i++], Operators[j], context);
                     j++;
                 }
+            }
+            if (_isNegated)
+            {
+                result = result.Clone();
+                result.ApplyMinusSign();
             }
             return result;
         }

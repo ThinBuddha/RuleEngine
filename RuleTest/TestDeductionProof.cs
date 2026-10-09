@@ -16,10 +16,9 @@ namespace RuleTest
         private static RuleEvaluateResult Run(string source, ValueBag context, string query = "Goal")
         {
             var container = TestHelper.ParseRules(source).Containers[0];
-            container.EvaluationType = EvaluationType.Deduction;
             TestHelper.QueryToExpression(query, new Interpreter(), out var expression, out var errors);
             Assert.Empty(errors);
-            return container.Evaluate(context, expression);
+            return container.Evaluate(context, EvaluationType.Deduction, expression);
         }
 
         private static IEnumerable<ProofNode> Nodes(ProofNode node)
@@ -177,8 +176,7 @@ namespace RuleTest
             var context = new ValueBag();
             context.AddOrUpdateValue("Input", new TConstantNumValue(true));
             var container = TestHelper.ParseRules("RuleContainer Demo Rule test If Input Then Goal").Containers[0];
-            container.EvaluationType = mode;
-            Assert.Null(container.Evaluate(context).Proof);
+            Assert.Null(container.Evaluate(context, mode).Proof);
             Assert.Null(context.GetDeductionProof());
         }
 

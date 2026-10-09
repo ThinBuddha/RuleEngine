@@ -12,7 +12,7 @@ using Xunit;
 
 namespace RuleTest
 {
-    /* Deduction
+    /* Total test matrix for deduction per query type (multiple rules yes/no, true yes/no, false yes/no, unknown yes/no):
        Type         Query type	Multiple rules	True	False	Unknown	
        Deduction    A > 5		no			    yes	    no	    no
 		                        no			    no	    yes	    no
@@ -57,9 +57,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rule
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.NotNull(evalResult.QueryResult);
             Assert.True(evalResult.QueryResult);
@@ -109,11 +108,10 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rule
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
             try
             {
-                var evalResult = task.Evaluate(_context, compareExpr);
+                var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
                 Assert.Null(evalResult.QueryResult);
             }
             //catch(Xunit.Sdk.AssertActualExpectedException xe)
@@ -146,9 +144,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rule
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.Null(evalResult.QueryResult);
         }
@@ -177,9 +174,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rule
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.NotNull(evalResult.QueryResult);
             Assert.True(evalResult.QueryResult);
@@ -206,9 +202,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rule
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.NotNull(evalResult.QueryResult);
 
@@ -236,9 +231,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rule
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
 
             // There should be no result
@@ -294,9 +288,8 @@ namespace RuleTest
             Assert.NotNull(compareExpr);
 
             // Answer the query via deduction over the rules
-            ruleContainers.Containers[0].EvaluationType = EvaluationType.Deduction;
             var task = new TTask { RuleContainers = ruleContainers };
-            var evalResult = task.Evaluate(_context, compareExpr);
+            var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
             Assert.NotNull(evalResult);
             Assert.NotNull(evalResult.QueryResult);
             Assert.True(evalResult.QueryResult);

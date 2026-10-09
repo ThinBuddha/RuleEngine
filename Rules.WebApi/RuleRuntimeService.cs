@@ -49,7 +49,7 @@ public sealed class RuleRuntimeService
             }
 
             var task = new TTask { RuleContainers = containers };
-            var result = task.Evaluate(context, query, evaluationType);
+            var result = task.Evaluate(context, evaluationType, query);
 
             if (missingFacts.Count > 0)
             {

@@ -22,7 +22,7 @@ namespace Rules.CommandShell
 
         private static RuleContainers _ruleContainers = new RuleContainers();
         private static TaskEvaluateResults _evalResult;
-        private static EvaluationType? _requestedEvaluationType;
+        private static EvaluationType _requestedEvaluationType = EvaluationType.FireOnce;
 
         public static Interpreter _interpreter = new Interpreter();
 
@@ -106,7 +106,7 @@ namespace Rules.CommandShell
         private static void ClearRuleContainers()
         {
             _evalResult = null;
-            _requestedEvaluationType = null;
+            _requestedEvaluationType = EvaluationType.FireOnce;
             _task.Clear();
             _ruleContainers.Clear();
             Console.WriteLine("All rules in all rule containers were cleared");
@@ -168,16 +168,15 @@ namespace Rules.CommandShell
             {
                 file = command[3..];
             }
-            Console.WriteLine("Choose the type of evaluation: 0 = Once, 1 = Iterate, 2 = Deduction (or anything else to use the rule container's default): ");
+            Console.WriteLine("Choose the type of evaluation: 0 = Once, 1 = Iterate, 2 = Deduction: ");
             EvaluationType evaluationType;
-            bool useContainerEvalTypes = false;
             var choice = Console.IsInputRedirected ? Console.ReadLine()?.Trim() : Console.ReadKey().KeyChar.ToString();
             switch (choice)
             { 
                 case "0": case "": case "\r": evaluationType = EvaluationType.FireOnce; break;
                 case "1": evaluationType = EvaluationType.Iteration; break;
                 case "2": evaluationType = EvaluationType.Deduction; break;
-                default: evaluationType = EvaluationType.FireOnce; useContainerEvalTypes = true; break;
+                default: evaluationType = EvaluationType.FireOnce; break;
             }
 
             try
@@ -198,7 +197,7 @@ namespace Rules.CommandShell
                 {
                     Console.WriteLine("Successfully loaded file");
                     _ruleContainers = (parser.Builder as RulesBuilder).RuleContainers;
-                    _requestedEvaluationType = useContainerEvalTypes ? null : evaluationType;
+                    _requestedEvaluationType = evaluationType;
                 }
             }
             catch (Exception e)
@@ -236,7 +235,7 @@ namespace Rules.CommandShell
                 }
                 string query = string.Empty;
                 TCompareExpression compareExpr = null;
-                if ((_requestedEvaluationType ?? _task.RuleContainers.Containers[0].EvaluationType) == EvaluationType.Deduction)
+                if (_requestedEvaluationType == EvaluationType.Deduction)
                 {
                     query = ReadQuery();
                     QueryToExpression(query, out compareExpr, out string errors);
@@ -247,7 +246,7 @@ namespace Rules.CommandShell
                         QueryToExpression(query, out compareExpr, out errors);
                     }
                 }
-                _evalResult = _task.Evaluate(_context, compareExpr, _requestedEvaluationType);
+                _evalResult = _task.Evaluate(_context, _requestedEvaluationType, compareExpr);
                 if (_evalResult.QueryResult != null)
                 {
                     Console.WriteLine($"The answer to your query is: {_evalResult.QueryResult}");

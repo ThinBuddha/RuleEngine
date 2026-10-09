@@ -67,7 +67,7 @@ Its main concepts are:
 | `TCompareExpression` | Compares two expressions or evaluates one Boolean expression. |
 | `TAssignExpression` | Writes a calculated or Boolean fact into a `ValueBag`. |
 | `Rule` | Holds conditions, conclusions, priority, weight, and a stop flag. |
-| `RuleContainer` | Groups rules and selects an `EvaluationType`. |
+| `RuleContainer` | Groups rules for evaluation. |
 | `RuleEngine` | Evaluates one container using fire-once, iteration, or deduction. |
 | `TTask` | Evaluates forward containers sequentially; runs one combined deduction query across their rules. |
 | `RuleEvaluateResult` | Reports fired rules, deduction status, and stop status. |
@@ -182,7 +182,7 @@ The command shell prints deduction proofs after evaluation and on the `how` comm
 
 ### Multiple containers
 
-`TTask.Evaluate(context, query, requestedType)` uses the requested type for that run, overriding every `RuleContainer.EvaluationType` without changing it. The Web API passes `EvaluateRequest.Mode` as this argument. Callers that omit it retain the container-configured behavior. For Fire once and Iteration, `TTask` evaluates containers in their stored order using a shared context. A validated container stop condition can prevent later containers from running. For Deduction, a single query is evaluated against a temporary combined rule set instead of querying each container in turn. Stop conditions are not part of the deduction path. In the current parser, evaluation types and container stop conditions are configured by the host rather than by rule-file syntax.
+`TTask.Evaluate(context, evaluationType, query)` selects the mode for that run. The Web API passes `EvaluateRequest.Mode` as this argument. `RuleContainer.Evaluate(context, evaluationType, query)` supports the same per-call choice for one container. `RuleContainer.EvaluationType` and the overloads that omit the mode are obsolete compatibility APIs; callers should pass the mode explicitly. For Fire once and Iteration, `TTask` evaluates containers in their stored order using a shared context. A validated container stop condition can prevent later containers from running. For Deduction, a single query is evaluated against a temporary combined rule set instead of querying each container in turn. Stop conditions are not part of the deduction path. In the current parser, evaluation types and container stop conditions are configured by the host rather than by rule-file syntax.
 
 ## Project dependencies
 

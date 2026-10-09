@@ -131,7 +131,7 @@ namespace Rules.Parser
                     }
                     break;
               
-                case ParsedItem.Minus: // TODO
+                case ParsedItem.Minus:
                     break;
 
                 default:
@@ -226,6 +226,15 @@ namespace Rules.Parser
                     {
                         // Replace the abstract TFactor by this specialized instance
                         _stack.Replace(new Tuple<ParsedItem, object>(item.Item1, item.Item2));
+                    }
+                    else if (priorItem?.Item1 == ParsedItem.Minus)
+                    {
+                        // The enclosing Factor was replaced by this expression. Apply
+                        // the unary minus before attaching it to the enclosing term.
+                        ((TExpression)item.Item2).ApplyMinusSign();
+                        var term = _stack.Peek(1).Item2 as TTerm;
+                        Debug.Assert(term != null);
+                        term.AddFactor((TExpression)item.Item2);
                     }
                     else
                     {
