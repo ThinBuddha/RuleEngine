@@ -220,4 +220,4 @@ flowchart TD
 ## Legacy and experimental areas
 
 - `Interpreter/Interpreter.csproj` is an older project alongside the active `Interpreter/QueryInterpreter` project. It is not in the solution and currently has recursive source-inclusion and missing-reference problems when built independently.
-- Documents in `doc` and `RuleParser/doc` capture earlier design ideas. The Markdown documentation describes behavior verified against the current source.
+- The Markdown documentation in `doc` describes behavior verified against the current source. `RuleParser/doc/Examples` contains sample rule files; `RuleParser/doc/Further design` contains exploratory linked-rule sketches.
