@@ -6,6 +6,19 @@ namespace TokenizerTest
     public class TestTokenizer
     {
         [Fact]
+        public void TokenizesModelValueListPunctuationWithoutSpaces()
+        {
+            var tokenizer = new Tokenizer("[\"cold\",\"warm\"]");
+
+            Assert.Equal((Token.LeftSquare, "["), tokenizer.GetNextToken());
+            Assert.Equal((Token.String, "cold"), tokenizer.GetNextToken());
+            Assert.Equal((Token.Comma, ","), tokenizer.GetNextToken());
+            Assert.Equal((Token.String, "warm"), tokenizer.GetNextToken());
+            Assert.Equal((Token.RightSquare, "]"), tokenizer.GetNextToken());
+            Assert.Equal(Token.EndOfFile, tokenizer.GetNextToken().Item1);
+        }
+
+        [Fact]
         public void TestGetNextToken_EmptyInput()
         {
             string input = string.Empty;

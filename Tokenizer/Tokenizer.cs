@@ -26,7 +26,10 @@ namespace Lexical
         Minus = 32768, 
         Plus = 65536, 
         Multiply = 131072, 
-        Divide = 262144
+        Divide = 262144,
+        LeftSquare = 524288,
+        RightSquare = 1048576,
+        Comma = 2097152
     }
 
     /// <summary>
@@ -119,6 +122,21 @@ namespace Lexical
                 {
                     token = Token.RightHook;
                     literal = ")";
+                }
+                else if (c == '[' && _parseMode == ParseMode.None)
+                {
+                    token = Token.LeftSquare;
+                    literal = "[";
+                }
+                else if (c == ']' && _parseMode == ParseMode.None)
+                {
+                    token = Token.RightSquare;
+                    literal = "]";
+                }
+                else if (c == ',' && _parseMode == ParseMode.None)
+                {
+                    token = Token.Comma;
+                    literal = ",";
                 }
                 if (c == '/' && PeekNextChar() == '*' && _parseMode == ParseMode.None)
                 {
@@ -366,7 +384,7 @@ namespace Lexical
 
         private bool IsWhiteSpace(char c) => char.IsWhiteSpace(c) || c == '\r' || c == '\n';
 
-        private bool IsDelimiter(char c) => IsWhiteSpace(c) || "()[]+-*/^√".Contains(c); 
+        private bool IsDelimiter(char c) => IsWhiteSpace(c) || "()[],+-*/^√".Contains(c);
 
         private void TryEndLineComment(char c)
         {

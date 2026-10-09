@@ -8,6 +8,7 @@ namespace Rules.Model
 {
     /// <summary>
     /// Generic parameter to pass on to the rules Evaluate() method, giving the rules a context to work on.
+    /// The context is model-unaware, it's just a "bag of values".
     /// </summary>
     /// <remarks>
     /// A <see cref="RuleContainer"/> can supply a <see cref="ValueBag"/> "model" to a rule when there is no model explicitly defined (real models are FUTURE use).
@@ -24,7 +25,7 @@ namespace Rules.Model
         /// <summary>The proof so far, including the active reason for an input request.</summary>
         public DeductionProof GetDeductionProof() => ProofRecorder?.Snapshot();
 
-        private readonly Dictionary<string, TConstantValue> _values = new Dictionary<string, TConstantValue>();
+        private readonly Dictionary<string, TConstantValue> _values = [];
 
         public IReadOnlyDictionary<string, TConstantValue> Values => _values;
 

@@ -35,6 +35,7 @@ Namespace: `Lexical`
 - quoted strings;
 - comparison and assignment operators;
 - arithmetic operators and parentheses;
+- square brackets and commas for model value lists;
 - the logical words `and` and `not`;
 - parser-supplied keywords;
 - `//` line comments and `/* ... */` block comments.
@@ -53,6 +54,8 @@ Parsing produces two outputs at the same time:
 2. `RulesBuilder` listens to parse-tree events and builds the executable object graph.
 
 Syntax errors are collected as `(message, parseTree)` tuples. The parser attempts to recover and stops after too many errors.
+
+`ModelParser` is a separate parser in the same project. It recognizes the unit and type declarations described in [Types and units](../RuleParser/doc/Further%20design/Types%20and%20units.md), and exposes the parse tree and syntax errors through the shared `Parser` API. It does not attach a builder or construct model objects. Reference and domain validation are future work.
 
 ### `Rules`
 
@@ -116,7 +119,7 @@ Facts persist between runs in the browser, not in a long-lived server-side engin
 ### Tests
 
 - `TokenizerTest` covers token recognition and lookahead behavior.
-- `RuleParserTest` covers expressions, conditions, conclusions, rules, and containers.
+- `RuleParserTest` covers expressions, conditions, conclusions, rules, containers, and model declaration syntax.
 - `RuleTest` covers expression evaluation and rule-engine deduction.
 
 ## Runtime model

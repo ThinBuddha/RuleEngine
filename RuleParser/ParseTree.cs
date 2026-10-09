@@ -6,7 +6,8 @@ namespace Rules.Parser
     public enum ParsedItem
     {
         RuleCont, Rule, Prio, Cond, Concl, Expr, CompExpr, AssignExpr, Assign, MathOp, LogicalOp, Term,
-        Factor, Id, Lhook, Rhook, Integer, Float, String, If, Not, Compare, Minus, Then
+        Factor, Id, Lhook, Rhook, Integer, Float, String, If, Not, Compare, Minus, Then,
+        UnitDecl, TypeDecl, BaseType, Short, Bounds, Min, Max, Values
     };
 
     public class ParseTree
@@ -22,17 +23,17 @@ namespace Rules.Parser
         public void Begin(ParsedItem item)
         {
             _parseTree.Append($"{item.ToString()}(");
-            OnStart(item);
+            OnStart?.Invoke(item);
         }
         public void Add(ParsedItem item, string value = "")
         {
             _parseTree.Append($"{item.ToString()}({value})");
-            OnAdd(item, value);
+            OnAdd?.Invoke(item, value);
         }
         public void End()
         {
             _parseTree.Append(")");
-            OnEnd();
+            OnEnd?.Invoke();
         }
 
         public void Clear()

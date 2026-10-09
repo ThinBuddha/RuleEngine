@@ -1,6 +1,6 @@
 # Types and units: proposed syntax
 
-This describes the declarations in [Types and units.txt](Types%20and%20units.txt). It is a design description; the current rule parser does not recognize these declarations.
+This describes the declarations in [Types and units.txt](Types%20and%20units.txt). `ModelParser` recognizes this syntax separately from `RuleParser`. It produces a parse tree and syntax errors; it does not construct model objects or validate references and value domains yet.
 
 ## Grammar shown by the example
 
@@ -48,6 +48,6 @@ stringType        = "type", name, "of", "string",
 
 - It does not say whether declarations can refer to units defined later in the file, or how a separate rules file names and imports these definitions.
 - It does not define how typed facts are declared, how unit symbols appear in expressions, or whether values in different units can be converted.
-- The current tokenizer has no comma or square-bracket tokens. Implementing `values = [...]` requires adding them, along with parser and validation rules.
+- Semantic validation is still needed for unit references, numeric kinds, duplicate declarations, value lists, and bound satisfiability.
 
 Until those choices are made, this grammar deliberately covers the forms present in the example rather than assigning behavior to additional forms.
