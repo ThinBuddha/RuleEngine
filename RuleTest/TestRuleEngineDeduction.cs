@@ -112,7 +112,7 @@ namespace RuleTest
             try
             {
                 var evalResult = task.Evaluate(_context, EvaluationType.Deduction, compareExpr);
-                Assert.Null(evalResult.QueryResult);
+                Assert.False(evalResult.QueryResult);
             }
             //catch(Xunit.Sdk.AssertActualExpectedException xe)
             //{
@@ -120,7 +120,7 @@ namespace RuleTest
             //}
             catch (Exception ex)
             {
-                Assert.True(false, $"Exception was raised but did not expect this to happen. Message: {ex.Message}");
+                Assert.Fail($"Exception was raised but did not expect this to happen. Message: {ex.Message}");
             }
         }
 
