@@ -8,7 +8,7 @@ Import `Demo-Moonbase-Clinic.txt`, choose **Deduction**, and enter one of these 
 - `Assessment.Echo.fever`
 - `Assessment.Starlight.depletion`
 
-The rule file names the companion [type definitions](Demo-Moonbase-Clinic-Types.txt); [class definitions](Demo-Moonbase-Clinic-Classes.txt) show the nested fact structure. The three assessment goals have Boolean types because their rules assert them as bare conclusions.
+The rule file names the companion [model definitions](Demo-Moonbase-Clinic-model.txt), which contain types followed by classes. Import that file in the GUI's Model workspace to view both sections. The three assessment goals have Boolean types because their rules assert them as bare conclusions.
 
 Choose **Start fresh** when comparing independent scenarios. There are 20 rules in one container. Keeping the rules together is important because the deduction engine searches the current container for rules that establish a requested fact.
 

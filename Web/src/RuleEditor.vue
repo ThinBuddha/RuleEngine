@@ -14,7 +14,7 @@ let resizeObserver
 const keywords = new Set([
   'rulecontainer', 'rule', 'priority', 'description', 'if', 'then', 'and', 'not',
   'enforce', 'model', 'unit', 'type', 'of', 'with', 'short', 'integer', 'real',
-  'string', 'boolean', 'min', 'max', 'values'
+  'string', 'boolean', 'min', 'max', 'values', 'class', 'has', 'as'
 ])
 const tokens = computed(() => {
   // Match strings and comments first so their contents are never treated as code.
@@ -29,7 +29,7 @@ const tokens = computed(() => {
     else if (/^[A-Za-z_]/.test(text)) {
       const word = text.toLowerCase()
       kind = keywords.has(word) ? 'keyword' : declaration ? 'declaration' : 'identifier'
-      declaration = word === 'rule' || word === 'rulecontainer' || word === 'unit' || word === 'type'
+      declaration = word === 'rule' || word === 'rulecontainer' || word === 'unit' || word === 'type' || word === 'class'
     } else if (/\S/.test(text)) kind = 'operator'
     return { text, kind }
   })

@@ -100,7 +100,7 @@ When a rule needs an unknown fact, the shell prompts for a Boolean, integer, dou
 
 ### `Web`
 
-`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, a Model workspace with a Types source editor and a reserved Classes tab, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP/WebSocket client; rule parsing, inference, and calculation are delegated to `Rules.WebApi`. The Types editor currently holds imported or edited text in the browser; it does not yet submit that text for model parsing.
+`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, a Model workspace that splits imported model files into editable Types and Classes tabs, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP/WebSocket client; rule parsing, inference, and calculation are delegated to `Rules.WebApi`. The Model workspace currently holds imported or edited text in the browser; it does not yet submit that text for model parsing.
 
 ### `Rules.WebApi`
 

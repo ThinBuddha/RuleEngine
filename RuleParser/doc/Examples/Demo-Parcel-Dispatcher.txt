@@ -1,4 +1,4 @@
-Enforce model "Demo-Parcel-Dispatcher-Types.txt"
+Enforce model "Demo-Parcel-Dispatcher-model.txt"
 
 RuleContainer Parcel.Handling
 

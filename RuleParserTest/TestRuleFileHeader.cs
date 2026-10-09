@@ -18,8 +18,8 @@ namespace RuleParserTest
             parser.Parse(File.ReadAllText(path));
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Equal("Demo-Parcel-Dispatcher-Types.txt", parser.ModelFileName);
-            Assert.StartsWith("ModelFile(Demo-Parcel-Dispatcher-Types.txt)RuleCont(", parser.ParseTree);
+            Assert.Equal("Demo-Parcel-Dispatcher-model.txt", parser.ModelFileName);
+            Assert.StartsWith("ModelFile(Demo-Parcel-Dispatcher-model.txt)RuleCont(", parser.ParseTree);
             Assert.Equal(10, Assert.IsType<RulesBuilder>(parser.Builder).RuleContainers.Containers.Count);
         }
 
@@ -35,7 +35,7 @@ namespace RuleParserTest
             parser.Parse(File.ReadAllText(path));
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Equal(demo + "-Types.txt", parser.ModelFileName);
+            Assert.Equal(demo + "-model.txt", parser.ModelFileName);
             Assert.Equal(containerCount, Assert.IsType<RulesBuilder>(parser.Builder).RuleContainers.Containers.Count);
         }
 

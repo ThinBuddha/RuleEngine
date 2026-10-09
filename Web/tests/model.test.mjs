@@ -25,7 +25,7 @@ test('parse request returns the derived model with the container summary', async
   assert.deepEqual(await parseRules('RuleContainer Demo'), response)
 })
 
-test('model tab content renders nested classes, kinds and escaped string choices', async () => {
+test('derived model tree renders nested classes, kinds and escaped string choices', async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' })
   try {
     const { default: component } = await server.ssrLoadModule('/src/ModelTree.vue')

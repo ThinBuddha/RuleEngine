@@ -28,28 +28,11 @@ namespace RuleParserTest
         }
 
         [Fact]
-        public void ParsesTheParcelDispatcherTypeDefinitions()
-        {
-            var path = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
-                "..", "..", "..", "..", "RuleParser", "doc", "Examples",
-                "Demo-Parcel-Dispatcher-Types.txt"));
-            var parser = new ModelParser();
-
-            parser.Parse(File.ReadAllText(path));
-
-            Assert.Empty(parser.SyntaxErrors);
-            Assert.Equal(4, Count(parser.ParseTree, "UnitDecl("));
-            Assert.Equal(33, Count(parser.ParseTree, "TypeDecl("));
-        }
-
-        [Fact]
-        public void ParsesTheParcelDispatcherTypesAndClassesTogether()
+        public void ParsesTheParcelDispatcherModel()
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Demo-Parcel-Dispatcher-Types.txt")) +
-                System.Environment.NewLine +
-                File.ReadAllText(Path.Combine(examples, "Demo-Parcel-Dispatcher-Classes.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Demo-Parcel-Dispatcher-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);
@@ -63,13 +46,11 @@ namespace RuleParserTest
         }
 
         [Fact]
-        public void ParsesTheComputerAssemblyTypesAndClassesTogether()
+        public void ParsesTheComputerAssemblyModel()
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Demo-Computer-Assembly-Types.txt")) +
-                System.Environment.NewLine +
-                File.ReadAllText(Path.Combine(examples, "Demo-Computer-Assembly-Classes.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Demo-Computer-Assembly-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);
@@ -82,13 +63,11 @@ namespace RuleParserTest
         }
 
         [Fact]
-        public void ParsesTheMoonbaseClinicTypesAndClassesTogether()
+        public void ParsesTheMoonbaseClinicModel()
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Demo-Moonbase-Clinic-Types.txt")) +
-                System.Environment.NewLine +
-                File.ReadAllText(Path.Combine(examples, "Demo-Moonbase-Clinic-Classes.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Demo-Moonbase-Clinic-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);

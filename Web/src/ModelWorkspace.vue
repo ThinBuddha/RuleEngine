@@ -1,22 +1,29 @@
 <script setup>
 import { ref } from 'vue'
 import RuleEditor from './RuleEditor.vue'
+import { splitModelSource } from './modelSource'
 
 defineProps({
-  source: { type: String, default: '' },
+  typesSource: { type: String, default: '' },
+  classesSource: { type: String, default: '' },
   fileName: { type: String, default: '' },
   tab: { type: String, default: 'types' }
 })
-const emit = defineEmits(['update:source', 'update:fileName', 'update:tab'])
+const emit = defineEmits(['update:typesSource', 'update:classesSource', 'update:fileName', 'update:tab'])
 const picker = ref(null)
 
 async function importFile(event) {
   const file = event.target.files?.[0]
   if (!file) return
-  emit('update:source', await file.text())
+  const { types, classes } = splitModelSource(await file.text())
+  emit('update:typesSource', types)
+  emit('update:classesSource', classes)
   emit('update:fileName', file.name)
+  emit('update:tab', types ? 'types' : 'classes')
   event.target.value = ''
 }
+
+function lineCount(source) { return source ? source.split(/\r\n|\r|\n/).length : 0 }
 
 function navigate(event) {
   const tabs = Array.from(event.currentTarget.querySelectorAll('[role="tab"]'))
@@ -37,8 +44,8 @@ function navigate(event) {
   <article class="panel editor model-workspace">
     <header>
       <div><label>MODEL</label><h2>Model workspace</h2></div>
-      <div v-if="tab === 'types'">
-        <button class="text-btn" @click="picker.click()">Import file</button>
+      <div>
+        <button class="text-btn" @click="picker.click()">Import model file</button>
         <input ref="picker" type="file" accept=".txt,.model" hidden @change="importFile">
       </div>
     </header>
@@ -51,13 +58,17 @@ function navigate(event) {
         @click="emit('update:tab', 'classes')">Classes</button>
     </div>
     <div v-if="tab === 'types'" id="model-panel-types" role="tabpanel" aria-labelledby="model-tab-types">
-      <RuleEditor :model-value="source" aria-label="Type definitions editor"
-        placeholder="Import a types file or enter unit and type declarations."
-        @update:model-value="emit('update:source', $event)" />
-      <footer><span>{{ fileName || 'Unsaved type definitions' }}</span><span>{{ source.split('\n').length }} lines</span></footer>
+      <RuleEditor :model-value="typesSource" aria-label="Type definitions editor"
+        placeholder="Import a model file or enter unit and type declarations."
+        @update:model-value="emit('update:typesSource', $event)" />
+      <footer><span>{{ fileName || 'Unsaved model' }} · Types</span><span>{{ lineCount(typesSource) }} lines</span></footer>
     </div>
-    <div v-else id="model-panel-classes" role="tabpanel" aria-labelledby="model-tab-classes"
-      class="empty large">No classes defined yet.</div>
+    <div v-else id="model-panel-classes" role="tabpanel" aria-labelledby="model-tab-classes">
+      <RuleEditor :model-value="classesSource" aria-label="Class definitions editor"
+        placeholder="Class declarations appear here when a model file is imported."
+        @update:model-value="emit('update:classesSource', $event)" />
+      <footer><span>{{ fileName || 'Unsaved model' }} · Classes</span><span>{{ lineCount(classesSource) }} lines</span></footer>
+    </div>
   </article>
 </template>
 
@@ -68,5 +79,4 @@ function navigate(event) {
 .model-tabs button:hover { color: #edf2ee; background: #172437; }
 .model-tabs button[aria-selected="true"] { color: #c8f169; border-bottom-color: #c8f169; background: #1a293c; }
 .model-tabs button:focus-visible { outline: 2px solid #c8f169; outline-offset: -3px; }
-.model-workspace .empty.large { min-height: 420px; }
 </style>
