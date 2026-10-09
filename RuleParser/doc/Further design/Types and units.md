@@ -1,6 +1,6 @@
 # Types and units: proposed syntax
 
-This describes the declarations in [Types and units.txt](Types%20and%20units.txt). `ModelParser` recognizes this syntax separately from `RuleParser`. It produces a parse tree and syntax errors; it does not construct model objects or validate references and value domains yet.
+This describes the declarations in [Types and units.txt](Types%20and%20units.txt). `ModelParser` recognizes this syntax separately from `RuleParser`. It produces a parse tree and compiles unit, type, and class declarations into an explicit model. Model validation checks references, duplicates, and numeric bounds.
 
 The [class syntax](Classes.md) lets properties refer to these types or directly to atomic types. In a combined model file, unit and type declarations must come before class declarations.
 
@@ -51,8 +51,8 @@ booleanType       = "type", name, "of", "boolean" ;
 
 ## Decisions still needed
 
-- It does not say whether declarations can refer to units defined later in the file. A rules file can name a types file with `enforce model "filename"`, but loading and enforcing that file are not implemented yet.
+- Model references are resolved after parsing, so types may refer to units defined later among the declarations before classes. A rules file can name a model file with `enforce model "filename"`; the API request must supply that file's text and matching filename.
 - It does not define how typed facts are declared, how unit symbols appear in expressions, or whether values in different units can be converted.
-- Semantic validation is still needed for unit references, numeric kinds, duplicate declarations, value lists, and bound satisfiability.
+- Rule validation checks model paths, expression kinds, units in comparisons and additions, literal values, and numeric bounds. It cannot prove that every computed numeric result remains inside a target range.
 
 Until those choices are made, this grammar deliberately covers the forms present in the example rather than assigning behavior to additional forms.

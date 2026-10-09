@@ -31,7 +31,7 @@ If <condition> [and <condition> ...]
 Then <conclusion> [and <conclusion> ...]
 ```
 
-The optional `enforce model` directive must appear before the first container. `RuleParser.ModelFileName` exposes the quoted filename, and the parse tree includes a `ModelFile(...)` entry. The parser does not yet load or validate the referenced model file.
+The optional `enforce model` directive must appear before the first container. `RuleParser.ModelFileName` exposes the quoted filename, and the parse tree includes a `ModelFile(...)` entry. When present, the API requires matching `modelFileName` and `modelSource` fields. It parses the model and validates all rule IDs and expressions against its classes, types, and units before evaluation.
 
 Container and rule names are identifiers. Dots can be used to qualify names, for example `Pricing.Insurance` or `Customer.Is.Adult`.
 

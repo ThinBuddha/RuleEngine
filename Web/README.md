@@ -2,7 +2,7 @@
 
 This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell's core workflow visible in a browser and calls `Rules.WebApi` for all rule logic:
 
-- edit or import a rule file;
+- edit or import a rule file, selecting its companion model file at the same time when it uses `enforce model`;
 - parse containers and inspect their rule counts;
 - import a model file and inspect its types and classes;
 - choose fire-once, iteration, or deduction mode;
@@ -45,6 +45,8 @@ Each evaluation has its own engines, parsed rules, fact context (`ValueBag`), in
 Parsing derives `modelTypes`, mapping each string ID to distinct literals encountered in comparisons and assignments throughout the rule file. Interactive prompts include these `choices`; the GUI shows a select box when choices exist and a text field otherwise. Numeric-looking and Boolean-looking string choices remain strings. Empty literals are omitted because an empty answer means no value. Computed string fragments are not offered as complete values. Conflicting known scalar types for an ID are reported as syntax errors. The calculator can receive the loaded rule source through its optional `source` field to use the same choices.
 
 The parse response also includes a `model` tree built from dotted fact IDs. The GUI's **Model** workspace displays types and classes imported from an explicit model file.
+
+When rules start with `enforce model "filename"`, parsing and evaluation require the matching model file. Select both files in the rule import dialog, or import the model into the **Model** workspace first. The API accepts `modelSource` and `modelFileName` alongside rule `source`; it returns all model and rule validation errors in `syntaxErrors`.
 
 The Vite development server proxies HTTP and WebSocket requests to `Rules.WebApi` at `http://localhost:5215`. Production reverse proxies must also support WebSocket upgrades. The API target can be changed with `RULES_API_URL`; for a non-proxied build or preview, set `VITE_RULES_API_URL` to the API base including `/api`.
 

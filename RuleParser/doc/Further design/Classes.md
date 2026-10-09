@@ -1,6 +1,6 @@
 # Classes: proposed syntax
 
-This describes the declarations in [Classes.txt](Classes.txt). It extends the [types and units syntax](Types%20and%20units.md). `ModelParser` parses these declarations into a parse tree without constructing model objects.
+This describes the declarations in [Classes.txt](Classes.txt). It extends the [types and units syntax](Types%20and%20units.md). `ModelParser` also compiles declarations into explicit model objects.
 
 ## Grammar
 
@@ -38,4 +38,4 @@ The optional words `type` and `class` make a reference explicit; `of` always int
 
 ## Further design
 
-This grammar describes structure only. `ModelParser` does not resolve referenced types and classes, check duplicate declarations or properties, or build model objects. The example does not define an empty class or property modifiers such as optionality or collections.
+After parsing, model validation resolves referenced types and classes and reports duplicate declarations or properties. Rule validation walks dotted fact IDs from a root class through class properties to a typed leaf. The example does not define an empty class or property modifiers such as optionality or collections.

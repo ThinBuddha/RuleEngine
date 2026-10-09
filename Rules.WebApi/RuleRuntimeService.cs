@@ -10,9 +10,9 @@ namespace Rules.WebApi;
 
 public sealed class RuleRuntimeService
 {
-    public ParseResponse Parse(string source)
+    public ParseResponse Parse(string source, string? modelSource = null, string? modelFileName = null)
     {
-        var containers = ParseContainers(source, out var parser, out var derivedModelTypes);
+        var containers = ParseContainers(source, out var parser, out var derivedModelTypes, modelSource, modelFileName);
         return new ParseResponse(
             containers.Containers.Select(container => new ContainerSummary(
                 container.Name,
@@ -25,7 +25,7 @@ public sealed class RuleRuntimeService
 
     public EvaluateResponse Evaluate(EvaluateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
     {
-        var containers = ParseContainers(request.Source, out _, out var derivedModelTypes);
+        var containers = ParseContainers(request.Source, out _, out var derivedModelTypes, request.ModelSource, request.ModelFileName);
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
         var evaluationType = ParseEvaluationType(request.Mode);
@@ -84,7 +84,7 @@ public sealed class RuleRuntimeService
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
         var derivedModelTypes = new DerivedModelTypes();
-        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes);
+        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes, request.ModelSource, request.ModelFileName);
         ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes);
         try
         {
@@ -113,7 +113,8 @@ public sealed class RuleRuntimeService
         }
     }
 
-    private static RuleContainers ParseContainers(string source, out RuleParser parser, out DerivedModelTypes derivedModelTypes)
+    private static RuleContainers ParseContainers(string source, out RuleParser parser, out DerivedModelTypes derivedModelTypes,
+        string? modelSource = null, string? modelFileName = null)
     {
         parser = new RuleParser(RulePart.RuleContainer);
         parser.Parse(source);
@@ -122,6 +123,25 @@ public sealed class RuleRuntimeService
             throw new RuleSyntaxException(parser.SyntaxErrors);
         }
 
+        // No syntax errors,lets see if we need to validate the rules against a model.
+        if (parser.ModelFileName != null)
+        {
+            if (modelSource == null || !string.Equals(parser.ModelFileName, modelFileName, StringComparison.Ordinal))
+                throw new RuleSyntaxException(new[] { Tuple.Create($"Model '{parser.ModelFileName}' must be supplied with the rules", string.Empty) });
+
+            // Intention to validate the rules against the model is there, so parse the model and use it to validate the rules.
+            var modelParser = new ModelParser();
+            modelParser.Parse(modelSource);
+            if (modelParser.SyntaxErrors.Count > 0) throw new RuleSyntaxException(modelParser.SyntaxErrors);
+            var modelBuilder = (ModelBuilder)modelParser.Builder;
+            var modelErrors = modelBuilder.Errors.Concat(modelBuilder.Model.Validate())
+                .Concat(new RuleModelValidator(modelBuilder.Model).Validate(builder.RuleContainers)).ToList();
+            if (modelErrors.Count > 0)
+                throw new RuleSyntaxException(modelErrors.Select(error => Tuple.Create(error, string.Empty)).ToList());
+        }
+
+        // Syntax and model validation passed, now derive types, this is legacy since the GUI still uses it
+        // it's also future improvement to let the user work two ways: model first or rules first.
         try
         {
             derivedModelTypes = DerivedModelTypes.Derive(builder.RuleContainers);

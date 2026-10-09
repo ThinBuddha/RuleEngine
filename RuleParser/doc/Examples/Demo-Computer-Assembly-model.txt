@@ -1,7 +1,7 @@
 unit Credits of integer with short = "credits"
 unit Components of integer with short = "components"
 
-type Build.Profile of string with values = ["office", "gaming", "creator"]
+type Build.Profile of string with values = ["", "office", "gaming", "creator"]
 type Build.Status of string with values = ["collecting components", "ready for delivery"]
 type Build.Component.list of string
 type Build.Component.count of Components with min = 0 and max = 7

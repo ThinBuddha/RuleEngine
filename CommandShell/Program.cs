@@ -188,15 +188,36 @@ namespace Rules.CommandShell
                 {
                     Console.WriteLine($"There are {parser.SyntaxErrors.Count} syntax errors in the file {file}");
                     Console.WriteLine($"The first {Math.Min(parser.SyntaxErrors.Count, 5)} errors are:");
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 0; i < Math.Min(5, parser.SyntaxErrors.Count); i++)
                     {
                         Console.WriteLine(parser.SyntaxErrors[i].Item1);
                     }
                 }
                 else
                 {
+                    var containers = ((RulesBuilder)parser.Builder).RuleContainers;
+                    if (parser.ModelFileName != null)
+                    {
+                        var modelPath = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(file))!, parser.ModelFileName);
+                        var modelParser = new ModelParser();
+                        modelParser.Parse(File.ReadAllText(modelPath));
+                        var modelErrors = new List<string>();
+                        foreach (var syntaxError in modelParser.SyntaxErrors) modelErrors.Add(syntaxError.Item1);
+                        if (modelErrors.Count == 0)
+                        {
+                            modelErrors.AddRange(((ModelBuilder)modelParser.Builder).Errors);
+                            modelErrors.AddRange(modelParser.Model.Validate());
+                            modelErrors.AddRange(new RuleModelValidator(modelParser.Model).Validate(containers));
+                        }
+                        if (modelErrors.Count > 0)
+                        {
+                            Console.WriteLine($"There are {modelErrors.Count} model validation errors:");
+                            foreach (var error in modelErrors) Console.WriteLine(error);
+                            return;
+                        }
+                    }
                     Console.WriteLine("Successfully loaded file");
-                    _ruleContainers = (parser.Builder as RulesBuilder).RuleContainers;
+                    _ruleContainers = containers;
                     _requestedEvaluationType = evaluationType;
                 }
             }

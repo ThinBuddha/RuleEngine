@@ -19,7 +19,7 @@ app.MapPost("/api/rules/parse", (ParseRequest request, RuleRuntimeService runtim
 {
     try
     {
-        return Results.Ok(runtime.Parse(request.Source));
+        return Results.Ok(runtime.Parse(request.Source, request.ModelSource, request.ModelFileName));
     }
     catch (RuleSyntaxException exception)
     {
@@ -61,15 +61,19 @@ app.MapPost("/api/rules/calculate", (CalculateRequest request, RuleRuntimeServic
 
 app.Run();
 
-public sealed record ParseRequest(string Source);
+public sealed record ParseRequest(string Source, string? ModelSource = null, string? ModelFileName = null);
 
 public sealed record EvaluateRequest(
     string Source,
     string Mode,
     string? Query,
-    Dictionary<string, JsonElement>? Context);
+    Dictionary<string, JsonElement>? Context,
+    string? ModelSource = null,
+    string? ModelFileName = null);
 
 public sealed record CalculateRequest(
     string Expression,
     Dictionary<string, JsonElement>? Context,
-    string? Source = null);
+    string? Source = null,
+    string? ModelSource = null,
+    string? ModelFileName = null);

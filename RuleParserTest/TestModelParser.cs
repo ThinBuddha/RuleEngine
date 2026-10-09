@@ -7,7 +7,7 @@ namespace RuleParserTest
     public class TestModelParser
     {
         [Fact]
-        public void ParsesTheTypesAndUnitsExampleWithoutBuildingObjects()
+        public void ParsesTheTypesAndUnitsExample()
         {
             var path = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Further design", "Types and units.txt"));
@@ -17,7 +17,7 @@ namespace RuleParserTest
             parser.Parse(source);
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Null(parser.Builder);
+            Assert.NotNull(((ModelBuilder)parser.Builder).Model);
             Assert.Equal(2, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(10, Count(parser.ParseTree, "TypeDecl("));
             Assert.Contains("Short(kg)", parser.ParseTree);
@@ -38,7 +38,7 @@ namespace RuleParserTest
             parser.Parse(source);
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Null(parser.Builder);
+            Assert.Empty(((ModelBuilder)parser.Builder).Model.Validate());
             Assert.Equal(4, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(33, Count(parser.ParseTree, "TypeDecl("));
             Assert.Equal(25, Count(parser.ParseTree, "ClassDecl("));
@@ -92,7 +92,7 @@ namespace RuleParserTest
         }
 
         [Fact]
-        public void ParsesTheClassesExampleWithoutBuildingObjects()
+        public void ParsesTheClassesExample()
         {
             var path = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Further design", "Classes.txt"));
@@ -101,7 +101,7 @@ namespace RuleParserTest
             parser.Parse(File.ReadAllText(path));
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Null(parser.Builder);
+            Assert.NotNull(((ModelBuilder)parser.Builder).Model);
             Assert.Equal(3, Count(parser.ParseTree, "ClassDecl("));
             Assert.Equal(5, Count(parser.ParseTree, "Property("));
             Assert.Contains("ClassDecl(Id(Customer)Property(Id(Membership)TypeRef(Customer.Membership))Property(Id(Discount)ClassRef(Discount)))", parser.ParseTree);

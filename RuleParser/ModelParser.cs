@@ -1,15 +1,18 @@
 using System;
 using Lexical;
+using Rules.Model;
 
 namespace Rules.Parser
 {
     /// <summary>
-    /// Parses model declarations into a syntax tree without (yet) constructing model objects.
+    /// Parses model declarations and builds an explicit model.
     /// Supports unit, type, and class declarations.
     /// </summary>
     public class ModelParser : Parser
     {
         private bool _classesStarted;
+
+        public ExplicitModel Model => (Builder as ModelBuilder)?.Model;
 
         public ModelParser()
         {
@@ -17,7 +20,7 @@ namespace Rules.Parser
             _lookAheads = Token.Keyword;
         }
 
-        protected override Builder CreateBuilder() => null;
+        protected override Builder CreateBuilder() => new ModelBuilder(_parseTree);
 
         protected override void SetTokens()
         {
@@ -88,7 +91,7 @@ namespace Rules.Parser
                         GetNextTokenIfIsKeyword("string", out primitive) ||
                         GetNextTokenIfIsKeyword("boolean", out primitive))
                     {
-                        _parseTree.Add(ParsedItem.AtomicType, primitive);
+                        _parseTree.Add(ParsedItem.AtomicType, primitive.ToLowerInvariant());
                     }
                     else if (TokenValue(Token.Identifier, "type name or atomic type", out var typeName))
                     {
@@ -117,7 +120,7 @@ namespace Rules.Parser
                 if (!Name() || !Keyword("of")) return;
                 if (!OneOfKeywords("integer", "real", out var primitive)) return;
 
-                _parseTree.Add(ParsedItem.BaseType, primitive);
+                _parseTree.Add(ParsedItem.BaseType, primitive.ToLowerInvariant());
 
                 if (!Keyword("with") || !Keyword("short") || !Comparison("=", out _)) return;
                 if (!TokenValue(Token.String, "string literal", out var shortName)) return;
