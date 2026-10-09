@@ -38,8 +38,7 @@ Then Price.of.gas := "good"`
 }
 
 export async function parseRules(source) {
-  const response = await request('/rules/parse', { source })
-  return response.containers
+  return request('/rules/parse', { source })
 }
 
 function interactiveRequest(operation, body, getUserInput) {

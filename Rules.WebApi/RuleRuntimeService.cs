@@ -17,7 +17,10 @@ public sealed class RuleRuntimeService
             containers.Containers.Select(container => new ContainerSummary(
                 container.Name,
                 container.Rules.Select(rule => new RuleSummary(rule.Name, rule.Priority)).ToList())).ToList(),
-            parser.ParseTree, modelTypes.StringValues);
+            parser.ParseTree, modelTypes.StringValues)
+        {
+            Model = ModelDeriver.Derive(modelTypes)
+        };
     }
 
     public EvaluateResponse Evaluate(EvaluateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
@@ -222,7 +225,10 @@ public sealed class RuleRuntimeService
 
 public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices, ProofSnapshot? Why = null);
 public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree,
-    IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes);
+    IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes)
+{
+    public required ModelClass Model { get; init; }
+}
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
 public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds,

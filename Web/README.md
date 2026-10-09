@@ -4,6 +4,7 @@ This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell
 
 - edit or import a rule file;
 - parse containers and inspect their rule counts;
+- inspect the derived model of classes, fact properties, types, and known string values;
 - choose fire-once, iteration, or deduction mode;
 - enter a deduction query;
 - execute rules and inspect the trace;
@@ -42,6 +43,8 @@ Run `npm run test:ui` for component-rendering/runtime tests, and `npm run test:s
 Each evaluation has its own engines, parsed rules, fact context (`ValueBag`), input callbacks, and traces. The API runtime is request-scoped, and simultaneous WebSocket conversations cannot exchange answers or facts. Facts retained by the browser are sent as JSON for the next run and reconstructed into a fresh server-side context; no engine is shared across runs or users. Containers within a single run intentionally share that run's context.
 
 Parsing derives `modelTypes`, mapping each string ID to distinct literals encountered in comparisons and assignments throughout the rule file. Interactive prompts include these `choices`; the GUI shows a select box when choices exist and a text field otherwise. Numeric-looking and Boolean-looking string choices remain strings. Empty literals are omitted because an empty answer means no value. Computed string fragments are not offered as complete values. Conflicting known scalar types for an ID are reported as syntax errors. The calculator can receive the loaded rule source through its optional `source` field to use the same choices.
+
+The parse response also includes a `model` tree built from dotted fact IDs. Open **Derived model** after importing or parsing a file to browse its classes and properties. Editing the source hides the previous model until the source is parsed again.
 
 The Vite development server proxies HTTP and WebSocket requests to `Rules.WebApi` at `http://localhost:5215`. Production reverse proxies must also support WebSocket upgrades. The API target can be changed with `RULES_API_URL`; for a non-proxied build or preview, set `VITE_RULES_API_URL` to the API base including `/api`.
 

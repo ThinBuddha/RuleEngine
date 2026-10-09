@@ -104,7 +104,7 @@ When a rule needs an unknown fact, the shell prompts for a Boolean, integer, dou
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/health` | Service health check. |
-| `POST /api/rules/parse` | Parse rule source and return container/rule summaries. |
+| `POST /api/rules/parse` | Parse rule source and return container/rule summaries, inferred string choices, and a nested model of fact IDs. |
 | `POST /api/rules/evaluate` | Run fire-once, iteration, or deduction evaluation with supplied context and query. |
 | `POST /api/rules/calculate` | Parse and evaluate an expression against supplied context. |
 | WebSocket `/api/rules/interactive/{operation}` | Evaluate or calculate interactively, prompting for unknown facts on the same connection. |
@@ -126,6 +126,8 @@ Facts persist between runs in the browser, not in a long-lived server-side engin
 `ValueBag` is a dictionary from identifier names to `TConstantValue`. Supported concrete values are numeric/Boolean (`TConstantNumValue`) and string (`TConstantStringValue`). Assigning a conclusion updates the bag; reading an absent identifier delegates value resolution through `context.MessageSink.NotifyUnknownValue`.
 
 A bare conclusion such as `Access.Allowed` stores Boolean `true`. An assignment such as `Price.Total := Price.Base * 1.21` evaluates the right-hand expression and stores its result.
+
+`ModelTypes.Derive` infers each fact ID's kind and known string literals from rule conditions and conclusions. `ModelDeriver.Derive` presents those same IDs as a nested `ModelClass` tree: `Parcel.Drone.status` becomes property `status` in class `Parcel.Drone`. The root class has an empty name and holds IDs without dots as properties. Each `ModelProperty` exposes its full ID, inferred kind (`Boolean`, `numeric`, `string`, or null when unconstrained), and known string values. The parse API returns this tree as `model` alongside the existing `modelTypes` string-choice map. The tree describes the rules; evaluation continues to use flat IDs in `ValueBag`.
 
 ### Unknown-value resolution
 

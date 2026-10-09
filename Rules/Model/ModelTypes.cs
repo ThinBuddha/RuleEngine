@@ -20,6 +20,12 @@ namespace Rules.Model
     {
         private readonly Dictionary<string, Domain> _ids = new(StringComparer.Ordinal);
 
+        /// <summary>All fact IDs discovered in conditions and conclusions.</summary>
+        public IReadOnlyCollection<string> Identifiers => _ids.Keys.ToArray();
+
+        /// <summary>Returns the inferred kind, or null when the rules do not constrain it.</summary>
+        public string GetKind(string id) => _ids.TryGetValue(id, out var domain) ? domain.Kind : null;
+
         public IReadOnlyDictionary<string, IReadOnlyList<string>> StringValues => _ids
             .Where(item => item.Value.Kind == "string")
             .ToDictionary(item => item.Key, item => (IReadOnlyList<string>)item.Value.Values.ToArray(), StringComparer.Ordinal);
