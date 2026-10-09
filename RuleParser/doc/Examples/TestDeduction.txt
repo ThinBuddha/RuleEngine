@@ -1,7 +1,0 @@
-RuleContainer System.Configuration
-
-  Rule Discs.Minimal.2
-  If App.Needed = "database" and
-     Security.Level = "high"
-  then 
-     Discs.MinNumber := 2
