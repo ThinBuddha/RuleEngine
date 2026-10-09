@@ -51,9 +51,9 @@ function compact(source) {
 }
 
 function clauses(source, start, end, conjunctions) {
-  const boundaries = [start, ...conjunctions.map(word => word.start), end]
-  return boundaries.slice(0, -1).map((position, index) =>
-    compact(source.slice(index ? conjunctions[index - 1].end : position, boundaries[index + 1])))
+  const boundaries = [...conjunctions.map(word => word.end), end]
+  return boundaries.map((position, index) =>
+    compact(source.slice(index ? boundaries[index - 1] : start, position)))
 }
 
 function formatRule(source, start, end, tokens, newline) {
@@ -73,9 +73,9 @@ function formatRule(source, start, end, tokens, newline) {
   const conditions = clauses(source, ifToken.end, thenToken.start, conditionAnds)
   const conclusions = clauses(source, thenToken.end, end, conclusionAnds)
   lines.push(`\tIf   ${conditions[0]}`)
-  lines.push(...conditions.slice(1).map(clause => `\tand  ${clause}`))
+  lines.push(...conditions.slice(1).map(clause => `\t     ${clause}`))
   lines.push(`\tThen ${conclusions[0]}`)
-  lines.push(...conclusions.slice(1).map(clause => `\tand  ${clause}`))
+  lines.push(...conclusions.slice(1).map(clause => `\t     ${clause}`))
   return lines.join(newline)
 }
 

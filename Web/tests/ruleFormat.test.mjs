@@ -14,10 +14,10 @@ test('auto format aligns conditions and conclusions with tabs', () => {
     '',
     '\tRule First',
     '\tPriority 1',
-    '\tIf   A = "sand and Then Rule"',
-    '\tand  B > 2',
-    '\tThen X := 1',
-    '\tand  Y := 2',
+    '\tIf   A = "sand and Then Rule" and',
+    '\t     B > 2',
+    '\tThen X := 1 and',
+    '\t     Y := 2',
     '',
     '\tRule Next',
     '\tIf   B',
@@ -30,8 +30,8 @@ test('comments and quoted keywords remain intact', () => {
   const source = '// RuleContainer phantom\r\nRuleContainer Real Rule first If A /* and Then */ and B = "Rule and Then" Then X := 1 and Y := "and" // Rule fake\r\nRule second If B Then Z'
   const formatted = formatRuleSource(source)
   assert.match(formatted, /^\/\/ RuleContainer phantom\r\n\r\nRuleContainer Real/)
-  assert.match(formatted, /\tIf   A \/\* and Then \*\/\r\n\tand  B = "Rule and Then"/)
-  assert.match(formatted, /\tand  Y := "and" \/\/ Rule fake\r\n/)
+  assert.match(formatted, /\tIf   A \/\* and Then \*\/ and\r\n\t     B = "Rule and Then"/)
+  assert.match(formatted, /\t     Y := "and" \/\/ Rule fake\r\n/)
   assert.deepEqual(splitRuleContainers(formatted).map(section => section.name), ['Real'])
   assert.equal(formatRuleSource(formatted), formatted)
 })
@@ -40,7 +40,7 @@ test('formats a complete demo without losing containers or quoted values', () =>
   const source = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
   const formatted = formatRuleSource(source)
   assert.equal(splitRuleContainers(formatted).length, 10)
-  assert.match(formatted, /\tIf   Delivery\.Distance\.km > 3\r?\n\tand  Delivery\.Distance\.km <= 15/)
+  assert.match(formatted, /\tIf   Delivery\.Distance\.km > 3 and\r?\n\t     Delivery\.Distance\.km <= 15/)
   assert.match(formatted, /"ring the doorbell"/)
   assert.equal(formatRuleSource(formatted), formatted)
 })
@@ -60,7 +60,7 @@ test('keeps a comment before the next rule on its own line', () => {
 test('keeps descriptions and expressions intact while separating clauses', () => {
   const source = 'RuleContainer Demo Rule decide Priority 2 Description "if and then" If not Flag and (Count + 2) > -4 Then Total := -(4 * 50) and Done'
   const formatted = formatRuleSource(source)
-  assert.match(formatted, /\tDescription "if and then"\n\tIf   not Flag\n\tand  \(Count \+ 2\) > -4/)
-  assert.match(formatted, /\tThen Total := -\(4 \* 50\)\n\tand  Done/)
+  assert.match(formatted, /\tDescription "if and then"\n\tIf   not Flag and\n\t     \(Count \+ 2\) > -4/)
+  assert.match(formatted, /\tThen Total := -\(4 \* 50\) and\n\t     Done/)
   assert.equal(formatRuleSource(formatted), formatted)
 })
