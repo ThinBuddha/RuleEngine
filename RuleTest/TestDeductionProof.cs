@@ -11,6 +11,9 @@ using Xunit;
 
 namespace RuleTest
 {
+    /// <summary>
+    /// Test the building up of proof (why tree).
+    /// </summary>
     public class TestDeductionProof
     {
         private static RuleEvaluateResult Run(string source, ValueBag context, string query = "Goal")

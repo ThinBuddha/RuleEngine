@@ -10,6 +10,9 @@ using Xunit;
 
 namespace RuleTest
 {
+    /// <summary>
+    /// Test deduction over mutiple rule containers.
+    /// </summary>
     public class TestCombinedDeduction
     {
         private static (TTask.TaskEvaluateResults Result, RuleContainers Containers) Run(
