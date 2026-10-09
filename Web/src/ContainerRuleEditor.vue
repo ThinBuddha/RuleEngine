@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import RuleEditor from './RuleEditor.vue'
 import { splitRuleContainers } from './ruleContainers'
+import { formatRuleSource } from './ruleFormat'
 
 const props = defineProps({ modelValue: { type: String, default: '' } })
 const emit = defineEmits(['update:modelValue'])
@@ -28,6 +29,18 @@ function updateSource(text) {
   }
   emit('update:modelValue', emittedSource)
 }
+
+function formatAll() {
+  const formatted = formatRuleSource(emittedSource)
+  if (formatted === emittedSource) return
+  const selected = active.value
+  sections.value = splitRuleContainers(formatted)
+  active.value = selected < 0 ? -1 : Math.min(selected, sections.value.length - 1)
+  emittedSource = formatted
+  emit('update:modelValue', formatted)
+}
+
+defineExpose({ formatAll })
 
 function refreshSections() {
   // Re-split after editing, not on every keystroke: partially typed headers

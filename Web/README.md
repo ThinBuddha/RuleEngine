@@ -3,6 +3,7 @@
 This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell's core workflow visible in a browser and calls `Rules.WebApi` for all rule logic:
 
 - edit or import a rule file, selecting its companion model file at the same time when it uses `enforce model`;
+- auto format rule source with aligned conditions and conclusions;
 - parse containers and inspect their rule counts;
 - import a model file and inspect its types and classes;
 - choose fire-once, iteration, or deduction mode;

@@ -4,6 +4,7 @@ import { once } from 'node:events'
 import { before, after, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
+import { formatRuleSource } from '../src/ruleFormat.js'
 
 let server
 let baseUrl
@@ -172,6 +173,18 @@ test('enforced model rejects absent files, unknown IDs and out-of-domain values'
   assert.ok(invalid.body.syntaxErrors.some(error => error.includes("outside type 'Score'")))
   assert.equal((await parse('RuleContainer C', undefined, undefined)).status, 200)
 })
+
+for (const demo of ['Demo-Parcel-Dispatcher', 'Demo-Computer-Assembly', 'Demo-Moonbase-Clinic']) {
+  test(`auto formatted ${demo} has the same parsed rules and model choices`, async () => {
+    const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${demo}.txt`, import.meta.url), 'utf8')
+    const modelSource = readFileSync(new URL(`../../RuleParser/doc/Examples/${demo}-model.txt`, import.meta.url), 'utf8')
+    const original = await parse(source, modelSource, `${demo}-model.txt`)
+    const formatted = await parse(formatRuleSource(source), modelSource, `${demo}-model.txt`)
+    assert.equal(original.status, 200, JSON.stringify(original.body))
+    assert.equal(formatted.status, 200, JSON.stringify(formatted.body))
+    assert.deepEqual(formatted.body, original.body)
+  })
+}
 
 test('enforced model supplies nested property choices, bounds and boolean kind to prompts', async () => {
   const modelSource = 'unit Points of integer with short = "pt" type Phase of string with values = ["queued", "ready", "unused"] type Duration of Points with min > 0 and max < 5 class Child has Phase of Phase Duration of Duration Enabled of boolean class Root has Child as Child'
