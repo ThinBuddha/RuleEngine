@@ -5,10 +5,12 @@ namespace Rules.Parser
 {
     /// <summary>
     /// Parses model declarations into a syntax tree without (yet) constructing model objects.
-    /// Currently supports unit and type declarations.
+    /// Supports unit, type, and class declarations.
     /// </summary>
     public class ModelParser : Parser
     {
+        private bool _classesStarted;
+
         public ModelParser()
         {
             _parse = Declaration;
@@ -19,10 +21,11 @@ namespace Rules.Parser
 
         protected override void SetTokens()
         {
+            _classesStarted = false;
             foreach (var keyword in new[]
             {
-                "unit", "type", "of", "with", "short", "integer", "real", "string",
-                "min", "max", "values"
+                "unit", "type", "of", "with", "short", "integer", "real", "string", "boolean",
+                "min", "max", "values", "class", "has", "as"
             })
             {
                 _tokenizer.AddKeyword(keyword);
@@ -31,9 +34,78 @@ namespace Rules.Parser
 
         private void Declaration()
         {
-            if (NextTokenIsKeyword("unit", out _)) UnitDeclaration();
-            else if (NextTokenIsKeyword("type", out _)) TypeDeclaration();
-            else Error("unit or type");
+            if (NextTokenIsKeyword("unit", out _))
+            {
+                if (_classesStarted) ReportError("unit and type declarations before classes");
+                UnitDeclaration();
+            }
+            else if (NextTokenIsKeyword("type", out _))
+            {
+                if (_classesStarted) ReportError("unit and type declarations before classes");
+                TypeDeclaration();
+            }
+            else if (NextTokenIsKeyword("class", out _))
+            {
+                _classesStarted = true;
+                ClassDeclaration();
+            }
+            else Error("unit, type, or class");
+        }
+
+        private void ClassDeclaration()
+        {
+            _tokenizer.GetNextToken(); // class
+            _parseTree.Begin(ParsedItem.ClassDecl);
+            try
+            {
+                if (!SimpleName(ParsedItem.Id) || !Keyword("has")) return;
+                if (!LookAheadHasAnyOf(Token.Identifier))
+                {
+                    Error("property name");
+                    return;
+                }
+
+                while (LookAheadHasAnyOf(Token.Identifier)) PropertyDeclaration();
+            }
+            finally
+            {
+                _parseTree.End();
+            }
+        }
+
+        private void PropertyDeclaration()
+        {
+            _parseTree.Begin(ParsedItem.Property);
+            try
+            {
+                if (!SimpleName(ParsedItem.Id)) return;
+
+                if (GetNextTokenIfIsKeyword("of", out _))
+                {
+                    GetNextTokenIfIsKeyword("type", out _);
+                    if (GetNextTokenIfIsKeyword("integer", out var primitive) ||
+                        GetNextTokenIfIsKeyword("real", out primitive) ||
+                        GetNextTokenIfIsKeyword("string", out primitive) ||
+                        GetNextTokenIfIsKeyword("boolean", out primitive))
+                    {
+                        _parseTree.Add(ParsedItem.AtomicType, primitive);
+                    }
+                    else if (TokenValue(Token.Identifier, "type name or atomic type", out var typeName))
+                    {
+                        _parseTree.Add(ParsedItem.TypeRef, typeName);
+                    }
+                }
+                else if (GetNextTokenIfIsKeyword("as", out _))
+                {
+                    GetNextTokenIfIsKeyword("class", out _);
+                    SimpleName(ParsedItem.ClassRef);
+                }
+                else Error("of or as");
+            }
+            finally
+            {
+                _parseTree.End();
+            }
         }
 
         private void UnitDeclaration()
@@ -71,7 +143,11 @@ namespace Rules.Parser
                     _parseTree.Add(ParsedItem.BaseType, "string");
                     if (GetNextTokenIfIsKeyword("with", out _)) StringValues();
                 }
-                else if (TokenValue(Token.Identifier, "unit name or string", out var unit))
+                else if (GetNextTokenIfIsKeyword("boolean", out _))
+                {
+                    _parseTree.Add(ParsedItem.BaseType, "boolean");
+                }
+                else if (TokenValue(Token.Identifier, "unit name, string, or boolean", out var unit))
                 {
                     _parseTree.Add(ParsedItem.BaseType, unit);
                     if (GetNextTokenIfIsKeyword("with", out _)) NumericBounds();
@@ -161,6 +237,18 @@ namespace Rules.Parser
             return true;
         }
 
+        private bool SimpleName(ParsedItem item)
+        {
+            if (!TokenValue(Token.Identifier, "simple identifier", out var value)) return false;
+            if (value.Contains('.'))
+            {
+                ReportError("simple identifier without dots", value);
+                return false;
+            }
+            _parseTree.Add(item, value);
+            return true;
+        }
+
         private bool Number(out string value, out ParsedItem kind)
         {
             var negative = LookAheadHasAnyOf(Token.Minus);
@@ -227,18 +315,29 @@ namespace Rules.Parser
 
         private void Error(string expected)
         {
-            var (_, literal) = _tokenizer.GetLookAhead();
-            SyntaxErrors.Add(Tuple.Create(
-                $"Syntax error at {_tokenizer.CurrentPos}: expected {expected} but instead encountered \"{literal}\"",
-                _parseTree.ToString()));
+            ReportError(expected);
 
             // Keep a following declaration for the outer parse loop to process.
-            if (!NextTokenIsKeyword("unit", out _) 
-                && !NextTokenIsKeyword("type", out _) &&
-                !LookAheadHasAnyOf(Token.EndOfFile))
+            if (!NextTokenIsKeyword("unit", out _)
+                && !NextTokenIsKeyword("type", out _)
+                && !NextTokenIsKeyword("class", out _)
+                && !LookAheadHasAnyOf(Token.EndOfFile))
             {
                 _tokenizer.GetNextToken();
             }
+        }
+
+        private void ReportError(string expected)
+        {
+            var (_, literal) = _tokenizer.GetLookAhead();
+            ReportError(expected, literal);
+        }
+
+        private void ReportError(string expected, string literal)
+        {
+            SyntaxErrors.Add(Tuple.Create(
+                $"Syntax error at {_tokenizer.CurrentPos}: expected {expected} but instead encountered \"{literal}\"",
+                _parseTree.ToString()));
         }
     }
 }

@@ -23,6 +23,22 @@ namespace RuleParserTest
             Assert.Equal(10, Assert.IsType<RulesBuilder>(parser.Builder).RuleContainers.Containers.Count);
         }
 
+        [Theory]
+        [InlineData("Demo-Computer-Assembly", 2)]
+        [InlineData("Demo-Moonbase-Clinic", 1)]
+        public void ParsesOtherDemoFilesWithTheirModelHeaders(string demo, int containerCount)
+        {
+            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
+                "..", "..", "..", "..", "RuleParser", "doc", "Examples", demo + ".txt"));
+            var parser = new RuleParser(RulePart.RuleContainer);
+
+            parser.Parse(File.ReadAllText(path));
+
+            Assert.Empty(parser.SyntaxErrors);
+            Assert.Equal(demo + "-Types.txt", parser.ModelFileName);
+            Assert.Equal(containerCount, Assert.IsType<RulesBuilder>(parser.Builder).RuleContainers.Containers.Count);
+        }
+
         [Fact]
         public void HeaderIsOptionalAndClearedWhenParserIsReused()
         {

@@ -55,7 +55,7 @@ Parsing produces two outputs at the same time:
 
 Syntax errors are collected as `(message, parseTree)` tuples. The parser attempts to recover and stops after too many errors.
 
-`ModelParser` is a separate parser in the same project. It recognizes the unit and type declarations described in [Types and units](../RuleParser/doc/Further%20design/Types%20and%20units.md), and exposes the parse tree and syntax errors through the shared `Parser` API. It does not attach a builder or construct model objects. Reference and domain validation are future work.
+`ModelParser` is a separate parser in the same project. It recognizes the unit, type, and class declarations described in [Types and units](../RuleParser/doc/Further%20design/Types%20and%20units.md) and [Classes](../RuleParser/doc/Further%20design/Classes.md), and exposes the parse tree and syntax errors through the shared `Parser` API. Unit and type declarations must precede classes. It does not attach a builder or construct model objects. Reference and domain validation are future work.
 
 For a complete rule file, `RuleParser` accepts one optional `enforce model "filename"` header before its containers. It records the filename in `ModelFileName` and the parse tree while continuing to build the rule containers. Resolving the file and checking rules against it are not implemented yet.
 

@@ -1,3 +1,5 @@
+Enforce model "Demo-Computer-Assembly-Types.txt"
+
 RuleContainer Computer.Order
 
   Rule initialize.build

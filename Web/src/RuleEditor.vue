@@ -14,7 +14,7 @@ let resizeObserver
 const keywords = new Set([
   'rulecontainer', 'rule', 'priority', 'description', 'if', 'then', 'and', 'not',
   'enforce', 'model', 'unit', 'type', 'of', 'with', 'short', 'integer', 'real',
-  'string', 'min', 'max', 'values'
+  'string', 'boolean', 'min', 'max', 'values'
 ])
 const tokens = computed(() => {
   // Match strings and comments first so their contents are never treated as code.

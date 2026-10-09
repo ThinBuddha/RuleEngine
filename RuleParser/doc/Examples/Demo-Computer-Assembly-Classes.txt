@@ -1,0 +1,53 @@
+class BuildComponent has
+  list of Build.Component.list
+  count of Build.Component.count
+
+class BuildTotal has
+  credits of Build.Total.credits
+
+class Build has
+  Profile of Build.Profile
+  Status of Build.Status
+  Component as BuildComponent
+  Total as BuildTotal
+
+class CPU has
+  Model of CPU.Model
+  Status of CPU.Status
+
+class Memory has
+  Model of Memory.Model
+  Status of Memory.Status
+
+class Graphics has
+  Model of Graphics.Model
+  Status of Graphics.Status
+
+class Storage has
+  Model of Storage.Model
+  Status of Storage.Status
+
+class Power has
+  Model of Power.Model
+  Status of Power.Status
+
+class Chassis has
+  Model of Chassis.Model
+  Status of Chassis.Status
+
+class Cooling has
+  Model of Cooling.Model
+  Status of Cooling.Status
+
+class Platform has
+  Status of Platform.Status
+
+class System has
+  Status of System.Status
+
+class Tests has
+  Status of Tests.Status
+
+class Software has
+  Status of Software.Status
+  Package of Software.Package

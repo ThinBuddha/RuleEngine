@@ -1,6 +1,6 @@
 # Computer assembly: one pass versus forward chaining
 
-Import `Demo-Computer-Assembly.txt`. There are 21 rules in two containers, and one input: `Build.Profile`, with choices **office**, **gaming**, and **creator**. Component names, compatibility, and prices are fictional demo data.
+Import `Demo-Computer-Assembly.txt`. There are 21 rules in two containers, and one input: `Build.Profile`, with choices **office**, **gaming**, and **creator**. Component names, compatibility, and prices are fictional demo data. The rule file names the companion [type definitions](Demo-Computer-Assembly-Types.txt); [class definitions](Demo-Computer-Assembly-Classes.txt) show the nested fact structure.
 
 Run once in **Fire once**, inspect Fact context and Evaluation trace, then choose **Start fresh** and run with the same profile in **Iteration**.
 

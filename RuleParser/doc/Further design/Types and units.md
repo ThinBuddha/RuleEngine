@@ -2,12 +2,14 @@
 
 This describes the declarations in [Types and units.txt](Types%20and%20units.txt). `ModelParser` recognizes this syntax separately from `RuleParser`. It produces a parse tree and syntax errors; it does not construct model objects or validate references and value domains yet.
 
+The [class syntax](Classes.md) lets properties refer to these types or directly to atomic types. In a combined model file, unit and type declarations must come before class declarations.
+
 ## Grammar shown by the example
 
 Keywords are written below in lowercase. As in the current rule language, they should be matched without regard to case, while declared names retain their spelling.
 
 ```ebnf
-document          = { unitDeclaration | numericType | stringType } ;
+document          = { unitDeclaration | numericType | stringType | booleanType } ;
 
 unitDeclaration   = "unit", name, "of", numericPrimitive,
                     "with", "short", "=", stringLiteral ;
@@ -22,11 +24,14 @@ maximum           = "max", ("=" | "<"), numberLiteral ;
 stringType        = "type", name, "of", "string",
                     ["with", "values", "=", "[", stringLiteral,
                      {",", stringLiteral}, "]"] ;
+booleanType       = "type", name, "of", "boolean" ;
 ```
 
 `name` and `unitName` are identifiers. `unitName` must resolve to a `unit` declaration. `numberLiteral` is an integer or real literal; a bound on an integer unit must be an integer. Whitespace, including line breaks, separates tokens but does not change their meaning. The keywords `unit` and `type` begin new declarations.
 
 `with` may introduce a minimum, a maximum, or both (in that order). Omitting `with` leaves a numeric type unbounded. `and` is used only when both bounds are present.
+
+`boolean` is available for facts that a rule asserts as a bare conclusion, such as `Assessment.Moonbloom`. Boolean types do not have range or value-list clauses.
 
 ## Meaning
 

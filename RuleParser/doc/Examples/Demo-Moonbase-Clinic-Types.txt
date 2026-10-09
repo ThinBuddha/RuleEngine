@@ -1,0 +1,24 @@
+unit Hours of real with short = "h"
+
+type Syndrome.Glow.status of string with values = ["matched", "unmatched"]
+type Syndrome.Echo.status of string with values = ["matched", "unmatched"]
+type Syndrome.Rest.status of string with values = ["matched", "unmatched"]
+
+type Exposure.Moonpollen.status of string with values = ["matched", "unmatched"]
+type Exposure.Resonator.status of string with values = ["matched", "unmatched"]
+
+type Assessment.Moonbloom of boolean
+type Assessment.Echo.fever of boolean
+type Assessment.Starlight.depletion of boolean
+type Assessment.Finding of string with values = ["fictional moonbloom pattern", "fictional echo-fever pattern", "fictional starlight-depletion pattern"]
+type Assessment.Explanation of string with values = ["Shimmering skin and night tingling after a moon-garden visit", "An echoing voice and chiming ears after a resonator-workshop visit", "Low energy and fragmented sleep after an extended station shift"]
+
+type Workload.Status of string with values = ["extended", "standard"]
+type Skin.Appearance of string with values = ["shimmering", "ordinary"]
+type Night.Sensation of string with values = ["tingling", "calm"]
+type Recent.Location of string with values = ["moon garden", "resonator workshop", "living quarters"]
+type Voice.Effect of string with values = ["echoing", "ordinary"]
+type Ear.Sound of string with values = ["chiming", "quiet"]
+type Energy.Level of string with values = ["low", "steady"]
+type Sleep.Pattern of string with values = ["fragmented", "settled"]
+type Shift.Hours of Hours with min = 0

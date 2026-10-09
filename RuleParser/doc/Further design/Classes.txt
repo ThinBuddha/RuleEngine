@@ -1,0 +1,13 @@
+class Discount has
+  credits of Credits
+  
+class Customer has
+  Membership of Customer.Membership
+  Discount as Discount
+  
+class Person has
+  Parent as class Person
+  Child as Person 
+
+
+  
