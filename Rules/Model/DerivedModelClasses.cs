@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -6,46 +6,50 @@ using Rules.Rules;
 
 namespace Rules.Model
 {
-    /// <summary>A node in the hierarchy formed by dotted fact IDs.</summary>
-    public class ModelClass
+    /// <summary>
+    /// A node in the hierarchy formed by dotted fact IDs.
+    /// In other words: a model inferred from the rules, not explicitly defined beforehand.
+    /// It's not needed for evaluation of the rules, but it is useful for generating documentation and user interfaces.
+    /// </summary>
+    public class DerivedModelClass
     {
-        private readonly SortedDictionary<string, ModelClass> _classes = new(StringComparer.Ordinal);
-        private readonly SortedDictionary<string, ModelProperty> _properties = new(StringComparer.Ordinal);
-        private readonly IReadOnlyDictionary<string, ModelClass> _classesView;
-        private readonly IReadOnlyDictionary<string, ModelProperty> _propertiesView;
+        private readonly SortedDictionary<string, DerivedModelClass> _classes = new(StringComparer.Ordinal);
+        private readonly SortedDictionary<string, DerivedModelProperty> _properties = new(StringComparer.Ordinal);
+        private readonly IReadOnlyDictionary<string, DerivedModelClass> _classesView;
+        private readonly IReadOnlyDictionary<string, DerivedModelProperty> _propertiesView;
 
-        internal ModelClass(string name, string fullName)
+        internal DerivedModelClass(string name, string fullName)
         {
             Name = name;
             FullName = fullName;
-            _classesView = new ReadOnlyDictionary<string, ModelClass>(_classes);
-            _propertiesView = new ReadOnlyDictionary<string, ModelProperty>(_properties);
+            _classesView = new ReadOnlyDictionary<string, DerivedModelClass>(_classes);
+            _propertiesView = new ReadOnlyDictionary<string, DerivedModelProperty>(_properties);
         }
 
         /// <summary>The final segment of this class's dotted path. Empty for the root.</summary>
         public string Name { get; }
         /// <summary>The dotted path from the root. Empty for the root.</summary>
         public string FullName { get; }
-        public IReadOnlyDictionary<string, ModelClass> Classes => _classesView;
-        public IReadOnlyDictionary<string, ModelProperty> Properties => _propertiesView;
+        public IReadOnlyDictionary<string, DerivedModelClass> Classes => _classesView;
+        public IReadOnlyDictionary<string, DerivedModelProperty> Properties => _propertiesView;
 
-        internal ModelClass GetOrAddClass(string name)
+        internal DerivedModelClass GetOrAddClass(string name)
         {
             if (!_classes.TryGetValue(name, out var modelClass))
             {
                 var fullName = FullName.Length == 0 ? name : $"{FullName}.{name}";
-                _classes.Add(name, modelClass = new ModelClass(name, fullName));
+                _classes.Add(name, modelClass = new DerivedModelClass(name, fullName));
             }
             return modelClass;
         }
 
-        internal void AddProperty(ModelProperty property) => _properties.Add(property.Name, property);
+        internal void AddProperty(DerivedModelProperty property) => _properties.Add(property.Name, property);
     }
 
     /// <summary>A fact identified by a rule condition or conclusion.</summary>
-    public class ModelProperty
+    public class DerivedModelProperty
     {
-        internal ModelProperty(string name, string fullName, string kind, IReadOnlyList<string> stringValues)
+        internal DerivedModelProperty(string name, string fullName, string kind, IReadOnlyList<string> stringValues)
         {
             Name = name;
             FullName = fullName;
@@ -60,20 +64,20 @@ namespace Rules.Model
         public IReadOnlyList<string> StringValues { get; }
     }
 
-    public class ModelDeriver
+    public class DerivedModelDeriver
     {
         /// <summary>Builds a tree from the fact IDs and types inferred from the rules.</summary>
-        public static ModelClass Derive(RuleContainers containers)
+        public static DerivedModelClass Derive(RuleContainers containers)
         {
             ArgumentNullException.ThrowIfNull(containers);
             return Derive(DerivedModelTypes.Derive(containers));
         }
 
         /// <summary>Builds a tree from an existing type derivation.</summary>
-        public static ModelClass Derive(DerivedModelTypes types)
+        public static DerivedModelClass Derive(DerivedModelTypes types)
         {
             ArgumentNullException.ThrowIfNull(types);
-            var root = new ModelClass(string.Empty, string.Empty);
+            var root = new DerivedModelClass(string.Empty, string.Empty);
 
             foreach (var id in types.Identifiers.OrderBy(id => id, StringComparer.Ordinal))
             {
@@ -82,7 +86,7 @@ namespace Rules.Model
                 for (var i = 0; i < parts.Length - 1; i++)
                     owner = owner.GetOrAddClass(parts[i]);
 
-                owner.AddProperty(new ModelProperty(parts[^1], id,
+                owner.AddProperty(new DerivedModelProperty(parts[^1], id,
                     types.GetKind(id), types.GetStringValues(id)));
             }
 

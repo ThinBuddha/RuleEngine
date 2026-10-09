@@ -4,7 +4,7 @@ using Xunit;
 
 namespace RuleTest
 {
-    public class TestModelDeriver
+    public class TestDerivedModelDeriver
     {
         [Fact]
         public void BuildsNestedClassesFromConditionsAndConclusions()
@@ -15,7 +15,7 @@ namespace RuleTest
                 "Rule ground If Parcel.Drone.status = \"blocked\" Then Delivery.Route := \"ground\"");
 
             var types = DerivedModelTypes.Derive(containers);
-            var model = ModelDeriver.Derive(types);
+            var model = DerivedModelDeriver.Derive(types);
 
             Assert.Empty(model.Name);
             Assert.Empty(model.Properties);
@@ -40,7 +40,7 @@ namespace RuleTest
             var containers = TestHelper.ParseRules(
                 "RuleContainer Demo Rule result If Input Then Output := Input");
 
-            var model = ModelDeriver.Derive(containers);
+            var model = DerivedModelDeriver.Derive(containers);
 
             Assert.Equal("Boolean", model.Properties["Input"].Kind);
             Assert.Equal("Boolean", model.Properties["Output"].Kind);

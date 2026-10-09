@@ -19,7 +19,7 @@ public sealed class RuleRuntimeService
                 container.Rules.Select(rule => new RuleSummary(rule.Name, rule.Priority)).ToList())).ToList(),
             parser.ParseTree, derivedModelTypes.StringValues)
         {
-            Model = ModelDeriver.Derive(derivedModelTypes)
+            Model = DerivedModelDeriver.Derive(derivedModelTypes)
         };
     }
 
@@ -227,7 +227,7 @@ public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choi
 public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree,
     IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes)
 {
-    public required ModelClass Model { get; init; }
+    public required DerivedModelClass Model { get; init; }
 }
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);

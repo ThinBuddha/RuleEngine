@@ -7,8 +7,8 @@ using Rules.Rules;
 namespace Rules.Model
 {
     /// <summary>
-    /// Represents inferred types and literal string choices for identifiers and expressions discovered from rule
-    /// containers.
+    /// Represents inferred types and literal string choices for identifiers and expressions discovered from rule.
+    /// If the types are not explicitly defined beforehand, these drived types can enable a GUI to present the user with a list of valid choices.
     /// </summary>
     /// <remarks>
     /// Maintains a mapping from identifier names to domains (Kind and known string Values). Build a
