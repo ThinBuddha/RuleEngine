@@ -2,7 +2,7 @@ The ValueBag is a "poor man's model", in that it only allows for implicitly desc
 Example:
 
   Rule 	Employee.Assess.quality
-  If		Employee.works.hard
+  If	Employee.works.hard
   Then	Employee.is.good
 
 The ValueBag contains the condition's and possibly the conclusion's expression as a single string value.
@@ -33,5 +33,4 @@ So for example, inside the ValueBag we can find:
   ValueBag[ Employee.reputation ] = "good" 
   ValueBag[ Employee.age ] = 35 
 
-The ValueBag just holds values, it has no idea what they mean. For example comparing  Employee.reputation with Employee.age
-will be allright by the ValueBag. In a more advanced stage, we would introduce modelling capabilites to at least define entities, properties and types.
+The ValueBag just holds values, it has no idea what they mean.

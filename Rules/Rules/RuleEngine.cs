@@ -3,8 +3,6 @@ using Rules.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
-using System.Xml.Linq;
 
 namespace Rules.Rules
 {

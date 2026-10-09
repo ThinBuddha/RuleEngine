@@ -35,7 +35,7 @@ namespace Rules.Model
 
         public TConstantValue GetValue(string name)
         {
-            if (_values.TryGetValue(name, out TConstantValue value)) // TODO: figure out if we need to return a Clone or even only the real underlying value?
+            if (_values.TryGetValue(name, out TConstantValue value))
             {
                 return value;
             }

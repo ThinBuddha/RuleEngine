@@ -1,13 +1,8 @@
-﻿using Rules;
-using Rules.Expression;
+﻿using Rules.Expression;
 using Rules.Model;
-using Rules.Parser;
 using Rules.QueryInterpreter;
 using Rules.Rules;
 using Rules.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace RuleTest

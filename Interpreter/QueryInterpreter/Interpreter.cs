@@ -1,7 +1,5 @@
 ﻿using Rules.Expression;
-using Rules.Model;
 using Rules.Parser;
-using Rules.Rules;
 using System;
 using System.Collections.Generic;
 
@@ -20,7 +18,7 @@ namespace Rules.QueryInterpreter
         /// <returns></returns>
         public (TCompareExpression?, List<Tuple<string, string>>?) QueryToExpression(string query)
         {
-            RuleParser parser = new RuleParser(RulePart.Condition);
+            RuleParser parser = new(RulePart.Condition);
             parser.Parse(query);
             if (parser.SyntaxErrors.Count == 0)
             {

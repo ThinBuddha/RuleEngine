@@ -1,7 +1,5 @@
-using Rules;
 using Rules.Expression;
 using Rules.Parser;
-using System;
 using Xunit;
 
 namespace RuleTest

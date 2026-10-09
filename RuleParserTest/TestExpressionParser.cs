@@ -1,5 +1,4 @@
-﻿using System;
-using Xunit;
+﻿using Xunit;
 using Rules.Parser;
 using Rules.Expression;
 

@@ -6,6 +6,16 @@ using Rules.Rules;
 
 namespace Rules.Model
 {
+    /// <summary>
+    /// Represents inferred types and literal string choices for identifiers and expressions discovered from rule
+    /// containers.
+    /// </summary>
+    /// <remarks>
+    /// Maintains a mapping from identifier names to domains (Kind and known string Values). Build a
+    /// model with Derive(RuleContainers). StringValues exposes identifiers whose Kind is "string"; 
+    /// GetStringValues returns known literal strings for an identifier. 
+    /// Merge combines domains, propagates literal values and aliases and throws ArgumentException on conflicting Kind values.
+    /// </remarks>
     public class ModelTypes
     {
         private readonly Dictionary<string, Domain> _ids = new(StringComparer.Ordinal);
@@ -51,6 +61,7 @@ namespace Rules.Model
             // Unwrap parentheses, but do not present fragments of computed strings as choices.
             if (expression.Terms.Count == 1 && expression.Terms[0].Factors.Count == 1)
                 return Factor(expression.Terms[0].Factors[0]);
+
             var operands = expression.Terms.SelectMany(term => term.Factors).Select(Factor).ToList();
             // Arithmetic dispatches on its left value. In particular, string addition
             // can append numbers; operands need not share either a type or a domain.
@@ -66,14 +77,20 @@ namespace Rules.Model
                     if (id.ShouldBeNegated) Merge(domain, new Domain { Kind = "Boolean" });
                     if (id.ShouldBeMinused) Merge(domain, new Domain { Kind = "numeric" });
                     return domain;
-                case TExpression nested: return Expression(nested);
+
+                case TExpression nested: 
+                    return Expression(nested);
+
                 case TConstantStringValue text:
                     var strings = new Domain { Kind = "string" };
                     if (!string.IsNullOrWhiteSpace(text.Value)) strings.Values.Add(text.Value);
                     return strings;
+
                 case TConstantNumValue number:
                     return new Domain { Kind = number.Value.ValueType == TConstantNumValue.BoolType ? "Boolean" : "numeric" };
-                default: return new Domain();
+
+                default: 
+                    return new Domain();
             }
         }
 
@@ -96,7 +113,7 @@ namespace Rules.Model
         private sealed class Domain
         {
             public string Kind;
-            public List<string> Values { get; } = new();
+            public List<string> Values { get; } = [];
         }
 
     }
