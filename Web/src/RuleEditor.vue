@@ -1,13 +1,21 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-const props = defineProps({ modelValue: { type: String, default: '' } })
+const props = defineProps({
+  modelValue: { type: String, default: '' },
+  ariaLabel: { type: String, default: 'Rule source editor' },
+  placeholder: { type: String, default: '' }
+})
 const emit = defineEmits(['update:modelValue'])
 const input = ref(null)
 const highlight = ref(null)
 let resizeObserver
 
-const keywords = new Set(['rulecontainer', 'rule', 'priority', 'description', 'if', 'then', 'and', 'not'])
+const keywords = new Set([
+  'rulecontainer', 'rule', 'priority', 'description', 'if', 'then', 'and', 'not',
+  'enforce', 'model', 'unit', 'type', 'of', 'with', 'short', 'integer', 'real',
+  'string', 'min', 'max', 'values'
+])
 const tokens = computed(() => {
   // Match strings and comments first so their contents are never treated as code.
   // Also accept unfinished strings/comments while the user is typing.
@@ -21,7 +29,7 @@ const tokens = computed(() => {
     else if (/^[A-Za-z_]/.test(text)) {
       const word = text.toLowerCase()
       kind = keywords.has(word) ? 'keyword' : declaration ? 'declaration' : 'identifier'
-      declaration = word === 'rule' || word === 'rulecontainer'
+      declaration = word === 'rule' || word === 'rulecontainer' || word === 'unit' || word === 'type'
     } else if (/\S/.test(text)) kind = 'operator'
     return { text, kind }
   })
@@ -60,7 +68,8 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
       autocapitalize="off"
       autocomplete="off"
       autocorrect="off"
-      aria-label="Rule source editor"
+      :aria-label="ariaLabel"
+      :placeholder="placeholder"
       @input="emit('update:modelValue', $event.target.value)"
       @scroll="syncScroll"
     ></textarea>
@@ -96,6 +105,7 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
 }
 .rule-editor .rule-highlight { overflow: hidden; pointer-events: none; color: #bfcbd8; }
 .rule-editor .rule-input { overflow: auto; resize: none; background: transparent; color: transparent; caret-color: #edf2ee; -webkit-text-fill-color: transparent; }
+.rule-editor .rule-input::placeholder { color: #687b92; -webkit-text-fill-color: #687b92; }
 .rule-input::selection { background: #44678a99; }
 .keyword { color: #c8f169; }
 .declaration { color: #f3ce85; }

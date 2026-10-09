@@ -46,7 +46,7 @@ stringType        = "type", name, "of", "string",
 
 ## Decisions still needed
 
-- It does not say whether declarations can refer to units defined later in the file, or how a separate rules file names and imports these definitions.
+- It does not say whether declarations can refer to units defined later in the file. A rules file can name a types file with `enforce model "filename"`, but loading and enforcing that file are not implemented yet.
 - It does not define how typed facts are declared, how unit symbols appear in expressions, or whether values in different units can be converted.
 - Semantic validation is still needed for unit references, numeric kinds, duplicate declarations, value lists, and bound satisfiability.
 

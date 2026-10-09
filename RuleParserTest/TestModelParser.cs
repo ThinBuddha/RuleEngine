@@ -28,6 +28,21 @@ namespace RuleParserTest
         }
 
         [Fact]
+        public void ParsesTheParcelDispatcherTypeDefinitions()
+        {
+            var path = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
+                "..", "..", "..", "..", "RuleParser", "doc", "Examples",
+                "Demo-Parcel-Dispatcher-Types.txt"));
+            var parser = new ModelParser();
+
+            parser.Parse(File.ReadAllText(path));
+
+            Assert.Empty(parser.SyntaxErrors);
+            Assert.Equal(4, Count(parser.ParseTree, "UnitDecl("));
+            Assert.Equal(33, Count(parser.ParseTree, "TypeDecl("));
+        }
+
+        [Fact]
         public void ParsesCompactListsNegativeBoundsAndCaseInsensitiveKeywords()
         {
             var parser = new ModelParser();

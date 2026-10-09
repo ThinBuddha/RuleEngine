@@ -7,7 +7,7 @@ namespace Rules.Parser
     {
         RuleCont, Rule, Prio, Cond, Concl, Expr, CompExpr, AssignExpr, Assign, MathOp, LogicalOp, Term,
         Factor, Id, Lhook, Rhook, Integer, Float, String, If, Not, Compare, Minus, Then,
-        UnitDecl, TypeDecl, BaseType, Short, Bounds, Min, Max, Values
+        UnitDecl, TypeDecl, BaseType, Short, Bounds, Min, Max, Values, ModelFile
     };
 
     public class ParseTree

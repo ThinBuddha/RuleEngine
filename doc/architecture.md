@@ -57,6 +57,8 @@ Syntax errors are collected as `(message, parseTree)` tuples. The parser attempt
 
 `ModelParser` is a separate parser in the same project. It recognizes the unit and type declarations described in [Types and units](../RuleParser/doc/Further%20design/Types%20and%20units.md), and exposes the parse tree and syntax errors through the shared `Parser` API. It does not attach a builder or construct model objects. Reference and domain validation are future work.
 
+For a complete rule file, `RuleParser` accepts one optional `enforce model "filename"` header before its containers. It records the filename in `ModelFileName` and the parse tree while continuing to build the rule containers. Resolving the file and checking rules against it are not implemented yet.
+
 ### `Rules`
 
 This is the domain and runtime library.
@@ -98,7 +100,7 @@ When a rule needs an unknown fact, the shell prompts for a Boolean, integer, dou
 
 ### `Web`
 
-`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP/WebSocket client; all parsing, inference, and calculation are delegated to `Rules.WebApi`.
+`Web` is a Vue/Vite single-page workbench that presents the same user-facing workflow without a console. Its primary surface includes rule-source editing and file import, a Model workspace with a Types source editor and a reserved Classes tab, evaluation-mode selection, deduction queries, execution, loaded-container summaries, traces, fact context, clearing actions, and expression calculation. `Web/src/runtime.js` is an HTTP/WebSocket client; rule parsing, inference, and calculation are delegated to `Rules.WebApi`. The Types editor currently holds imported or edited text in the browser; it does not yet submit that text for model parsing.
 
 ### `Rules.WebApi`
 

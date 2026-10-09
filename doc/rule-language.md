@@ -18,9 +18,11 @@ Keywords are case-insensitive. Whitespace and line breaks generally separate tok
 
 ## Containers and rules
 
-A rule file consists of one or more containers:
+A rule file may begin with one model directive, followed by one or more containers:
 
 ```text
+[enforce model "<types-file-name>"]
+
 RuleContainer <container-name>
 
 Rule <rule-name>
@@ -28,6 +30,8 @@ Rule <rule-name>
 If <condition> [and <condition> ...]
 Then <conclusion> [and <conclusion> ...]
 ```
+
+The optional `enforce model` directive must appear before the first container. `RuleParser.ModelFileName` exposes the quoted filename, and the parse tree includes a `ModelFile(...)` entry. The parser does not yet load or validate the referenced model file.
 
 Container and rule names are identifiers. Dots can be used to qualify names, for example `Pricing.Insurance` or `Customer.Is.Adult`.
 

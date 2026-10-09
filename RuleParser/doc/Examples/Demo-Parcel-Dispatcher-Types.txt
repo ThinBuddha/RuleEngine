@@ -1,0 +1,48 @@
+unit Credits of real with short = "credits"
+unit Kilometres of real with short = "km"
+unit Minutes of integer with short = "min"
+unit PriorityPoints of integer with short = "points"
+
+type Parcel.Contents of string with values = ["books", "electronics", "flowers", "ice cream"]
+type Parcel.Handling of string with values = ["standard", "padded", "upright", "chilled"]
+type Parcel.Drone.status of string with values = ["allowed", "disallowed"]
+type Parcel.Size of string with values = ["small", "medium", "large"]
+type Parcel.Declared.value of Credits with min = 0
+
+type Packing.Content.fee of Credits with min = 0
+type Packing.Size.fee of Credits with min = 0
+
+type Delivery.Distance.km of Kilometres with min = 0
+type Delivery.Urgency of string with values = ["relaxed", "today", "express"]
+type Delivery.Handoff of string with values = ["ring the doorbell", "leave at reception", "send a locker code", "hand over chilled parcel in person"]
+type Delivery.Vehicle of string with values = ["refrigerated van", "regional van", "delivery van", "drone", "locker shuttle", "bike courier"]
+type Delivery.Estimated.minutes of Minutes with min = 0
+type Delivery.Status of string with values = ["ready to dispatch"]
+
+type Route.Zone of string with values = ["neighbourhood", "across town", "regional"]
+type Route.Fee of Credits with min = 0
+
+type Weather.Now of string with values = ["clear", "rain", "storm"]
+type Weather.Delay.minutes of Minutes with min = 0
+type Flight.Status of string with values = ["available", "unavailable"]
+
+type Recipient.Location of string with values = ["home", "office", "parcel locker"]
+type Destination.Drone.status of string with values = ["allowed", "disallowed"]
+
+type Service.Priority of PriorityPoints with min = 1 and max = 3
+type Service.Fee of Credits with min = 0
+type Service.Wait.minutes of Minutes with min = 0
+
+type Vehicle.Selection.status of string with values = ["pending", "selected"]
+type Vehicle.Fee of Credits with min = 0
+type Vehicle.Travel.minutes of Minutes with min = 0
+
+type Customer.Membership of string with values = ["visitor", "regular", "neighbourhood hero"]
+type Customer.Discount.credits of Credits with min = 0 and max = 2
+
+type Cover.Level of string with values = ["basic", "extra", "treasure"]
+type Cover.Fee of Credits with min = 0
+
+type Quote.Subtotal of Credits with min = 0
+type Quote.Discount of Credits with min = 0
+type Quote.Total of Credits with min = 0

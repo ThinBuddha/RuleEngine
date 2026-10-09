@@ -18,6 +18,10 @@ namespace Rules.Parser
         private readonly Enum _ruleStart = Token.Keyword;
         private readonly Enum _ruleContainerStart = Token.Keyword;
         private readonly Enum _mathOperator = Token.Minus | Token.Plus | Token.Multiply | Token.Divide;
+        private readonly bool _isRuleFile;
+        private bool _hasStartedContainers;
+
+        public string ModelFileName { get; private set; }
 
         /// <summary>
         /// Create a parser for an entire rule of for just a part of it
@@ -31,12 +35,18 @@ namespace Rules.Parser
                 case RulePart.Condition: _parse = RuleCondition; _lookAheads = _conditionStart; break;
                 case RulePart.Conclusion: _parse = Conclusion; _lookAheads = _conclusionStart;  break;
                 case RulePart.Rule: _parse = Rule; _lookAheads = _ruleStart; break;
-                case RulePart.RuleContainer: _parse = RuleContainer; _lookAheads = _ruleContainerStart; break;
+                case RulePart.RuleContainer:
+                    _parse = RuleFileEntry;
+                    _lookAheads = _ruleContainerStart;
+                    _isRuleFile = true;
+                    break;
             }
         }
 
         protected override void SetTokens()
         {
+            ModelFileName = null;
+            _hasStartedContainers = false;
             // Operators are set by Tokenizer by default
             // We add our keywords here
             _tokenizer.AddKeyword("rulecontainer");
@@ -45,11 +55,54 @@ namespace Rules.Parser
             _tokenizer.AddKeyword("description");
             _tokenizer.AddKeyword("if");
             _tokenizer.AddKeyword("then");
+            if (_isRuleFile)
+            {
+                _tokenizer.AddKeyword("enforce");
+                _tokenizer.AddKeyword("model");
+            }
         }
 
         protected override Builder CreateBuilder()
         {
             return new RulesBuilder(_parseTree);
+        }
+
+        private void RuleFileEntry()
+        {
+            if (GetNextTokenIfIsKeyword("enforce", out _))
+            {
+                if (_hasStartedContainers || ModelFileName != null)
+                {
+                    AddSyntaxError("enforce model must appear once before the rule containers");
+                    return;
+                }
+
+                if (!GetNextTokenIfIsKeyword("model", out var literal))
+                {
+                    AddSyntaxError("model", literal);
+                    return;
+                }
+
+                if (!LookAheadHasAnyOf(Token.String, out literal))
+                {
+                    AddSyntaxError(Token.String, literal);
+                    return;
+                }
+
+                _tokenizer.GetNextToken();
+                ModelFileName = literal;
+                _parseTree.Add(ParsedItem.ModelFile, literal);
+            }
+            else if (NextTokenIsKeyword("rulecontainer", out _))
+            {
+                _hasStartedContainers = true;
+                RuleContainer();
+            }
+            else
+            {
+                (_, var literal) = _tokenizer.GetLookAhead();
+                AddSyntaxError("RuleContainer or enforce model", literal);
+            }
         }
 
         private void RuleContainer()

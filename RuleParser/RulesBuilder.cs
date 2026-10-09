@@ -56,6 +56,8 @@ namespace Rules.Parser
         /// <param name="value">literal</param>
         public void Add(ParsedItem parsedItem, string value)
         {
+            if (parsedItem == ParsedItem.ModelFile) return;
+
             Tuple<ParsedItem, object> item = _stack.Peek();
 
             Type itemType = item.Item2?.GetType();
