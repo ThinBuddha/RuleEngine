@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using Rules.Expression;
 using Rules.Rules;
 
@@ -118,7 +119,8 @@ namespace Rules.Parser
                 case ParsedItem.Float:
                     if (itemType == typeof(TFactor))
                     {
-                        TConstantNumValue numValue = new TConstantNumValue(double.Parse(value));
+                        TConstantNumValue numValue = new TConstantNumValue(
+                            double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture));
                         _stack.Replace(new Tuple<ParsedItem, object>(parsedItem, numValue));
                     }
                     break;

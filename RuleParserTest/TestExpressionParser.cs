@@ -1,5 +1,6 @@
 ﻿using Xunit;
 using Rules.Parser;
+using System.Globalization;
 using Rules.Expression;
 
 namespace RuleParserTest
@@ -124,7 +125,32 @@ namespace RuleParserTest
             Assert.True(expr.Terms.Count == 3, "");
             Assert.True(expr.Operators.Count == 2, "");
             // TODO: decompose expr entirely....
-            Assert.True(expr.ToString() == "(length + (5 * width) - (12 / (Factor - 35500000000000)))", "");
+            Assert.Equal("(length + (5 * width) - (12 / (Factor - 35500000000000)))", expr.ToString());
+        }
+
+        [Theory]
+        [InlineData("en-US", "3.55", 3.55)]
+        [InlineData("nl-NL", "3.55", 3.55)]
+        [InlineData("en-US", "3.55E13", 35500000000000d)]
+        [InlineData("nl-NL", "3.55E13", 35500000000000d)]
+        public void FloatLiteralsUseTheRuleLanguageDecimalSeparator(string cultureName, string input, double expected)
+        {
+            var previousCulture = CultureInfo.CurrentCulture;
+            try
+            {
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cultureName);
+                var parser = new RuleParser(RulePart.Expression);
+                parser.Parse(input);
+
+                Assert.Empty(parser.SyntaxErrors);
+                var expression = Assert.IsType<TExpression>(parser.Builder.Result);
+                var value = Assert.IsType<TConstantNumValue>(expression.Terms[0].Factors[0]);
+                Assert.Equal(expected, value.Value.DoubleValue);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = previousCulture;
+            }
         }
 
         [Fact]

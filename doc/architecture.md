@@ -215,7 +215,7 @@ flowchart TD
 - The model has `Stop`, weight, description, and container stop concepts, but the active parser does not fully populate all of them.
 - `ValueBag`, engines, and rule collections are not thread-safe and must not be shared between concurrent evaluations. The web API creates separate instances for each evaluation.
 - Identifier lookup in `ValueBag` is case-sensitive even though keyword tokenization is case-insensitive.
-- Numeric parsing and formatting depend partly on the process culture, while the tokenizer recognizes a dot as the decimal separator.
+- Rule float literals use a dot as the decimal separator and are parsed with invariant culture; numeric `ToString()` output still follows the process culture.
 - Iteration fires each rule at most once per evaluation; it does not reactivate fired rules when facts subsequently change.
 - Deduction is a first implementation: it follows the first provable rule path and does not build a complete proof tree or detect every cycle.
 - Equality is overridden on several domain types without corresponding `GetHashCode` implementations.
