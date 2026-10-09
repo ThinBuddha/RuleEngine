@@ -4,12 +4,14 @@ import { calculate, evaluate, parseRules, starterRules } from './runtime'
 import ValuePrompt from './ValuePrompt.vue'
 import ContainerRuleEditor from './ContainerRuleEditor.vue'
 import ProofTree from './ProofTree.vue'
+import ProofStory from './ProofStory.vue'
 import ModelWorkspace from './ModelWorkspace.vue'
 import { splitModelSource } from './modelSource'
 
 const valuePrompt = ref(null)
 const busy = ref(false)
 const proofs = ref([])
+const explanationView = ref('tree')
 const typesSource = ref('')
 const classesSource = ref('')
 const typesFileName = ref('')
@@ -124,8 +126,18 @@ void load()
         <section v-if="view === 'context'" class="panel detail"><header><div><label>FACTS</label><h2>Fact context</h2></div><button class="text-btn" @click="clearContext">Clear context</button></header><div v-if="factCount" class="facts"><div v-for="(value, key) in context" :key="key"><small>{{ key }}</small><strong>{{ String(value) }}</strong></div></div><div v-else class="empty large">No facts have been established. Execute a rule set to build the context.</div></section>
         <section v-if="view === 'calculator'" class="panel detail calculator"><header><div><label>CALC</label><h2>Expression calculator</h2></div><span class="chip">Uses current context</span></header><label class="field">Expression<textarea v-model="calcInput" rows="3" spellcheck="false"></textarea></label><button class="primary compact" @click="calc">Calculate <b>↗</b></button><div class="calc-result"><small>Result</small><strong>{{ calcResult || '—' }}</strong></div></section>
         <section v-if="view === 'trace' && proofs.length" class="panel detail">
-          <header><div><label>HOW</label><h2>Deduction explanation</h2></div></header>
-          <ProofTree v-for="(proof, index) in proofs" :key="index" :proof="proof" />
+          <header><div><label>HOW</label><h2>Deduction explanation</h2></div>
+            <button type="button" class="outline-btn"
+              @click="explanationView = explanationView === 'tree' ? 'story' : 'tree'">
+              {{ explanationView === 'tree' ? 'Read as story' : 'Show proof tree' }}
+            </button>
+          </header>
+          <template v-if="explanationView === 'story'">
+            <ProofStory v-for="(proof, index) in proofs" :key="index" :proof="proof" />
+          </template>
+          <template v-else>
+            <ProofTree v-for="(proof, index) in proofs" :key="index" :proof="proof" />
+          </template>
         </section>
         <footer class="content-footer"><span>Rule Engine Workbench</span><span>Browser UI · Rules.WebApi connected</span></footer>
       </section>
