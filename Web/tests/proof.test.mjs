@@ -51,14 +51,15 @@ test('runtime forwards Why without submitting it and retains result/error proofs
       queueMicrotask(() => this.onmessage({ data: JSON.stringify(message.type === 'answer'
         ? fail ? { type: 'error', error: 'Missing', proofs: [proof], missingFacts: ['Input'] }
           : { type: 'result', result: { trace: [], proofs: [proof], context: {}, queryResult: true } }
-        : { type: 'unknownValue', name: 'Input', choices: [], why: proof }) }))
+        : { type: 'unknownValue', name: 'Input', choices: [], why: proof, inputType: { kind: 'boolean', values: [] } }) }))
     }
   }
   globalThis.WebSocket = FakeSocket
   try {
     let lifetime
-    const answer = (name, choices, signal, why) => {
+    const answer = (name, choices, signal, why, inputType) => {
       assert.deepEqual(why, proof)
+      assert.equal(inputType.kind, 'boolean')
       assert.equal(name, 'Input')
       assert.equal(signal.aborted, false)
       lifetime = signal

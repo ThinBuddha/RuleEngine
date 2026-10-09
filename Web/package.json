@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "test:ui": "node --test tests/proof.test.mjs tests/ruleContainers.test.mjs tests/model.test.mjs tests/modelSource.test.mjs",
+    "test:ui": "node --test tests/proof.test.mjs tests/ruleContainers.test.mjs tests/model.test.mjs tests/modelSource.test.mjs tests/promptValue.test.mjs",
     "test:shell": "dotnet build ../CommandShell/CommandShell.csproj && node --test tests/shell-proof.test.mjs",
     "test:interactive": "dotnet build ../Rules.WebApi/Rules.WebApi.csproj && node --test tests/interactive.test.mjs",
     "dev": "vite",

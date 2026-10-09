@@ -134,6 +134,8 @@ A bare conclusion such as `Access.Allowed` stores Boolean `true`. An assignment 
 
 `DerivedModelTypes.Derive` infers each fact ID's kind and known string literals from rule conditions and conclusions. `DerivedModelDeriver.Derive` presents those same IDs as a nested `DerivedModelClass` tree: `Parcel.Drone.status` becomes property `status` in class `Parcel.Drone`. The root class has an empty name and holds IDs without dots as properties. Each `DerivedModelProperty` exposes its full ID, inferred kind (`Boolean`, `numeric`, `string`, or null when unconstrained), and known string values. The parse API returns this tree as `model` alongside the existing `modelTypes` string-choice map. The tree describes the rules; evaluation continues to use flat IDs in `ValueBag`.
 
+Interactive prompts use derived string choices when no model is enforced. With `enforce model`, the API resolves the fact path through the compiled class model and sends its declared kind, values, unit label, and bounds as `inputType`. The browser uses that metadata to render and validate the input control, while the API also checks submitted values.
+
 ### Unknown-value resolution
 
 Each `ValueBag` owns a `MessageSink` exposing two instance delegates:

@@ -20,13 +20,11 @@ let loadSequence = 0
 const source = ref(starterRules()); const mode = ref('once'); const query = ref('Travel.by.train'); const view = ref('workspace'); const containers = ref([]); const context = ref({}); const trace = ref([]); const rounds = ref(0); const result = ref(null); const error = ref(''); const status = ref('Ready'); const calcInput = ref('2 + 3 * 4'); const calcResult = ref(''); const picker = ref(null)
 const modes = [{ value: 'once', label: 'Fire once', hint: 'Priority order' }, { value: 'iteration', label: 'Iteration', hint: 'Forward chaining' }, { value: 'deduction', label: 'Deduction', hint: 'Backward chaining' }]
 const ruleCount = computed(() => containers.value.reduce((n, c) => n + c.rules.length, 0)); const factCount = computed(() => Object.keys(context.value).length); const modeLabel = computed(() => modes.find((m) => m.value === mode.value)?.label); const resultLabel = computed(() => result.value === null ? 'No query' : result.value ? 'Proven' : 'Not proven')
-function parseAnswer(answer) { const value = answer.trim(); if (/^(true|false)$/i.test(value)) return value.toLowerCase() === 'true'; if (value !== '' && Number.isFinite(Number(value))) return Number(value); return answer }
-async function requestValue(id, choices, signal, why) {
-  const answer = await valuePrompt.value.ask(id, choices, signal, why)
-  if (answer === null || answer.trim() === '') return null
-  const value = choices.length ? answer : parseAnswer(answer)
-  context.value[id] = value
-  return value
+async function requestValue(id, choices, signal, why, inputType) {
+  const answer = await valuePrompt.value.ask(id, choices, signal, why, inputType)
+  if (answer === null) return null
+  context.value[id] = answer
+  return answer
 }
 async function load() {
   const sequence = ++loadSequence

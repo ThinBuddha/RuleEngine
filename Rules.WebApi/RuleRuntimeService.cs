@@ -12,7 +12,7 @@ public sealed class RuleRuntimeService
 {
     public ParseResponse Parse(string source, string? modelSource = null, string? modelFileName = null)
     {
-        var containers = ParseContainers(source, out var parser, out var derivedModelTypes, modelSource, modelFileName);
+        var containers = ParseContainers(source, out var parser, out var derivedModelTypes, out _, modelSource, modelFileName);
         return new ParseResponse(
             containers.Containers.Select(container => new ContainerSummary(
                 container.Name,
@@ -25,13 +25,13 @@ public sealed class RuleRuntimeService
 
     public EvaluateResponse Evaluate(EvaluateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
     {
-        var containers = ParseContainers(request.Source, out _, out var derivedModelTypes, request.ModelSource, request.ModelFileName);
+        var containers = ParseContainers(request.Source, out _, out var derivedModelTypes, out var explicitModel, request.ModelSource, request.ModelFileName);
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
         var evaluationType = ParseEvaluationType(request.Mode);
         TCompareExpression? query = null;
 
-        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes);
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes, explicitModel);
         try
         {
             if (evaluationType == EvaluationType.Deduction)
@@ -84,8 +84,9 @@ public sealed class RuleRuntimeService
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
         var derivedModelTypes = new DerivedModelTypes();
-        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes, request.ModelSource, request.ModelFileName);
-        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes);
+        ExplicitModel? explicitModel = null;
+        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes, out explicitModel, request.ModelSource, request.ModelFileName);
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes, explicitModel);
         try
         {
             var parser = new RuleParser(RulePart.Expression);
@@ -114,8 +115,10 @@ public sealed class RuleRuntimeService
     }
 
     private static RuleContainers ParseContainers(string source, out RuleParser parser, out DerivedModelTypes derivedModelTypes,
+        out ExplicitModel? explicitModel,
         string? modelSource = null, string? modelFileName = null)
     {
+        explicitModel = null;
         parser = new RuleParser(RulePart.RuleContainer);
         parser.Parse(source);
         if (parser.SyntaxErrors.Count > 0 || parser.Builder is not RulesBuilder builder || builder.RuleContainers is null)
@@ -138,6 +141,7 @@ public sealed class RuleRuntimeService
                 .Concat(new RuleModelValidator(modelBuilder.Model).Validate(builder.RuleContainers)).ToList();
             if (modelErrors.Count > 0)
                 throw new RuleSyntaxException(modelErrors.Select(error => Tuple.Create(error, string.Empty)).ToList());
+            explicitModel = modelBuilder.Model;
         }
 
         // Syntax and model validation passed, now derive types, this is legacy since the GUI still uses it
@@ -171,7 +175,7 @@ public sealed class RuleRuntimeService
     }
 
     private static void ConfigureUnknownValueResolution(ValueBag context, ISet<string> missingFacts,
-        Func<UnknownValueRequest, JsonElement?>? getUserInput, DerivedModelTypes derivedModelTypes)
+        Func<UnknownValueRequest, JsonElement?>? getUserInput, DerivedModelTypes derivedModelTypes, ExplicitModel? explicitModel)
     {
         TConstantValue? Resolve(TId subject, ValueBag _) 
         {
@@ -180,11 +184,18 @@ public sealed class RuleRuntimeService
                 return value;
             }
 
-            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, derivedModelTypes.GetStringValues(subject.Name),
-                ProofSnapshot.From(context.GetDeductionProof())));
+            var modelType = explicitModel?.Resolve(subject.Name);
+            if (explicitModel != null && modelType == null)
+                throw new RuleRuntimeException($"ID '{subject.Name}' does not map to a model property", new[] { subject.Name });
+            var inputType = modelType == null ? null : ToInputType(modelType, explicitModel!);
+            var choices = inputType?.Values ?? derivedModelTypes.GetStringValues(subject.Name);
+            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, choices,
+                ProofSnapshot.From(context.GetDeductionProof()), inputType));
             if (answer is JsonElement input && input.ValueKind != JsonValueKind.Null &&
-                !(input.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(input.GetString())))
+                !(input.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(input.GetString()) &&
+                  !(inputType?.Kind == "string" && inputType.Values.Contains(input.GetString()!, StringComparer.Ordinal))))
             {
+                if (inputType != null) ValidateInput(subject.Name, input, inputType);
                 return FromJsonValue(input);
             }
 
@@ -194,6 +205,30 @@ public sealed class RuleRuntimeService
 
         context.MessageSink.NotifyUnknownValue = Resolve;
         context.MessageSink.GetUserInput = Resolve;
+    }
+
+    private static PromptInputType ToInputType(ModelType type, ExplicitModel model)
+    {
+        var unit = type.Kind == null ? model.Units[type.BaseName] : null;
+        return new PromptInputType(type.Kind ?? unit!.Kind, unit?.ShortName, type.Values.ToArray(), type.Minimum, type.Maximum);
+    }
+
+    private static void ValidateInput(string name, JsonElement value, PromptInputType type)
+    {
+        var valid = type.Kind switch
+        {
+            "string" => value.ValueKind == JsonValueKind.String &&
+                (type.Values.Count == 0 || type.Values.Contains(value.GetString()!, StringComparer.Ordinal)),
+            "boolean" => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+            "integer" or "real" => value.ValueKind == JsonValueKind.Number &&
+                (type.Kind != "integer" || value.GetDouble() == Math.Truncate(value.GetDouble())) &&
+                (type.Minimum == null || value.GetDouble() > type.Minimum.Value ||
+                    (type.Minimum.Inclusive && value.GetDouble() == type.Minimum.Value)) &&
+                (type.Maximum == null || value.GetDouble() < type.Maximum.Value ||
+                    (type.Maximum.Inclusive && value.GetDouble() == type.Maximum.Value)),
+            _ => false
+        };
+        if (!valid) throw new RuleRuntimeException($"Value for '{name}' is outside its model type", new[] { name });
     }
 
     private static EvaluationType ParseEvaluationType(string mode) => mode.Trim().ToLowerInvariant() switch
@@ -243,7 +278,8 @@ public sealed class RuleRuntimeService
     };
 }
 
-public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices, ProofSnapshot? Why = null);
+public sealed record PromptInputType(string Kind, string? Unit, IReadOnlyList<string> Values, ModelBound? Minimum, ModelBound? Maximum);
+public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices, ProofSnapshot? Why = null, PromptInputType? InputType = null);
 public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree,
     IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes)
 {

@@ -61,7 +61,7 @@ function interactiveRequest(operation, body, getUserInput) {
       try {
         const message = JSON.parse(data)
         if (message.type === 'unknownValue') {
-          const value = await getUserInput(message.name, message.choices || [], promptLifetime.signal, message.why)
+          const value = await getUserInput(message.name, message.choices || [], promptLifetime.signal, message.why, message.inputType)
           if (!settled) socket.send(JSON.stringify({ type: 'answer', value: value ?? null }))
         } else if (message.type === 'result') {
           finish(null, message.result)

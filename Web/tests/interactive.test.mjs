@@ -44,7 +44,7 @@ function run(operation, request, answer) {
         const message = JSON.parse(data)
         if (message.type === 'unknownValue') {
           prompts.push(message.name)
-          const value = await answer(message.name, socket, message.choices, message.why)
+          const value = await answer(message.name, socket, message.choices, message.why, message.inputType)
           if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'answer', value }))
         } else {
           clearTimeout(timeout)
@@ -171,6 +171,49 @@ test('enforced model rejects absent files, unknown IDs and out-of-domain values'
   assert.ok(invalid.body.syntaxErrors.some(error => error.includes('Sample.Unknown')))
   assert.ok(invalid.body.syntaxErrors.some(error => error.includes("outside type 'Score'")))
   assert.equal((await parse('RuleContainer C', undefined, undefined)).status, 200)
+})
+
+test('enforced model supplies nested property choices, bounds and boolean kind to prompts', async () => {
+  const modelSource = 'unit Points of integer with short = "pt" type Phase of string with values = ["queued", "ready", "unused"] type Duration of Points with min > 0 and max < 5 class Child has Phase of Phase Duration of Duration Enabled of boolean class Root has Child as Child'
+  const source = 'enforce model "prompt-model.txt" RuleContainer C Rule R If Root.Child.Phase = "ready" and Root.Child.Duration > 1 and Root.Child.Enabled Then Root.Child.Enabled'
+  const requests = []
+  const response = await run('evaluate', { source, modelSource, modelFileName: 'prompt-model.txt', mode: 'once', context: {} },
+    (name, _, choices, __, inputType) => {
+      requests.push({ name, choices, inputType })
+      return { 'Root.Child.Phase': 'ready', 'Root.Child.Duration': 3, 'Root.Child.Enabled': true }[name]
+    })
+  assert.equal(response.type, 'result', JSON.stringify(response))
+  assert.deepEqual(requests.map(request => request.name), ['Root.Child.Phase', 'Root.Child.Duration', 'Root.Child.Enabled'])
+  assert.deepEqual(requests[0].choices, ['queued', 'ready', 'unused'])
+  assert.equal(requests[0].inputType.kind, 'string')
+  assert.equal(requests[1].inputType.kind, 'integer')
+  assert.equal(requests[1].inputType.unit, 'pt')
+  assert.deepEqual(requests[1].inputType.minimum, { value: 0, inclusive: false, isInteger: true })
+  assert.deepEqual(requests[1].inputType.maximum, { value: 5, inclusive: false, isInteger: true })
+  assert.equal(requests[2].inputType.kind, 'boolean')
+  const invalid = await run('evaluate', { source, modelSource, modelFileName: 'prompt-model.txt', mode: 'once', context: {} },
+    name => name === 'Root.Child.Phase' ? 'ready' : 5)
+  assert.equal(invalid.type, 'error')
+  assert.match(invalid.error, /outside its model type/)
+})
+
+test('an explicitly declared empty string can be answered as a value', async () => {
+  const modelSource = 'type Phase of string with values = ["", "ready"] class Root has Phase of Phase Done of boolean'
+  const source = 'enforce model "empty-model.txt" RuleContainer C Rule R If Root.Phase = "ready" Then Root.Done'
+  const response = await run('evaluate', { source, modelSource, modelFileName: 'empty-model.txt', mode: 'once', context: {} },
+    (_, __, choices) => { assert.deepEqual(choices, ['', 'ready']); return '' })
+  assert.equal(response.type, 'result', JSON.stringify(response))
+  assert.equal(response.result.context['Root.Phase'], '')
+  assert.equal(response.result.context['Root.Done'], undefined)
+})
+
+test('enforced calculator does not prompt for an unmapped ID', async () => {
+  const modelSource = 'class Root has Known of integer'
+  const source = 'enforce model "only-known.txt" RuleContainer C Rule R If Root.Known = 1 Then Root.Known := 2'
+  const response = await run('calculate', { source, modelSource, modelFileName: 'only-known.txt', expression: 'Unknown', context: {} },
+    () => assert.fail('An unknown ID must not open a prompt'))
+  assert.equal(response.type, 'error')
+  assert.match(response.error, /does not map/)
 })
 
 function proofNodes(node) {
@@ -448,7 +491,7 @@ for (const [profile, price] of [['office', 420], ['gaming', 1040], ['creator', 1
     test(`computer assembly builds ${profile} in ${mode} mode`, async () => {
       const response = await run('evaluate', { source: computerDemo, modelSource: computerModel, modelFileName: 'Demo-Computer-Assembly-model.txt', mode, context: {} }, (name, _, choices) => {
         assert.equal(name, 'Build.Profile', 'Only the customer profile should require input')
-        assert.deepEqual(choices, ['office', 'gaming', 'creator'])
+        assert.deepEqual(choices, ['', 'office', 'gaming', 'creator'])
         return profile
       })
       assert.equal(response.type, 'result', JSON.stringify(response))
