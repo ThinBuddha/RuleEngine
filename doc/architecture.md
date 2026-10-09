@@ -127,7 +127,7 @@ Facts persist between runs in the browser, not in a long-lived server-side engin
 
 A bare conclusion such as `Access.Allowed` stores Boolean `true`. An assignment such as `Price.Total := Price.Base * 1.21` evaluates the right-hand expression and stores its result.
 
-`ModelTypes.Derive` infers each fact ID's kind and known string literals from rule conditions and conclusions. `ModelDeriver.Derive` presents those same IDs as a nested `ModelClass` tree: `Parcel.Drone.status` becomes property `status` in class `Parcel.Drone`. The root class has an empty name and holds IDs without dots as properties. Each `ModelProperty` exposes its full ID, inferred kind (`Boolean`, `numeric`, `string`, or null when unconstrained), and known string values. The parse API returns this tree as `model` alongside the existing `modelTypes` string-choice map. The tree describes the rules; evaluation continues to use flat IDs in `ValueBag`.
+`DerivedModelTypes.Derive` infers each fact ID's kind and known string literals from rule conditions and conclusions. `ModelDeriver.Derive` presents those same IDs as a nested `ModelClass` tree: `Parcel.Drone.status` becomes property `status` in class `Parcel.Drone`. The root class has an empty name and holds IDs without dots as properties. Each `ModelProperty` exposes its full ID, inferred kind (`Boolean`, `numeric`, `string`, or null when unconstrained), and known string values. The parse API returns this tree as `model` alongside the existing `modelTypes` string-choice map. The tree describes the rules; evaluation continues to use flat IDs in `ValueBag`.
 
 ### Unknown-value resolution
 

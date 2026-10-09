@@ -14,7 +14,7 @@ namespace RuleTest
                 "Then Delivery.Route := \"air\" and Delivery.Ready " +
                 "Rule ground If Parcel.Drone.status = \"blocked\" Then Delivery.Route := \"ground\"");
 
-            var types = ModelTypes.Derive(containers);
+            var types = DerivedModelTypes.Derive(containers);
             var model = ModelDeriver.Derive(types);
 
             Assert.Empty(model.Name);

@@ -16,7 +16,7 @@ namespace Rules.Model
     /// GetStringValues returns known literal strings for an identifier. 
     /// Merge combines domains, propagates literal values and aliases and throws ArgumentException on conflicting Kind values.
     /// </remarks>
-    public class ModelTypes
+    public class DerivedModelTypes
     {
         private readonly Dictionary<string, Domain> _ids = new(StringComparer.Ordinal);
 
@@ -33,9 +33,9 @@ namespace Rules.Model
         public IReadOnlyList<string> GetStringValues(string id) =>
             _ids.TryGetValue(id, out var domain) ? domain.Values.ToArray() : Array.Empty<string>();
 
-        public static ModelTypes Derive(RuleContainers containers)
+        public static DerivedModelTypes Derive(RuleContainers containers)
         {
-            var model = new ModelTypes();
+            var model = new DerivedModelTypes();
             foreach (var container in containers.Containers)
             {
                 foreach (var rule in container.Rules)

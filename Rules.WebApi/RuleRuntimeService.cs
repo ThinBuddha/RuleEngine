@@ -12,26 +12,26 @@ public sealed class RuleRuntimeService
 {
     public ParseResponse Parse(string source)
     {
-        var containers = ParseContainers(source, out var parser, out var modelTypes);
+        var containers = ParseContainers(source, out var parser, out var derivedModelTypes);
         return new ParseResponse(
             containers.Containers.Select(container => new ContainerSummary(
                 container.Name,
                 container.Rules.Select(rule => new RuleSummary(rule.Name, rule.Priority)).ToList())).ToList(),
-            parser.ParseTree, modelTypes.StringValues)
+            parser.ParseTree, derivedModelTypes.StringValues)
         {
-            Model = ModelDeriver.Derive(modelTypes)
+            Model = ModelDeriver.Derive(derivedModelTypes)
         };
     }
 
     public EvaluateResponse Evaluate(EvaluateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
     {
-        var containers = ParseContainers(request.Source, out _, out var modelTypes);
+        var containers = ParseContainers(request.Source, out _, out var derivedModelTypes);
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
         var evaluationType = ParseEvaluationType(request.Mode);
         TCompareExpression? query = null;
 
-        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, modelTypes);
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes);
         try
         {
             if (evaluationType == EvaluationType.Deduction)
@@ -83,9 +83,9 @@ public sealed class RuleRuntimeService
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
-        var modelTypes = new ModelTypes();
-        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out modelTypes);
-        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, modelTypes);
+        var derivedModelTypes = new DerivedModelTypes();
+        if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes);
+        ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes);
         try
         {
             var parser = new RuleParser(RulePart.Expression);
@@ -113,7 +113,7 @@ public sealed class RuleRuntimeService
         }
     }
 
-    private static RuleContainers ParseContainers(string source, out RuleParser parser, out ModelTypes modelTypes)
+    private static RuleContainers ParseContainers(string source, out RuleParser parser, out DerivedModelTypes derivedModelTypes)
     {
         parser = new RuleParser(RulePart.RuleContainer);
         parser.Parse(source);
@@ -124,7 +124,7 @@ public sealed class RuleRuntimeService
 
         try
         {
-            modelTypes = ModelTypes.Derive(builder.RuleContainers);
+            derivedModelTypes = DerivedModelTypes.Derive(builder.RuleContainers);
         }
         catch (ArgumentException exception)
         {
@@ -151,7 +151,7 @@ public sealed class RuleRuntimeService
     }
 
     private static void ConfigureUnknownValueResolution(ValueBag context, ISet<string> missingFacts,
-        Func<UnknownValueRequest, JsonElement?>? getUserInput, ModelTypes modelTypes)
+        Func<UnknownValueRequest, JsonElement?>? getUserInput, DerivedModelTypes derivedModelTypes)
     {
         TConstantValue? Resolve(TId subject, ValueBag _) 
         {
@@ -160,7 +160,7 @@ public sealed class RuleRuntimeService
                 return value;
             }
 
-            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, modelTypes.GetStringValues(subject.Name),
+            var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, derivedModelTypes.GetStringValues(subject.Name),
                 ProofSnapshot.From(context.GetDeductionProof())));
             if (answer is JsonElement input && input.ValueKind != JsonValueKind.Null &&
                 !(input.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(input.GetString())))

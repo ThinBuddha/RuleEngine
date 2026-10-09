@@ -66,11 +66,11 @@ namespace Rules.Model
         public static ModelClass Derive(RuleContainers containers)
         {
             ArgumentNullException.ThrowIfNull(containers);
-            return Derive(ModelTypes.Derive(containers));
+            return Derive(DerivedModelTypes.Derive(containers));
         }
 
         /// <summary>Builds a tree from an existing type derivation.</summary>
-        public static ModelClass Derive(ModelTypes types)
+        public static ModelClass Derive(DerivedModelTypes types)
         {
             ArgumentNullException.ThrowIfNull(types);
             var root = new ModelClass(string.Empty, string.Empty);
