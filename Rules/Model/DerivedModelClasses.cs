@@ -73,7 +73,13 @@ namespace Rules.Model
             return Derive(DerivedModelTypes.Derive(containers));
         }
 
-        /// <summary>Builds a tree from an existing type derivation.</summary>
+        /// <summary>
+        /// Builds a tree from an existing type derivation.
+        /// </summary>
+        /// <remarks>
+        /// This makes use of the derived type's name's class-property structure, 
+        /// so its use is limited to rules that don't enforce the usage of an explicit model.
+        /// </remarks>
         public static DerivedModelClass Derive(DerivedModelTypes types)
         {
             ArgumentNullException.ThrowIfNull(types);
