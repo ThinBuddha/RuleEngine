@@ -13,14 +13,20 @@ public sealed class RuleRuntimeService
     public ParseResponse Parse(string source, string? modelSource = null, string? modelFileName = null)
     {
         var containers = ParseContainers(source, out var parser, out var derivedModelTypes, out _, modelSource, modelFileName);
+
+        // Return parse results and a derived model for the GUI to use for validation and user input (if there is no explicit model).
         return new ParseResponse(
-            containers.Containers.Select(container => new ContainerSummary(
-                container.Name,
-                container.Rules.Select(rule => new RuleSummary(rule.Name, rule.Priority)).ToList())).ToList(),
-            parser.ParseTree, derivedModelTypes.StringValues)
-        {
-            Model = DerivedModelDeriver.Derive(derivedModelTypes)
-        };
+            Containers: GetContainersSummary(containers),
+            ParseTree: parser.ParseTree,
+            ModelTypes: derivedModelTypes.StringValues,
+            Model: DerivedModelDeriver.Derive(derivedModelTypes));
+
+        static List<ContainerSummary> GetContainersSummary(RuleContainers containers) =>
+            [.. containers.Containers.Select(container =>
+                    new ContainerSummary(
+                        container.Name,
+                        [.. container.Rules.Select(rule => new RuleSummary(rule.Name, rule.Priority)) ] ))
+            ];
     }
 
     public EvaluateResponse Evaluate(EvaluateRequest request, Func<UnknownValueRequest, JsonElement?>? getUserInput = null)
@@ -281,11 +287,11 @@ public sealed class RuleRuntimeService
 
 public sealed record PromptInputType(string Kind, string? Unit, IReadOnlyList<string> Values, ModelBound? Minimum, ModelBound? Maximum);
 public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choices, ProofSnapshot? Why = null, PromptInputType? InputType = null);
-public sealed record ParseResponse(List<ContainerSummary> Containers, string ParseTree,
-    IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes)
-{
-    public required DerivedModelClass Model { get; init; }
-}
+public sealed record ParseResponse(
+    List<ContainerSummary> Containers,
+    string ParseTree,
+    IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes,
+    DerivedModelClass Model);
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
 public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds,

@@ -183,6 +183,7 @@ for (const demo of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']
     const original = await parse(source, modelSource, `${demo}-model.txt`)
     const formatted = await parse(formatRuleSource(source), modelSource, `${demo}-model.txt`)
     assert.equal(original.status, 200, JSON.stringify(original.body))
+    assert.ok(original.body.model)
     assert.equal(formatted.status, 200, JSON.stringify(formatted.body))
     assert.deepEqual(formatted.body, original.body)
   })
