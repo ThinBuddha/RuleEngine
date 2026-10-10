@@ -14,12 +14,12 @@ public sealed class RuleRuntimeService
     {
         var containers = ParseContainers(source, out var parser, out var derivedModelTypes, out _, modelSource, modelFileName);
 
-        // Return parse results and a derived model for the GUI to use for validation and user input (if there is no explicit model).
+        // Derived type information is only needed when no explicit model is enforced.
         return new ParseResponse(
             Containers: GetContainersSummary(containers),
             ParseTree: parser.ParseTree,
-            ModelTypes: derivedModelTypes.StringValues,
-            Model: DerivedModelDeriver.Derive(derivedModelTypes));
+            ModelTypes: derivedModelTypes?.StringValues,
+            Model: derivedModelTypes is null ? null : DerivedModelDeriver.Derive(derivedModelTypes));
 
         static List<ContainerSummary> GetContainersSummary(RuleContainers containers) =>
             [.. containers.Containers.Select(container =>
@@ -89,7 +89,7 @@ public sealed class RuleRuntimeService
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
-        var derivedModelTypes = new DerivedModelTypes();
+        DerivedModelTypes? derivedModelTypes = new DerivedModelTypes();
         ExplicitModel? explicitModel = null;
         if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes, out explicitModel, request.ModelSource, request.ModelFileName);
         ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes, explicitModel);
@@ -120,7 +120,7 @@ public sealed class RuleRuntimeService
         }
     }
 
-    private static RuleContainers ParseContainers(string source, out RuleParser parser, out DerivedModelTypes derivedModelTypes,
+    private static RuleContainers ParseContainers(string source, out RuleParser parser, out DerivedModelTypes? derivedModelTypes,
         out ExplicitModel? explicitModel,
         string? modelSource = null, string? modelFileName = null)
     {
@@ -150,8 +150,13 @@ public sealed class RuleRuntimeService
             explicitModel = modelBuilder.Model;
         }
 
-        // Syntax and model validation passed, now derive types, this is legacy since the GUI still uses it
-        // it's also future improvement to let the user work two ways: model first or rules first.
+        if (explicitModel is not null)
+        {
+            derivedModelTypes = null;
+            return builder.RuleContainers;
+        }
+
+        // Without an explicit model, derive types for input choices and the GUI's derived model.
         try
         {
             derivedModelTypes = DerivedModelTypes.Derive(builder.RuleContainers);
@@ -181,7 +186,7 @@ public sealed class RuleRuntimeService
     }
 
     private static void ConfigureUnknownValueResolution(ValueBag context, ISet<string> missingFacts,
-        Func<UnknownValueRequest, JsonElement?>? getUserInput, DerivedModelTypes derivedModelTypes, ExplicitModel? explicitModel)
+        Func<UnknownValueRequest, JsonElement?>? getUserInput, DerivedModelTypes? derivedModelTypes, ExplicitModel? explicitModel)
     {
         TConstantValue? Resolve(TId subject, ValueBag _) 
         {
@@ -194,7 +199,7 @@ public sealed class RuleRuntimeService
             if (explicitModel != null && modelType == null)
                 throw new RuleRuntimeException($"ID '{subject.Name}' does not map to a model property", new[] { subject.Name });
             var inputType = modelType == null ? null : ToInputType(modelType, explicitModel!);
-            var choices = inputType?.Values ?? derivedModelTypes.GetStringValues(subject.Name);
+            var choices = inputType?.Values ?? derivedModelTypes?.GetStringValues(subject.Name) ?? [];
             var answer = getUserInput?.Invoke(new UnknownValueRequest(subject.Name, choices,
                 ProofSnapshot.From(context.GetDeductionProof()), inputType));
             if (answer is JsonElement input && input.ValueKind != JsonValueKind.Null &&
@@ -290,8 +295,8 @@ public sealed record UnknownValueRequest(string Name, IReadOnlyList<string> Choi
 public sealed record ParseResponse(
     List<ContainerSummary> Containers,
     string ParseTree,
-    IReadOnlyDictionary<string, IReadOnlyList<string>> ModelTypes,
-    DerivedModelClass Model);
+    IReadOnlyDictionary<string, IReadOnlyList<string>>? ModelTypes,
+    DerivedModelClass? Model);
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
 public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds,
