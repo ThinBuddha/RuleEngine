@@ -1,4 +1,4 @@
-Enforce model "Demo-Moonbase-Clinic-model.txt"
+Enforce model "Moonbase-Clinic-model.txt"
 
 RuleContainer Moonbase.Clinic
 

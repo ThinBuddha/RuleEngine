@@ -6,7 +6,7 @@ import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { splitModelSource } from '../src/modelSource.js'
 
-for (const stem of ['Demo-Parcel-Dispatcher', 'Demo-Computer-Assembly', 'Demo-Moonbase-Clinic']) {
+for (const stem of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']) {
   test(`${stem} splits into types and classes without losing text`, () => {
     const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${stem}-model.txt`, import.meta.url), 'utf8')
     const { types, classes } = splitModelSource(source)

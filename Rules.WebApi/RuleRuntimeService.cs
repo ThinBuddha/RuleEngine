@@ -245,7 +245,8 @@ public sealed class RuleRuntimeService
             result.TaskTrace.SelectMany(task => task.RuleResult.RuleTrace.Select(trace => new TraceEntry(
                 trace.Rule.Name,
                 trace.ContainerName ?? task.ContainerName,
-                trace.Rule.Conditions.Select(condition => condition.ToString()).ToList()))).ToList(),
+                trace.Rule.Conditions.Select(condition => condition.ToString()).ToList(),
+                trace.Rule.Conclusions.Select(conclusion => conclusion.ToString()).ToList()))).ToList(),
             result.TaskTrace.Count,
             ToContext(context), ToProofs(result));
 
@@ -289,7 +290,7 @@ public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
 public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds,
     Dictionary<string, object?> Context, IReadOnlyList<ProofSnapshot> Proofs);
-public sealed record TraceEntry(string Rule, string Container, List<string> Conditions);
+public sealed record TraceEntry(string Rule, string Container, List<string> Conditions, List<string> Conclusions);
 public sealed record CalculateResponse(object Value, Dictionary<string, object?> Context);
 
 public sealed class RuleSyntaxException : Exception

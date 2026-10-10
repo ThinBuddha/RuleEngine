@@ -49,6 +49,20 @@ test('story keeps false evidence separate from an unresolved question', () => {
   assert.doesNotMatch(unknownStory, /answer to “Goal” is no/)
 })
 
+test('story explains a deduction question while its answer is pending', () => {
+  const waitingProof = { root: node(1, 'Query', 'Goal', 'WaitingForInput', [
+    node(2, 'Rule', 'Demo/decide', 'WaitingForInput', [
+      node(3, 'Condition', 'Input > 10', 'WaitingForInput', [
+        node(4, 'Evidence', 'Input', 'WaitingForInput', [], { source: 'UserAnswer' }),
+      ]),
+    ]),
+  ]) }
+  const story = proofStory(waitingProof).join(' ')
+  assert.match(story, /waiting for a value for/)
+  assert.match(story, /Demo\/decide.*remains open/)
+  assert.match(story, /cannot settle.*Goal/)
+})
+
 test('story component escapes user supplied proof text', async () => {
   const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
   try {

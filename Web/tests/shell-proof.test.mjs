@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 const assembly = fileURLToPath(new URL('../../CommandShell/bin/Debug/net10.0/CommandShell.dll', import.meta.url))
 const fixture = fileURLToPath(new URL('./fixtures/proof.rules', import.meta.url))
 const multiFixture = fileURLToPath(new URL('./fixtures/proof-multi.rules', import.meta.url))
-const parcelDemo = fileURLToPath(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url))
+const parcelDemo = fileURLToPath(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher.txt', import.meta.url))
 
 function shell(answer, ruleFile = fixture) {
   const result = spawnSync('dotnet', [assembly], {

@@ -8,9 +8,9 @@ namespace RuleParserTest
     public class TestRuleModelValidator
     {
         [Theory]
-        [InlineData("Demo-Parcel-Dispatcher")]
-        [InlineData("Demo-Computer-Assembly")]
-        [InlineData("Demo-Moonbase-Clinic")]
+        [InlineData("Parcel-Dispatcher")]
+        [InlineData("Computer-Assembly")]
+        [InlineData("Moonbase-Clinic")]
         public void DemoRulesMapToTheirModels(string name)
         {
             var examples = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "RuleParser", "doc", "Examples"));

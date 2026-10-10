@@ -8,11 +8,13 @@ This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell
 - import a model file and inspect its types and classes;
 - choose fire-once, iteration, or deduction mode;
 - enter a deduction query;
-- execute rules and inspect the trace;
+- execute rules and inspect the trace as a rule list or a short story;
 - inspect and clear the fact context;
 - calculate an expression against the current context.
 
 The selected mode is sent with each evaluation request. Fire once visits each rule once. Iteration revisits rules whose conditions have not yet matched, but each rule can fire only once per evaluation. It stops when a complete pass fires no new rules. Fired-rule tracking resets for each evaluation; facts remain in the browser context until cleared. Iteration processes each container in sequence and visits its rules in their current order, so conflicting assignments can still depend on rule order.
+
+During deduction, expand **Why this question?** in a value prompt to switch between the proof tree and its short story.
 
 ## Run locally
 

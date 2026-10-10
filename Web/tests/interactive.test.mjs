@@ -93,6 +93,8 @@ for (const mode of ['once', 'iteration', 'deduction']) {
     assert.deepEqual(response.prompts, ['Input'])
     assert.equal(response.result.context.Output, 7)
     assert.equal(response.result.trace.length, 1)
+    assert.deepEqual(response.result.trace[0].conclusions,
+      mode === 'iteration' ? ['Output := 7', 'Input := 0'] : ['Output := 7'])
     if (mode === 'deduction') assert.equal(response.result.queryResult, true)
   })
 }
@@ -174,7 +176,7 @@ test('enforced model rejects absent files, unknown IDs and out-of-domain values'
   assert.equal((await parse('RuleContainer C', undefined, undefined)).status, 200)
 })
 
-for (const demo of ['Demo-Parcel-Dispatcher', 'Demo-Computer-Assembly', 'Demo-Moonbase-Clinic']) {
+for (const demo of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']) {
   test(`auto formatted ${demo} has the same parsed rules and model choices`, async () => {
     const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${demo}.txt`, import.meta.url), 'utf8')
     const modelSource = readFileSync(new URL(`../../RuleParser/doc/Examples/${demo}-model.txt`, import.meta.url), 'utf8')
@@ -459,10 +461,10 @@ test('different loaded models do not retain each other’s choices', async () =>
   assert.equal(response.result.value, 'custom')
 })
 
-const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
-const clinicDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Moonbase-Clinic.txt', import.meta.url), 'utf8')
-const parcelModel = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher-model.txt', import.meta.url), 'utf8')
-const clinicModel = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Moonbase-Clinic-model.txt', import.meta.url), 'utf8')
+const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+const clinicDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Moonbase-Clinic.txt', import.meta.url), 'utf8')
+const parcelModel = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher-model.txt', import.meta.url), 'utf8')
+const clinicModel = readFileSync(new URL('../../RuleParser/doc/Examples/Moonbase-Clinic-model.txt', import.meta.url), 'utf8')
 for (const [query, answers, expected] of [
   ['Assessment.Moonbloom', { 'Skin.Appearance': 'shimmering', 'Night.Sensation': 'tingling', 'Recent.Location': 'moon garden' }, true],
   ['Assessment.Moonbloom', { 'Skin.Appearance': 'ordinary' }, false],
@@ -475,7 +477,7 @@ for (const [query, answers, expected] of [
   ['Assessment.Starlight.depletion', { 'Energy.Level': 'steady' }, false],
 ]) {
   test(`fictional clinic ${query}: ${JSON.stringify(answers)}`, async () => {
-    const response = await run('evaluate', { source: clinicDemo, modelSource: clinicModel, modelFileName: 'Demo-Moonbase-Clinic-model.txt', mode: 'deduction', query, context: {} }, (name, _, choices) => {
+    const response = await run('evaluate', { source: clinicDemo, modelSource: clinicModel, modelFileName: 'Moonbase-Clinic-model.txt', mode: 'deduction', query, context: {} }, (name, _, choices) => {
       assert.ok(Object.hasOwn(answers, name), `Unnecessary or internal question: ${name}`)
       if (typeof answers[name] === 'string') assert.ok(choices.includes(answers[name]))
       return answers[name]
@@ -492,17 +494,17 @@ for (const [query, answers, expected] of [
 }
 
 test('declining a clinic observation stays unknown rather than disproving the hypothesis', async () => {
-  const response = await run('evaluate', { source: clinicDemo, modelSource: clinicModel, modelFileName: 'Demo-Moonbase-Clinic-model.txt', mode: 'deduction', query: 'Assessment.Moonbloom', context: {} }, () => null)
+  const response = await run('evaluate', { source: clinicDemo, modelSource: clinicModel, modelFileName: 'Moonbase-Clinic-model.txt', mode: 'deduction', query: 'Assessment.Moonbloom', context: {} }, () => null)
   assert.equal(response.type, 'error')
   assert.deepEqual(response.missingFacts, ['Skin.Appearance'])
 })
 
-const computerDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Computer-Assembly.txt', import.meta.url), 'utf8')
-const computerModel = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Computer-Assembly-model.txt', import.meta.url), 'utf8')
+const computerDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Computer-Assembly.txt', import.meta.url), 'utf8')
+const computerModel = readFileSync(new URL('../../RuleParser/doc/Examples/Computer-Assembly-model.txt', import.meta.url), 'utf8')
 for (const [profile, price] of [['office', 420], ['gaming', 1040], ['creator', 1630]]) {
   for (const mode of ['once', 'iteration']) {
     test(`computer assembly builds ${profile} in ${mode} mode`, async () => {
-      const response = await run('evaluate', { source: computerDemo, modelSource: computerModel, modelFileName: 'Demo-Computer-Assembly-model.txt', mode, context: {} }, (name, _, choices) => {
+      const response = await run('evaluate', { source: computerDemo, modelSource: computerModel, modelFileName: 'Computer-Assembly-model.txt', mode, context: {} }, (name, _, choices) => {
         assert.equal(name, 'Build.Profile', 'Only the customer profile should require input')
         assert.deepEqual(choices, ['', 'office', 'gaming', 'creator'])
         return profile
@@ -558,7 +560,7 @@ for (const [contents, size, distance, weather, recipient, urgency, membership, d
         'Weather.Now': weather, 'Recipient.Location': recipient, 'Delivery.Urgency': urgency,
         'Customer.Membership': membership, 'Parcel.Declared.value': declaredValue,
       }
-      const response = await run('evaluate', { source: parcelDemo, modelSource: parcelModel, modelFileName: 'Demo-Parcel-Dispatcher-model.txt', mode, context: {} }, (name, _, choices) => {
+      const response = await run('evaluate', { source: parcelDemo, modelSource: parcelModel, modelFileName: 'Parcel-Dispatcher-model.txt', mode, context: {} }, (name, _, choices) => {
         assert.ok(Object.hasOwn(answers, name), `Unexpected prompt: ${name}`)
         if (typeof answers[name] === 'string') assert.ok(choices.includes(answers[name]))
         else assert.deepEqual(choices, [])

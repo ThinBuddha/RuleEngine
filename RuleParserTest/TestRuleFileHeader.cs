@@ -12,20 +12,20 @@ namespace RuleParserTest
         {
             var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples",
-                "Demo-Parcel-Dispatcher.txt"));
+                "Parcel-Dispatcher.txt"));
             var parser = new RuleParser(RulePart.RuleContainer);
 
             parser.Parse(File.ReadAllText(path));
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Equal("Demo-Parcel-Dispatcher-model.txt", parser.ModelFileName);
-            Assert.StartsWith("ModelFile(Demo-Parcel-Dispatcher-model.txt)RuleCont(", parser.ParseTree);
+            Assert.Equal("Parcel-Dispatcher-model.txt", parser.ModelFileName);
+            Assert.StartsWith("ModelFile(Parcel-Dispatcher-model.txt)RuleCont(", parser.ParseTree);
             Assert.Equal(10, Assert.IsType<RulesBuilder>(parser.Builder).RuleContainers.Containers.Count);
         }
 
         [Theory]
-        [InlineData("Demo-Computer-Assembly", 2)]
-        [InlineData("Demo-Moonbase-Clinic", 1)]
+        [InlineData("Computer-Assembly", 2)]
+        [InlineData("Moonbase-Clinic", 1)]
         public void ParsesOtherDemoFilesWithTheirModelHeaders(string demo, int containerCount)
         {
             var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,

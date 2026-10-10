@@ -32,7 +32,7 @@ namespace RuleParserTest
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Demo-Parcel-Dispatcher-model.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Parcel-Dispatcher-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);
@@ -50,7 +50,7 @@ namespace RuleParserTest
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Demo-Computer-Assembly-model.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Computer-Assembly-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);
@@ -67,7 +67,7 @@ namespace RuleParserTest
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Demo-Moonbase-Clinic-model.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Moonbase-Clinic-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);

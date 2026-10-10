@@ -37,7 +37,7 @@ test('comments and quoted keywords remain intact', () => {
 })
 
 test('formats a complete demo without losing containers or quoted values', () => {
-  const source = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher.txt', import.meta.url), 'utf8')
   const formatted = formatRuleSource(source)
   assert.equal(splitRuleContainers(formatted).length, 10)
   assert.match(formatted, /\tIf   Delivery\.Distance\.km > 3 and\r?\n\t     Delivery\.Distance\.km <= 15/)

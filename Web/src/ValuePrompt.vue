@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import ProofTree from './ProofTree.vue'
+import ProofStory from './ProofStory.vue'
 import { inputHint, parsePromptValue } from './promptValue'
 
 const dialog = ref(null)
@@ -8,6 +9,7 @@ const prompt = ref(null)
 const answer = ref('')
 const validationError = ref('')
 const promptVersion = ref(0)
+const whyView = ref('tree')
 const isSelection = computed(() => prompt.value?.inputType?.kind === 'boolean' || !!prompt.value?.choices.length)
 let resolveAnswer
 let removeAbortListener
@@ -32,6 +34,7 @@ async function ask(name, choices, signal, why, inputType = null) {
   if (resolveAnswer) throw new Error('Another value is already being requested.')
   prompt.value = { name, choices, why, inputType }
   promptVersion.value++
+  whyView.value = 'tree'
   answer.value = inputType?.kind === 'boolean' || choices.length ? null : ''
   validationError.value = ''
   const result = new Promise((resolve) => { resolveAnswer = resolve })
@@ -65,7 +68,12 @@ defineExpose({ ask })
       <p v-if="validationError" class="input-error" role="alert">{{ validationError }}</p>
       <details v-if="prompt.why" :key="promptVersion" class="why">
         <summary>Why this question?</summary>
-        <ProofTree :proof="prompt.why" />
+        <button type="button" class="outline-btn why-toggle"
+          @click="whyView = whyView === 'tree' ? 'story' : 'tree'">
+          {{ whyView === 'tree' ? 'Read as story' : 'Show why tree' }}
+        </button>
+        <ProofStory v-if="whyView === 'story'" :proof="prompt.why" />
+        <ProofTree v-else :proof="prompt.why" />
       </details>
       <div class="value-actions">
         <button type="button" class="outline-btn" @click="finish()">Cancel</button>
@@ -87,6 +95,7 @@ select:focus, input:focus { outline: 2px solid #c8f169; }
 .value-dialog { width: min(820px, calc(100% - 32px)); max-height: 90vh; overflow: auto; }
 .why { margin-top: 18px; }
 .why > summary { cursor: pointer; color: #c8f169; }
+.why-toggle { margin-top: 12px; }
 .type-hint { display: block; margin-top: 8px; color: #a5b5c7; }
 .input-error { margin: 8px 0 0; color: #ffc0b3; font-size: 12px; }
 </style>

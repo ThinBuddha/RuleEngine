@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import { splitRuleContainers } from '../src/ruleContainers.js'
 
 test('the parcel demo has ten tabs and round-trips without changing its source', () => {
-  const source = readFileSync(new URL('../../RuleParser/doc/Examples/Demo-Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher.txt', import.meta.url), 'utf8')
   const sections = splitRuleContainers(source)
   assert.equal(sections.length, 10)
   assert.equal(sections[0].name, 'Parcel.Handling')

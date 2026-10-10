@@ -2,13 +2,13 @@
 
 This example resembles a symptom assessment, but its conditions, combinations, and thresholds are invented. It is not suitable for assessing anyone's health or making medical decisions.
 
-Import `Demo-Moonbase-Clinic.txt`, choose **Deduction**, and enter one of these queries exactly, without `= true`:
+Import `Moonbase-Clinic.txt`, choose **Deduction**, and enter one of these queries exactly, without `= true`:
 
 - `Assessment.Moonbloom`
 - `Assessment.Echo.fever`
 - `Assessment.Starlight.depletion`
 
-The rule file names the companion [model definitions](Demo-Moonbase-Clinic-model.txt), which contain types followed by classes. Import that file in the GUI's Model workspace to view both sections. The three assessment goals have Boolean types because their rules assert them as bare conclusions.
+The rule file names the companion [model definitions](Moonbase-Clinic-model.txt), which contain types followed by classes. Import that file in the GUI's Model workspace to view both sections. The three assessment goals have Boolean types because their rules assert them as bare conclusions.
 
 Choose **Start fresh** when comparing independent scenarios. There are 20 rules in one container. Keeping the rules together is important because the deduction engine searches the current container for rules that establish a requested fact.
 

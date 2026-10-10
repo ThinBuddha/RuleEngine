@@ -1,4 +1,4 @@
-Enforce model "Demo-Computer-Assembly-model.txt"
+Enforce model "Computer-Assembly-model.txt"
 
 RuleContainer Computer.Order
 
