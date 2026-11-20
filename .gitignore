@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # Local rule concepts spreadsheet
 /doc/Rule concepts.xlsx
+
+# Local OpenAI configuration
+/.openai/
