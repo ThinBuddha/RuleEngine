@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Generated Graphify output
 /graphify-out/
+
+# Local rule concepts spreadsheet
+/doc/Rule concepts.xlsx
