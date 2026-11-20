@@ -489,3 +489,7 @@ $RECYCLE.BIN/
 
 # Local OpenAI configuration
 /.openai/
+
+# Local PowerShell and batch scripts
+*.[pP][sS]1
+*.[bB][aA][tT]
