@@ -11,7 +11,7 @@ namespace Rules.Parser
     abstract public class Parser
     {
         protected Tokenizer _tokenizer;
-        protected readonly ParseTree _parseTree = new ParseTree();
+        protected readonly ParseTree _parseTree = new();
         protected int _syntaxErrorCount;
 
         protected delegate void ParseDelegate();
@@ -20,7 +20,7 @@ namespace Rules.Parser
         protected Enum _lookAheads;
 
         public string ParseTree => _parseTree.ToString();
-        public List<Tuple<string, string>> SyntaxErrors { get; } = new List<Tuple<string, string>>();
+        public List<Tuple<string, string>> SyntaxErrors { get; } = [];
         public Builder Builder { get; internal set; }
 
         public void Parse(string input)

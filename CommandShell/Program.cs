@@ -304,7 +304,7 @@ namespace Rules.CommandShell
             List<Tuple<string, string>> errorList;
             errors = string.Empty;
 
-            (compareExpr, errorList) = _interpreter.QueryToExpression(query);
+            (compareExpr, errorList) = Interpreter.QueryToExpression(query);
             if (errorList != null)
             {
                 foreach (Tuple<string, string> e in errorList)

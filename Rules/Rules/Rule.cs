@@ -16,8 +16,8 @@ namespace Rules.Rules
         public int Priority { get; set; } = 1;
         public Percentage Weight { get; set; } = Percentage.Max; // certainty or weight, however you look at it
         public bool Stop { get; set; } = false;
-        public List<TCompareExpression> Conditions { get; } = new List<TCompareExpression>();
-        public List<TAssignExpression> Conclusions { get; } = new List<TAssignExpression>();
+        public List<TCompareExpression> Conditions { get; } = [];
+        public List<TAssignExpression> Conclusions { get; } = [];
 
         int IComparable<Rule>.CompareTo(Rule other)
         {
@@ -80,7 +80,7 @@ namespace Rules.Rules
 
         public override string ToString()
         {
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
 
             result.Append($"Rule\t\t{Name}");
             result.Append(Environment.NewLine);
@@ -140,7 +140,7 @@ namespace Rules.Rules
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
 
             builder.Append($"\tRule \"{Rule.Name}\"{(ContainerName == null ? "" : $" in container \"{ContainerName}\"")} says:");
             builder.Append(Environment.NewLine);
@@ -164,7 +164,7 @@ namespace Rules.Rules
     public class RuleEvaluateResult
     {
         public DeductionProof Proof { get; internal set; }
-        public readonly List<RuleTrace> RuleTrace = new List<RuleTrace>();
+        public readonly List<RuleTrace> RuleTrace = [];
         public bool StopConditionValidated { get; set; }
         /// <summary>
         /// If <see cref="RuleGotFired"/> it true then at least one rule in the <see cref="RuleContainer"/> got fired.
@@ -179,7 +179,7 @@ namespace Rules.Rules
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
             builder.Append($"\tStop condition validated: {StopConditionValidated}");
             builder.Append(Environment.NewLine);
             builder.Append(Environment.NewLine);

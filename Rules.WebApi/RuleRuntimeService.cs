@@ -48,7 +48,7 @@ public sealed class RuleRuntimeService
                 }
 
                 var interpreter = new Interpreter();
-                var queryResult = interpreter.QueryToExpression(request.Query);
+                var queryResult = Interpreter.QueryToExpression(request.Query);
                 if (queryResult.Item2 is { Count: > 0 })
                 {
                     throw new RuleSyntaxException(queryResult.Item2);
@@ -89,7 +89,7 @@ public sealed class RuleRuntimeService
         var context = CreateContext(request.Context);
         var missingFacts = new HashSet<string>(StringComparer.Ordinal);
 
-        DerivedModelTypes? derivedModelTypes = new DerivedModelTypes();
+        DerivedModelTypes? derivedModelTypes = new();
         ExplicitModel? explicitModel = null;
         if (!string.IsNullOrWhiteSpace(request.Source)) ParseContainers(request.Source, out _, out derivedModelTypes, out explicitModel, request.ModelSource, request.ModelFileName);
         ConfigureUnknownValueResolution(context, missingFacts, getUserInput, derivedModelTypes, explicitModel);

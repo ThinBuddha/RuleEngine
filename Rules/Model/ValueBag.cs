@@ -50,7 +50,7 @@ namespace Rules.Model
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
             foreach (string key in _values.Keys)
             {
                 builder.Append($"{key}: ");

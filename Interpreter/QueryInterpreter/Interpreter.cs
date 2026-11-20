@@ -16,7 +16,7 @@ namespace Rules.QueryInterpreter
         /// </remarks>
         /// <param name="query"></param>
         /// <returns></returns>
-        public (TCompareExpression?, List<Tuple<string, string>>?) QueryToExpression(string query)
+        public static (TCompareExpression?, List<Tuple<string, string>>?) QueryToExpression(string query)
         {
             RuleParser parser = new(RulePart.Condition);
             parser.Parse(query);

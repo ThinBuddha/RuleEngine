@@ -118,8 +118,7 @@ namespace Rules.Parser
              *   [Description "bladibla and yadiya"]
              *   If Condition then Conclusion
              */
-            string literal;
-            if (!GetNextTokenIfIsKeyword("rulecontainer", out literal))
+            if (!GetNextTokenIfIsKeyword("rulecontainer", out string literal))
             {
                 AddSyntaxError("RuleContainer", literal);
                 return;
@@ -141,8 +140,7 @@ namespace Rules.Parser
 
         private void Rule()
         {
-            string literal;
-            if (!GetNextTokenIfIsKeyword("rule", out literal))
+            if (!GetNextTokenIfIsKeyword("rule", out string literal))
             {
                 AddSyntaxError("Rule", literal);
             }
