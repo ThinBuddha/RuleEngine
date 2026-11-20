@@ -1,6 +1,6 @@
 {
   "project_id": "appgprj_6ac34da047bc8191b963cd4b62bbe0cf",
   "static": {
-    "directory": "Web/dist"
+    "directory": "Rules.WebApi.GUI/dist"
   }
 }

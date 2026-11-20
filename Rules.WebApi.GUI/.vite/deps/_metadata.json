@@ -1,13 +1,13 @@
 {
-  "hash": "7fbaacb2",
-  "configHash": "928c5361",
-  "lockfileHash": "e13b9160",
-  "browserHash": "95f78215",
+  "hash": "eeeb3225",
+  "configHash": "097eaac5",
+  "lockfileHash": "63e82580",
+  "browserHash": "4b445cc4",
   "optimized": {
     "vue": {
       "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
       "file": "vue.js",
-      "fileHash": "ae10c91c",
+      "fileHash": "ea0b21ca",
       "needsInterop": false
     }
   },

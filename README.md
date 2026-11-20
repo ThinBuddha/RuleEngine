@@ -10,9 +10,15 @@ The repository also contains an interactive command shell, a query interpreter, 
 
 ## Documentation
 
+- [Architecture and developer guide](doc/architecture-and-developer-guide.md) follows the runtime from source text through evaluation, hosts, and proof output.
 - [Architecture](doc/architecture.md) explains the projects, runtime components, and evaluation flows.
 - [Rule language](doc/rule-language.md) describes the supported syntax with examples.
-- [Web workbench](Web/README.md) explains the Vue GUI and its browser runtime.
+- [Web workbench](Rules.WebApi.GUI/README.md) explains the Vue GUI and its browser runtime.
+
+To browse the architecture guide and existing Graphify wiki together, run
+`mkdocs serve --dev-addr 127.0.0.1:8000` from the repository root and open
+<http://127.0.0.1:8000/>. The site uses MkDocs Material and watches the guide
+and wiki for changes.
 
 ## Requirements
 
@@ -33,7 +39,7 @@ The web workbench uses the API project as its logic boundary. Run the API and Vu
 
 ```powershell
 dotnet run --project Rules.WebApi\Rules.WebApi.csproj --urls http://localhost:5215
-cd Web
+cd Rules.WebApi.GUI
 npm install
 npm run dev
 ```
@@ -91,8 +97,8 @@ If a required value cannot be derived from another rule, the command shell asks 
 | `Rules` | Contains expressions, facts, rules, inference engines, traces, and task orchestration. |
 | `Interpreter/QueryInterpreter` | Converts a textual query into a comparison expression. |
 | `CommandShell` | Interactive console application. |
-| `Web` | Vue workbench providing the browser equivalent of the command-shell workflow. |
-| `Rules.WebApi` | ASP.NET Core API exposing parsing, evaluation, and calculation to `Web`. |
+| `Rules.WebApi.GUI` | Vue workbench providing the browser equivalent of the command-shell workflow. |
+| `Rules.WebApi` | ASP.NET Core API exposing parsing, evaluation, and calculation to `Rules.WebApi.GUI`. |
 | `TokenizerTest` | Tokenizer tests. |
 | `RuleParserTest` | Parser and builder tests. |
 | `RuleTest` | Expression and inference tests. |
