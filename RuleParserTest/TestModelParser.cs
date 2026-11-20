@@ -32,7 +32,7 @@ namespace RuleParserTest
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Parcel-Dispatcher-model.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Parcel dispatcher", "Parcel-Dispatcher-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);
@@ -41,8 +41,8 @@ namespace RuleParserTest
             Assert.Empty(((ModelBuilder)parser.Builder).Model.Validate());
             Assert.Equal(4, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(33, Count(parser.ParseTree, "TypeDecl("));
-            Assert.Equal(25, Count(parser.ParseTree, "ClassDecl("));
-            Assert.Equal(45, Count(parser.ParseTree, "Property("));
+            Assert.Equal(19, Count(parser.ParseTree, "ClassDecl("));
+            Assert.Equal(39, Count(parser.ParseTree, "Property("));
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace RuleParserTest
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Computer-Assembly-model.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Computer assembly", "Computer-Assembly-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);
@@ -58,8 +58,8 @@ namespace RuleParserTest
             Assert.Empty(parser.SyntaxErrors);
             Assert.Equal(2, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(24, Count(parser.ParseTree, "TypeDecl("));
-            Assert.Equal(14, Count(parser.ParseTree, "ClassDecl("));
-            Assert.Equal(26, Count(parser.ParseTree, "Property("));
+            Assert.Equal(13, Count(parser.ParseTree, "ClassDecl("));
+            Assert.Equal(25, Count(parser.ParseTree, "Property("));
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace RuleParserTest
         {
             var examples = Path.GetFullPath(Path.Combine(System.AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
-            var source = File.ReadAllText(Path.Combine(examples, "Moonbase-Clinic-model.txt"));
+            var source = File.ReadAllText(Path.Combine(examples, "Moonbase clinic", "Moonbase-Clinic-model.txt"));
             var parser = new ModelParser();
 
             parser.Parse(source);

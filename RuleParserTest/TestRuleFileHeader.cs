@@ -12,7 +12,7 @@ namespace RuleParserTest
         {
             var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
                 "..", "..", "..", "..", "RuleParser", "doc", "Examples",
-                "Parcel-Dispatcher.txt"));
+                "Parcel dispatcher", "Parcel-Dispatcher.txt"));
             var parser = new RuleParser(RulePart.RuleContainer);
 
             parser.Parse(File.ReadAllText(path));
@@ -29,7 +29,7 @@ namespace RuleParserTest
         public void ParsesOtherDemoFilesWithTheirModelHeaders(string demo, int containerCount)
         {
             var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-                "..", "..", "..", "..", "RuleParser", "doc", "Examples", demo + ".txt"));
+                "..", "..", "..", "..", "RuleParser", "doc", "Examples", demo == "Computer-Assembly" ? "Computer assembly" : "Moonbase clinic", demo + ".txt"));
             var parser = new RuleParser(RulePart.RuleContainer);
 
             parser.Parse(File.ReadAllText(path));

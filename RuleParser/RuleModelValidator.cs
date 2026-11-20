@@ -69,7 +69,7 @@ namespace Rules.Parser
                 else
                 {
                     Numeric(result, next, expression.ToString());
-                    if (result.Unit != null && next.Unit != null && result.Unit != next.Unit)
+                    if (result.Unit != next.Unit)
                         Error($"Arithmetic mixes units '{result.Unit}' and '{next.Unit}' in '{expression}'");
                     result = new Domain("numeric", result.Unit ?? next.Unit, IsInteger: result.IsInteger && next.IsInteger);
                 }
@@ -90,7 +90,8 @@ namespace Rules.Parser
             for (var i = 1; i < factors.Length; i++)
             {
                 Numeric(result, factors[i], term.ToString());
-                if (result.Unit != null && factors[i].Unit != null)
+                if ((result.Unit != null && factors[i].Unit != null) ||
+                    (term.Operators[i - 1] == TMulDivOperator.Divide && factors[i].Unit != null))
                     Error($"Arithmetic combines two unit values in '{term}'");
                 result = new Domain("numeric", result.Unit ?? factors[i].Unit,
                     IsInteger: term.Operators[i - 1] == TMulDivOperator.Multiply && result.IsInteger && factors[i].IsInteger);
@@ -98,16 +99,32 @@ namespace Rules.Parser
             return result;
         }
 
-        private Domain Factor(TFactor factor) => factor switch
+        private Domain Factor(TFactor factor) => ResolveUnit(FactorDomain(factor));
+
+        private Domain FactorDomain(TFactor factor) => factor switch
         {
             TId id => CheckId(id),
             TExpression expression => Expression(expression),
             TConstantStringValue text => new Domain("string", null, Text: text.Value),
             TConstantNumValue number when number.Value.ValueType == TConstantNumValue.BoolType => new Domain("boolean", null),
-            TConstantNumValue number when number.Value.ValueType == TConstantNumValue.IntType => new Domain("numeric", null, Number: number.Value.IntValue, IsInteger: true),
-            TConstantNumValue number => new Domain("numeric", null, Number: number.Value.DoubleValue),
+            TConstantNumValue number when number.Value.ValueType == TConstantNumValue.IntType => new Domain("numeric", null, Number: number.Value.IntValue, IsInteger: true, UnitShortName: number.UnitShortName),
+            TConstantNumValue number => new Domain("numeric", null, Number: number.Value.DoubleValue, UnitShortName: number.UnitShortName),
             _ => new Domain(null, null)
         };
+
+        private Domain ResolveUnit(Domain domain)
+        {
+            if (domain.UnitShortName == null) return domain;
+            var units = _model.Units.Values.Where(unit => unit.ShortName == domain.UnitShortName).ToArray();
+            if (units.Length != 1)
+            {
+                Error($"Unit short name '{domain.UnitShortName}' must identify exactly one model unit");
+                return domain;
+            }
+            if (units[0].Kind == "integer" && !domain.IsInteger)
+                Error($"Value with unit '{domain.UnitShortName}' must be an integer");
+            return domain with { Unit = units[0].Name };
+        }
 
         private Domain CheckId(TId id)
         {
@@ -140,9 +157,14 @@ namespace Rules.Parser
         {
             if (target.Kind == null || value.Kind == null) return;
             if (target.Kind != value.Kind) { Error($"'{expression}' is {value.Kind} but expected {target.Kind}"); return; }
-            if (target.Kind == "numeric" && target.Unit != null && value.Unit != null && target.Unit != value.Unit)
-                Error($"'{expression}' uses unit '{value.Unit}' but expected '{target.Unit}'");
-            if (target.IsInteger && value.Kind == "numeric" && !value.IsInteger)
+            if (target.Kind == "numeric" && target.Unit != value.Unit)
+            {
+                if (target.Unit != null && value.Unit == null)
+                    Error($"'{expression}' requires unit short name '{_model.Units[target.Unit].ShortName}'");
+                else
+                    Error($"'{expression}' uses unit '{value.Unit}' but expected '{target.Unit ?? "no unit"}'");
+            }
+            if (target.Type != null && target.IsInteger && value.Kind == "numeric" && !value.IsInteger)
                 Error($"'{expression}' must be an integer");
             if (target.Type == null) return;
             if (value.Text != null && target.Type.Values.Count > 0 && !target.Type.Values.Contains(value.Text, StringComparer.Ordinal))
@@ -154,6 +176,6 @@ namespace Rules.Parser
         }
 
         private void Error(string message) => _errors.Add($"{_location}: {message}");
-        private sealed record Domain(string Kind, string Unit, string Text = null, double? Number = null, ModelType Type = null, bool IsInteger = false);
+        private sealed record Domain(string Kind, string Unit, string Text = null, double? Number = null, ModelType Type = null, bool IsInteger = false, string UnitShortName = null);
     }
 }

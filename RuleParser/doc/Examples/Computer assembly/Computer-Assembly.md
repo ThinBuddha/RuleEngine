@@ -45,8 +45,8 @@ Iteration builds the outcome over successive passes through the assembly contain
 | 6 | Release for delivery |
 | 7 | No new rule fires; iteration finishes |
 
-Each component rule appends its model to `Build.Component.list`, increments `Build.Component.count`, and adds its price to `Build.Total.credits`. Fired-rule tracking is essential here: iteration must not append components or charge for them again on subsequent passes.
+Each component rule appends its model to `Build.Component.list`, increments `Build.Component.count`, and adds its price to `Build.Total`. Fired-rule tracking is essential here: iteration must not append components or charge for them again on subsequent passes.
 
-Look at `Build.Component.list`, `Build.Component.count`, `Build.Total.credits`, and `Build.Status` in Fact context. The trace shows the order in which the assembly stages became possible. The GUI's current “passes” counter counts contributing containers, not these internal iteration passes; both modes report two contributing containers.
+Look at `Build.Component.list`, `Build.Component.count`, `Build.Total`, and `Build.Status` in Fact context. The trace shows the order in which the assembly stages became possible. The GUI's current “passes” counter counts contributing containers, not these internal iteration passes; both modes report two contributing containers.
 
 This example targets Fire once and Iteration. Its initialization and cumulative assignments are not designed for Deduction.

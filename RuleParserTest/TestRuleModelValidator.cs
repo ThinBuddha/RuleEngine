@@ -14,6 +14,7 @@ namespace RuleParserTest
         public void DemoRulesMapToTheirModels(string name)
         {
             var examples = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "RuleParser", "doc", "Examples"));
+            examples = Path.Combine(examples, name == "Parcel-Dispatcher" ? "Parcel dispatcher" : name == "Computer-Assembly" ? "Computer assembly" : "Moonbase clinic");
             var modelParser = new ModelParser();
             modelParser.Parse(File.ReadAllText(Path.Combine(examples, name + "-model.txt")));
             Assert.Empty(modelParser.SyntaxErrors);

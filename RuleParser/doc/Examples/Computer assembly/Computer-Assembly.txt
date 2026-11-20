@@ -18,8 +18,8 @@ RuleContainer Computer.Order
      and Tests.Status := "pending"
      and Software.Status := "pending"
      and Build.Component.list := ""
-     and Build.Component.count := 0
-     and Build.Total.credits := 0
+     and Build.Component.count := 0 components
+     and Build.Total := 0 credits
 
 
 RuleContainer Computer.Assembly
@@ -34,7 +34,7 @@ RuleContainer Computer.Assembly
   If Tests.Status = "passed"
   Then Software.Status := "installed"
      and Software.Package := "Demo Desktop OS"
-     and Build.Total.credits := Build.Total.credits + 80
+     and Build.Total := Build.Total + 80 credits
 
   Rule test.computer
   Priority 3
@@ -57,8 +57,8 @@ RuleContainer Computer.Assembly
   Then CPU.Model := "Office CPU"
      and CPU.Status := "installed"
      and Build.Component.list := Build.Component.list + "Office CPU; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 120
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 120 credits
 
 
   Rule install.cpu.gaming
@@ -67,8 +67,8 @@ RuleContainer Computer.Assembly
   Then CPU.Model := "Gaming CPU"
      and CPU.Status := "installed"
      and Build.Component.list := Build.Component.list + "Gaming CPU; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 260
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 260 credits
 
 
   Rule install.cpu.creator
@@ -77,8 +77,8 @@ RuleContainer Computer.Assembly
   Then CPU.Model := "Creator CPU"
      and CPU.Status := "installed"
      and Build.Component.list := Build.Component.list + "Creator CPU; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 420
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 420 credits
 
 
   Rule install.memory.office
@@ -87,8 +87,8 @@ RuleContainer Computer.Assembly
   Then Memory.Model := "16 GB RAM"
      and Memory.Status := "installed"
      and Build.Component.list := Build.Component.list + "16 GB RAM; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 60
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 60 credits
 
 
   Rule install.memory.gaming
@@ -97,8 +97,8 @@ RuleContainer Computer.Assembly
   Then Memory.Model := "32 GB RAM"
      and Memory.Status := "installed"
      and Build.Component.list := Build.Component.list + "32 GB RAM; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 100
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 100 credits
 
 
   Rule install.memory.creator
@@ -107,8 +107,8 @@ RuleContainer Computer.Assembly
   Then Memory.Model := "64 GB RAM"
      and Memory.Status := "installed"
      and Build.Component.list := Build.Component.list + "64 GB RAM; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 180
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 180 credits
 
 
   Rule install.graphics.office
@@ -117,8 +117,8 @@ RuleContainer Computer.Assembly
   Then Graphics.Model := "Integrated graphics"
      and Graphics.Status := "installed"
      and Build.Component.list := Build.Component.list + "Integrated graphics; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 0
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 0 credits
 
 
   Rule install.graphics.gaming
@@ -127,8 +127,8 @@ RuleContainer Computer.Assembly
   Then Graphics.Model := "Gaming graphics card"
      and Graphics.Status := "installed"
      and Build.Component.list := Build.Component.list + "Gaming graphics card; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 400
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 400 credits
 
 
   Rule install.graphics.creator
@@ -137,8 +137,8 @@ RuleContainer Computer.Assembly
   Then Graphics.Model := "Creator graphics card"
      and Graphics.Status := "installed"
      and Build.Component.list := Build.Component.list + "Creator graphics card; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 700
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 700 credits
 
 
   Rule install.storage.standard
@@ -147,8 +147,8 @@ RuleContainer Computer.Assembly
   Then Storage.Model := "1 TB SSD"
      and Storage.Status := "installed"
      and Build.Component.list := Build.Component.list + "1 TB SSD; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 80
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 80 credits
 
 
   Rule install.power.office
@@ -157,8 +157,8 @@ RuleContainer Computer.Assembly
   Then Power.Model := "400 W power supply"
      and Power.Status := "installed"
      and Build.Component.list := Build.Component.list + "400 W power supply; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 50
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 50 credits
 
 
   Rule install.power.gaming
@@ -167,8 +167,8 @@ RuleContainer Computer.Assembly
   Then Power.Model := "650 W power supply"
      and Power.Status := "installed"
      and Build.Component.list := Build.Component.list + "650 W power supply; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 90
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 90 credits
 
 
   Rule install.power.creator
@@ -177,8 +177,8 @@ RuleContainer Computer.Assembly
   Then Power.Model := "850 W power supply"
      and Power.Status := "installed"
      and Build.Component.list := Build.Component.list + "850 W power supply; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 140
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 140 credits
 
 
   Rule install.chassis.standard
@@ -187,8 +187,8 @@ RuleContainer Computer.Assembly
   Then Chassis.Model := "Quiet tower case"
      and Chassis.Status := "installed"
      and Build.Component.list := Build.Component.list + "Quiet tower case; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 70
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 70 credits
 
 
   Rule install.cooling.standard
@@ -197,6 +197,6 @@ RuleContainer Computer.Assembly
   Then Cooling.Model := "Tower air cooler"
      and Cooling.Status := "installed"
      and Build.Component.list := Build.Component.list + "Tower air cooler; "
-     and Build.Component.count := Build.Component.count + 1
-     and Build.Total.credits := Build.Total.credits + 40
+     and Build.Component.count := Build.Component.count + 1 components
+     and Build.Total := Build.Total + 40 credits
 

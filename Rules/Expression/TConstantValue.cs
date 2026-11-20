@@ -34,6 +34,10 @@ namespace Rules.Expression
 
         public TNumValueStruct Value;
 
+        // Source annotation used by explicit-model validation; execution remains numeric.
+        public string UnitShortName { get; set; }
+
+
         public TConstantNumValue(int value)
         {
             Value.ValueType = IntType;

@@ -369,6 +369,15 @@ namespace Rules.Parser
             }
         }
 
+        private void UnitSuffix()
+        {
+            if (ModelFileName != null && LookAheadHasAnyOf(Token.Identifier, out var suffix))
+            {
+                _tokenizer.GetNextToken();
+                _parseTree.Add(ParsedItem.UnitSuffix, suffix);
+            }
+        }
+
         private void Factor()
         {
             _parseTree.Begin(ParsedItem.Factor);
@@ -391,11 +400,13 @@ namespace Rules.Parser
                     }
                 case Token.Integer:
                     {
-                        _parseTree.Add(ParsedItem.Integer, literal); break;
+                        _parseTree.Add(ParsedItem.Integer, literal);
+                        UnitSuffix(); break;
                     }
                 case Token.Float:
                     {
-                        _parseTree.Add(ParsedItem.Float, literal);  break;
+                        _parseTree.Add(ParsedItem.Float, literal);
+                        UnitSuffix(); break;
                     }
                 case Token.Identifier:
                     {

@@ -12,18 +12,18 @@ type Parcel.Declared.value of Credits with min = 0
 type Packing.Content.fee of Credits with min = 0
 type Packing.Size.fee of Credits with min = 0
 
-type Delivery.Distance.km of Kilometres with min = 0
+type Delivery.Distance of Kilometres with min = 0
 type Delivery.Urgency of string with values = ["relaxed", "today", "express"]
 type Delivery.Handoff of string with values = ["ring the doorbell", "leave at reception", "send a locker code", "hand over chilled parcel in person"]
 type Delivery.Vehicle of string with values = ["refrigerated van", "regional van", "delivery van", "drone", "locker shuttle", "bike courier"]
-type Delivery.Estimated.minutes of Minutes with min = 0
+type Delivery.Estimated of Minutes with min = 0
 type Delivery.Status of string with values = ["ready to dispatch"]
 
 type Route.Zone of string with values = ["neighbourhood", "across town", "regional"]
 type Route.Fee of Credits with min = 0
 
 type Weather.Now of string with values = ["clear", "rain", "storm"]
-type Weather.Delay.minutes of Minutes with min = 0
+type Weather.Delay of Minutes with min = 0
 type Flight.Status of string with values = ["available", "unavailable"]
 
 type Recipient.Location of string with values = ["home", "office", "parcel locker"]
@@ -31,14 +31,14 @@ type Destination.Drone.status of string with values = ["allowed", "disallowed"]
 
 type Service.Priority of PriorityPoints with min = 1 and max = 3
 type Service.Fee of Credits with min = 0
-type Service.Wait.minutes of Minutes with min = 0
+type Service.Wait of Minutes with min = 0
 
 type Vehicle.Selection.status of string with values = ["pending", "selected"]
 type Vehicle.Fee of Credits with min = 0
-type Vehicle.Travel.minutes of Minutes with min = 0
+type Vehicle.Travel of Minutes with min = 0
 
 type Customer.Membership of string with values = ["visitor", "regular", "neighbourhood hero"]
-type Customer.Discount.credits of Credits with min = 0 and max = 2
+type Customer.Discount of Credits with min = 0 and max = 2
 
 type Cover.Level of string with values = ["basic", "extra", "treasure"]
 type Cover.Fee of Credits with min = 0
@@ -70,30 +70,21 @@ class Packing has
   Content as PackingContent
   Size as PackingSize
 
-class DeliveryDistance has
-  km of Delivery.Distance.km
-
-class DeliveryEstimated has
-  minutes of Delivery.Estimated.minutes
-
 class Delivery has
-  Distance as DeliveryDistance
+  Distance of Delivery.Distance
   Urgency of Delivery.Urgency
   Handoff of Delivery.Handoff
   Vehicle of Delivery.Vehicle
-  Estimated as DeliveryEstimated
+  Estimated of Delivery.Estimated
   Status of Delivery.Status
 
 class Route has
   Zone of Route.Zone
   Fee of Route.Fee
 
-class WeatherDelay has
-  minutes of Weather.Delay.minutes
-
 class Weather has
   Now of Weather.Now
-  Delay as WeatherDelay
+  Delay of Weather.Delay
 
 class Flight has
   Status of Flight.Status
@@ -107,31 +98,22 @@ class DestinationDrone has
 class Destination has
   Drone as DestinationDrone
 
-class ServiceWait has
-  minutes of Service.Wait.minutes
-
 class Service has
   Priority of Service.Priority
   Fee of Service.Fee
-  Wait as ServiceWait
+  Wait of Service.Wait
 
 class VehicleSelection has
   status of Vehicle.Selection.status
 
-class VehicleTravel has
-  minutes of Vehicle.Travel.minutes
-
 class Vehicle has
   Selection as VehicleSelection
   Fee of Vehicle.Fee
-  Travel as VehicleTravel
-
-class CustomerDiscount has
-  credits of Customer.Discount.credits
+  Travel of Vehicle.Travel
 
 class Customer has
   Membership of Customer.Membership
-  Discount as CustomerDiscount
+  Discount of Customer.Discount
 
 class Cover has
   Level of Cover.Level

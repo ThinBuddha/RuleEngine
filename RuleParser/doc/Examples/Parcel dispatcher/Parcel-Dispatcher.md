@@ -36,7 +36,7 @@ Each stage establishes facts consumed by later stages:
 | A very large box of books | books / large | 30 | clear | office | relaxed | neighbourhood hero | 25 | regional van | 21 | 210 |
 | An ordinary locker delivery | electronics / medium | 5 | clear | parcel locker | today | regular | 100 | locker shuttle | 16 | 105 |
 
-Inspect the **Evaluation trace** for the selected rules and **Fact context** for `Delivery.Vehicle`, `Parcel.Handling`, `Delivery.Handoff`, `Cover.Level`, `Quote.Total`, and `Delivery.Estimated.minutes`.
+Inspect the **Evaluation trace** for the selected rules and **Fact context** for `Delivery.Vehicle`, `Parcel.Handling`, `Delivery.Handoff`, `Cover.Level`, `Quote.Total`, and `Delivery.Estimated`.
 
 Chilled goods override both the vehicle and the handoff instruction: even when the customer requests a parcel locker, the model requires a refrigerated van and an in-person handoff. This makes a useful example of a more specific rule taking precedence over a customer's preference.
 

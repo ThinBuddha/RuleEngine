@@ -5,7 +5,7 @@ type Build.Profile of string with values = ["", "office", "gaming", "creator"]
 type Build.Status of string with values = ["collecting components", "ready for delivery"]
 type Build.Component.list of string
 type Build.Component.count of Components with min = 0 and max = 7
-type Build.Total.credits of Credits with min = 0
+type Build.Total of Credits with min = 0
 
 type CPU.Model of string with values = ["Office CPU", "Gaming CPU", "Creator CPU"]
 type CPU.Status of string with values = ["pending", "installed"]
@@ -38,14 +38,11 @@ class BuildComponent has
   list of Build.Component.list
   count of Build.Component.count
 
-class BuildTotal has
-  credits of Build.Total.credits
-
 class Build has
   Profile of Build.Profile
   Status of Build.Status
   Component as BuildComponent
-  Total as BuildTotal
+  Total of Build.Total
 
 class CPU has
   Model of CPU.Model

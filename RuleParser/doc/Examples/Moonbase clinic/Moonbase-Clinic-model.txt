@@ -21,7 +21,7 @@ type Voice.Effect of string with values = ["echoing", "ordinary"]
 type Ear.Sound of string with values = ["chiming", "quiet"]
 type Energy.Level of string with values = ["low", "steady"]
 type Sleep.Pattern of string with values = ["fragmented", "settled"]
-type Shift.Hours of Hours with min = 0
+type Shift.Duration of Hours with min = 0
 
 class SyndromeGlow has
   status of Syndrome.Glow.status
@@ -85,4 +85,4 @@ class Sleep has
   Pattern of Sleep.Pattern
 
 class Shift has
-  Hours of Shift.Hours
+  Duration of Shift.Duration

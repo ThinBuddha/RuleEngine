@@ -81,9 +81,9 @@ RuleContainer Moonbase.Clinic
   Then Syndrome.Rest.status := "unmatched"
 
   Rule workload.extended
-  If Shift.Hours > 8
+  If Shift.Duration > 8 h
   Then Workload.Status := "extended"
 
   Rule workload.standard
-  If Shift.Hours <= 8
+  If Shift.Duration <= 8 h
   Then Workload.Status := "standard"

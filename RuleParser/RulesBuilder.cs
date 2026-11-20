@@ -64,6 +64,10 @@ namespace Rules.Parser
 
             switch (parsedItem)
             {                   
+                case ParsedItem.UnitSuffix:
+                    ((TConstantNumValue)item.Item2).UnitShortName = value;
+                    break;
+
                 case ParsedItem.MathOp:
                     if ("+-".Contains(value))
                     {

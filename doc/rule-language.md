@@ -64,6 +64,14 @@ Although keywords are case-insensitive, fact names are stored in a case-sensitiv
 
 Integers and floating-point values are supported. Arithmetic between an integer and a floating-point value promotes the integer to floating point.
 
+### Unit suffixes with an enforced model
+
+When a rule file starts with `enforce model "model.txt"`, numeric literals used for a unit-bearing property must include that unit's exact, case-sensitive short name, separated from the number by whitespace. For a type based on `unit Kilogram of real with short = "kg"`, write `Parcel.Weight > 5 kg` and `Parcel.Weight := 2.5 kg`. Bare `5`, a full unit name, an unknown short name, and a different unit are rejected. Zero also requires its suffix.
+
+Identifiers already obtain their units from the model: `Parcel.Weight := Other.Weight` needs no suffix. Addition and subtraction require matching units (`Parcel.Weight + 1 kg`); multiplication and division by a unitless scalar remain valid (`Parcel.Weight * 2`). Numeric properties without a unit use bare literals. Model declaration bounds and numeric answers supplied through the GUI/API remain plain numbers.
+
+Without an `enforce model` directive, unit suffixes are invalid; continue writing plain numeric literals. The referenced model must still be supplied when importing enforced rules.
+
 ### String literals
 
 ```text

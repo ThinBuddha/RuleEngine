@@ -165,14 +165,14 @@ async function parse(source, modelSource, modelFileName) {
 
 test('enforced model rejects absent files, unknown IDs and out-of-domain values', async () => {
   const modelSource = 'unit Points of integer with short = "pt" type Score of Points with min = 0 and max < 10 class Sample has Score of Score'
-  const header = 'enforce model "sample-model.txt" RuleContainer C Rule R If Sample.Score = 2 Then Sample.Score := 3'
+  const header = 'enforce model "sample-model.txt" RuleContainer C Rule R If Sample.Score = 2 pt Then Sample.Score := 3 pt'
   assert.match((await parse(header)).body.error, /must be supplied/)
   assert.match((await parse(header, modelSource, 'other.txt')).body.error, /must be supplied/)
   const enforced = await parse(header, modelSource, 'sample-model.txt')
   assert.equal(enforced.status, 200)
   assert.equal(enforced.body.model, null)
   assert.equal(enforced.body.modelTypes, null)
-  const invalid = await parse(header.replace('Sample.Score = 2', 'Sample.Unknown = 2').replace('Score := 3', 'Score := 10'), modelSource, 'sample-model.txt')
+  const invalid = await parse(header.replace('Sample.Score = 2 pt', 'Sample.Unknown = 2').replace('Score := 3 pt', 'Score := 10 pt'), modelSource, 'sample-model.txt')
   assert.equal(invalid.status, 400)
   assert.ok(invalid.body.syntaxErrors.some(error => error.includes('Sample.Unknown')))
   assert.ok(invalid.body.syntaxErrors.some(error => error.includes("outside type 'Score'")))
@@ -182,10 +182,25 @@ test('enforced model rejects absent files, unknown IDs and out-of-domain values'
   assert.deepEqual(inferred.body.modelTypes, {})
 })
 
+test('unit suffixes are required only with an enforced model', async () => {
+  const modelSource = 'unit Kilogram of real with short = "kg" type Weight of Kilogram class Item has Weight of Weight'
+  const header = 'enforce model "weight.txt" '
+  const rule = 'RuleContainer C Rule R If Item.Weight > 1 kg Then Item.Weight := 2.5 kg'
+  assert.equal((await parse(header + rule, modelSource, 'weight.txt')).status, 200)
+  for (const invalid of [rule.replace('1 kg', '1'), rule.replace('2.5 kg', '2.5'), rule.replace('2.5 kg', '2.5 sec')]) {
+    assert.equal((await parse(header + invalid, modelSource, 'weight.txt')).status, 400)
+  }
+  assert.equal((await parse(rule)).status, 400)
+  assert.equal((await parse(rule.replaceAll(' kg', ''))).status, 200)
+  const result = await run('evaluate', { source: header + rule, modelSource, modelFileName: 'weight.txt', mode: 'once', context: { 'Item.Weight': 2 } },
+    () => assert.fail('The known weight must not prompt'))
+  assert.equal(result.result.context['Item.Weight'], 2.5)
+})
+
 for (const demo of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']) {
   test(`auto formatted ${demo} has the same parsed rules and model choices`, async () => {
-    const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${demo}.txt`, import.meta.url), 'utf8')
-    const modelSource = readFileSync(new URL(`../../RuleParser/doc/Examples/${demo}-model.txt`, import.meta.url), 'utf8')
+    const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${({ "Parcel-Dispatcher": "Parcel dispatcher", "Computer-Assembly": "Computer assembly", "Moonbase-Clinic": "Moonbase clinic" })[demo]}/${demo}.txt`, import.meta.url), 'utf8')
+    const modelSource = readFileSync(new URL(`../../RuleParser/doc/Examples/${({ "Parcel-Dispatcher": "Parcel dispatcher", "Computer-Assembly": "Computer assembly", "Moonbase-Clinic": "Moonbase clinic" })[demo]}/${demo}-model.txt`, import.meta.url), 'utf8')
     const original = await parse(source, modelSource, `${demo}-model.txt`)
     const formatted = await parse(formatRuleSource(source), modelSource, `${demo}-model.txt`)
     assert.equal(original.status, 200, JSON.stringify(original.body))
@@ -198,7 +213,7 @@ for (const demo of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']
 
 test('enforced model supplies nested property choices, bounds and boolean kind to prompts', async () => {
   const modelSource = 'unit Points of integer with short = "pt" type Phase of string with values = ["queued", "ready", "unused"] type Duration of Points with min > 0 and max < 5 class Child has Phase of Phase Duration of Duration Enabled of boolean class Root has Child as Child'
-  const source = 'enforce model "prompt-model.txt" RuleContainer C Rule R If Root.Child.Phase = "ready" and Root.Child.Duration > 1 and Root.Child.Enabled Then Root.Child.Enabled'
+  const source = 'enforce model "prompt-model.txt" RuleContainer C Rule R If Root.Child.Phase = "ready" and Root.Child.Duration > 1 pt and Root.Child.Enabled Then Root.Child.Enabled'
   const requests = []
   const response = await run('evaluate', { source, modelSource, modelFileName: 'prompt-model.txt', mode: 'once', context: {} },
     (name, _, choices, __, inputType) => {
@@ -469,10 +484,10 @@ test('different loaded models do not retain each other’s choices', async () =>
   assert.equal(response.result.value, 'custom')
 })
 
-const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher.txt', import.meta.url), 'utf8')
-const clinicDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Moonbase-Clinic.txt', import.meta.url), 'utf8')
-const parcelModel = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel-Dispatcher-model.txt', import.meta.url), 'utf8')
-const clinicModel = readFileSync(new URL('../../RuleParser/doc/Examples/Moonbase-Clinic-model.txt', import.meta.url), 'utf8')
+const parcelDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel dispatcher/Parcel-Dispatcher.txt', import.meta.url), 'utf8')
+const clinicDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Moonbase clinic/Moonbase-Clinic.txt', import.meta.url), 'utf8')
+const parcelModel = readFileSync(new URL('../../RuleParser/doc/Examples/Parcel dispatcher/Parcel-Dispatcher-model.txt', import.meta.url), 'utf8')
+const clinicModel = readFileSync(new URL('../../RuleParser/doc/Examples/Moonbase clinic/Moonbase-Clinic-model.txt', import.meta.url), 'utf8')
 for (const [query, answers, expected] of [
   ['Assessment.Moonbloom', { 'Skin.Appearance': 'shimmering', 'Night.Sensation': 'tingling', 'Recent.Location': 'moon garden' }, true],
   ['Assessment.Moonbloom', { 'Skin.Appearance': 'ordinary' }, false],
@@ -480,8 +495,8 @@ for (const [query, answers, expected] of [
   ['Assessment.Moonbloom', { 'Skin.Appearance': 'shimmering', 'Night.Sensation': 'tingling', 'Recent.Location': 'living quarters' }, false],
   ['Assessment.Echo.fever', { 'Voice.Effect': 'echoing', 'Ear.Sound': 'chiming', 'Recent.Location': 'resonator workshop' }, true],
   ['Assessment.Echo.fever', { 'Voice.Effect': 'echoing', 'Ear.Sound': 'quiet' }, false],
-  ['Assessment.Starlight.depletion', { 'Energy.Level': 'low', 'Sleep.Pattern': 'fragmented', 'Shift.Hours': 10 }, true],
-  ['Assessment.Starlight.depletion', { 'Energy.Level': 'low', 'Sleep.Pattern': 'fragmented', 'Shift.Hours': 6 }, false],
+  ['Assessment.Starlight.depletion', { 'Energy.Level': 'low', 'Sleep.Pattern': 'fragmented', 'Shift.Duration': 10 }, true],
+  ['Assessment.Starlight.depletion', { 'Energy.Level': 'low', 'Sleep.Pattern': 'fragmented', 'Shift.Duration': 6 }, false],
   ['Assessment.Starlight.depletion', { 'Energy.Level': 'steady' }, false],
 ]) {
   test(`fictional clinic ${query}: ${JSON.stringify(answers)}`, async () => {
@@ -507,8 +522,8 @@ test('declining a clinic observation stays unknown rather than disproving the hy
   assert.deepEqual(response.missingFacts, ['Skin.Appearance'])
 })
 
-const computerDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Computer-Assembly.txt', import.meta.url), 'utf8')
-const computerModel = readFileSync(new URL('../../RuleParser/doc/Examples/Computer-Assembly-model.txt', import.meta.url), 'utf8')
+const computerDemo = readFileSync(new URL('../../RuleParser/doc/Examples/Computer assembly/Computer-Assembly.txt', import.meta.url), 'utf8')
+const computerModel = readFileSync(new URL('../../RuleParser/doc/Examples/Computer assembly/Computer-Assembly-model.txt', import.meta.url), 'utf8')
 for (const [profile, price] of [['office', 420], ['gaming', 1040], ['creator', 1630]]) {
   for (const mode of ['once', 'iteration']) {
     test(`computer assembly builds ${profile} in ${mode} mode`, async () => {
@@ -526,7 +541,7 @@ for (const [profile, price] of [['office', 420], ['gaming', 1040], ['creator', 1
       assert.equal(facts['System.Status'], iterative ? 'assembled' : 'pending')
       assert.equal(facts['Tests.Status'], iterative ? 'passed' : 'pending')
       assert.equal(facts['Software.Status'], iterative ? 'installed' : 'pending')
-      assert.equal(facts['Build.Total.credits'], price + (iterative ? 80 : 0))
+      assert.equal(facts['Build.Total'], price + (iterative ? 80 : 0))
       assert.equal(facts['Build.Component.count'], 7)
       const components = facts['Build.Component.list'].split('; ').filter(Boolean)
       assert.equal(components.length, 7)
@@ -564,7 +579,7 @@ for (const [contents, size, distance, weather, recipient, urgency, membership, d
   for (const mode of ['once', 'iteration']) {
     test(`parcel dispatcher demo selects ${vehicle} in ${mode} mode`, async () => {
       const answers = {
-        'Parcel.Contents': contents, 'Parcel.Size': size, 'Delivery.Distance.km': distance,
+        'Parcel.Contents': contents, 'Parcel.Size': size, 'Delivery.Distance': distance,
         'Weather.Now': weather, 'Recipient.Location': recipient, 'Delivery.Urgency': urgency,
         'Customer.Membership': membership, 'Parcel.Declared.value': declaredValue,
       }
@@ -578,7 +593,7 @@ for (const [contents, size, distance, weather, recipient, urgency, membership, d
       const facts = response.result.context
       assert.equal(facts['Delivery.Vehicle'], vehicle)
       assert.ok(Math.abs(facts['Quote.Total'] - total) < 0.000001, `Expected ${total}, got ${facts['Quote.Total']}`)
-      assert.equal(facts['Delivery.Estimated.minutes'], minutes)
+      assert.equal(facts['Delivery.Estimated'], minutes)
       assert.equal(response.result.trace.length, 11)
       assert.equal(response.prompts.length, 8)
     })

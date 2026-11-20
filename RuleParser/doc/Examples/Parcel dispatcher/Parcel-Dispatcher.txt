@@ -5,22 +5,22 @@ RuleContainer Parcel.Handling
   Rule books
   Priority 1
   If Parcel.Contents = "books"
-  Then Parcel.Handling := "standard" and Parcel.Drone.status := "allowed" and Packing.Content.fee := 0
+  Then Parcel.Handling := "standard" and Parcel.Drone.status := "allowed" and Packing.Content.fee := 0 credits
 
   Rule electronics
   Priority 2
   If Parcel.Contents = "electronics"
-  Then Parcel.Handling := "padded" and Parcel.Drone.status := "allowed" and Packing.Content.fee := 3
+  Then Parcel.Handling := "padded" and Parcel.Drone.status := "allowed" and Packing.Content.fee := 3 credits
 
   Rule flowers
   Priority 3
   If Parcel.Contents = "flowers"
-  Then Parcel.Handling := "upright" and Parcel.Drone.status := "disallowed" and Packing.Content.fee := 4
+  Then Parcel.Handling := "upright" and Parcel.Drone.status := "disallowed" and Packing.Content.fee := 4 credits
 
   Rule ice.cream
   Priority 4
   If Parcel.Contents = "ice cream"
-  Then Parcel.Handling := "chilled" and Parcel.Drone.status := "disallowed" and Packing.Content.fee := 6
+  Then Parcel.Handling := "chilled" and Parcel.Drone.status := "disallowed" and Packing.Content.fee := 6 credits
 
 
 RuleContainer Parcel.Size
@@ -28,35 +28,35 @@ RuleContainer Parcel.Size
   Rule small
   Priority 1
   If Parcel.Size = "small"
-  Then Packing.Size.fee := 0
+  Then Packing.Size.fee := 0 credits
 
   Rule medium
   Priority 2
   If Parcel.Size = "medium"
-  Then Packing.Size.fee := 2
+  Then Packing.Size.fee := 2 credits
 
   Rule large
   Priority 3
   If Parcel.Size = "large"
-  Then Packing.Size.fee := 5
+  Then Packing.Size.fee := 5 credits
 
 
 RuleContainer Route.Classification
 
   Rule neighbourhood
   Priority 1
-  If Delivery.Distance.km <= 3
-  Then Route.Zone := "neighbourhood" and Route.Fee := 0
+  If Delivery.Distance <= 3 km
+  Then Route.Zone := "neighbourhood" and Route.Fee := 0 credits
 
   Rule across.town
   Priority 2
-  If Delivery.Distance.km > 3 and Delivery.Distance.km <= 15
-  Then Route.Zone := "across town" and Route.Fee := 3
+  If Delivery.Distance > 3 km and Delivery.Distance <= 15 km
+  Then Route.Zone := "across town" and Route.Fee := 3 credits
 
   Rule regional
   Priority 3
-  If Delivery.Distance.km > 15
-  Then Route.Zone := "regional" and Route.Fee := 8
+  If Delivery.Distance > 15 km
+  Then Route.Zone := "regional" and Route.Fee := 8 credits
 
 
 RuleContainer Weather.Assessment
@@ -64,17 +64,17 @@ RuleContainer Weather.Assessment
   Rule clear
   Priority 1
   If Weather.Now = "clear"
-  Then Flight.Status := "available" and Weather.Delay.minutes := 0
+  Then Flight.Status := "available" and Weather.Delay := 0 min
 
   Rule rain
   Priority 2
   If Weather.Now = "rain"
-  Then Flight.Status := "unavailable" and Weather.Delay.minutes := 20
+  Then Flight.Status := "unavailable" and Weather.Delay := 20 min
 
   Rule storm
   Priority 3
   If Weather.Now = "storm"
-  Then Flight.Status := "unavailable" and Weather.Delay.minutes := 90
+  Then Flight.Status := "unavailable" and Weather.Delay := 90 min
 
 
 RuleContainer Destination.Assessment
@@ -100,65 +100,65 @@ RuleContainer Urgency.Assessment
   Rule relaxed
   Priority 1
   If Delivery.Urgency = "relaxed"
-  Then Service.Priority := 1 and Service.Fee := 0 and Service.Wait.minutes := 120
+  Then Service.Priority := 1 points and Service.Fee := 0 credits and Service.Wait := 120 min
 
   Rule today
   Priority 2
   If Delivery.Urgency = "today"
-  Then Service.Priority := 2 and Service.Fee := 3 and Service.Wait.minutes := 45
+  Then Service.Priority := 2 points and Service.Fee := 3 credits and Service.Wait := 45 min
 
   Rule express
   Priority 3
   If Delivery.Urgency = "express"
-  Then Service.Priority := 3 and Service.Fee := 8 and Service.Wait.minutes := 0
+  Then Service.Priority := 3 points and Service.Fee := 8 credits and Service.Wait := 0 min
 
 
 RuleContainer Vehicle.Selection
 
   Rule begin.vehicle.selection
   Priority 0
-  If Service.Priority >= 1
+  If Service.Priority >= 1 points
   Then Vehicle.Selection.status := "pending"
 
   Rule save.the.ice.cream
   Priority 1
   If Vehicle.Selection.status = "pending" and Parcel.Handling = "chilled"
-  Then Delivery.Vehicle := "refrigerated van" and Vehicle.Fee := 12 and Vehicle.Travel.minutes := 45 and Delivery.Handoff := "hand over chilled parcel in person" and Vehicle.Selection.status := "selected"
+  Then Delivery.Vehicle := "refrigerated van" and Vehicle.Fee := 12 credits and Vehicle.Travel := 45 min and Delivery.Handoff := "hand over chilled parcel in person" and Vehicle.Selection.status := "selected"
 
   Rule regional.journey
   Priority 2
   If Vehicle.Selection.status = "pending" and Route.Zone = "regional"
-  Then Delivery.Vehicle := "regional van" and Vehicle.Fee := 10 and Vehicle.Travel.minutes := 90 and Vehicle.Selection.status := "selected"
+  Then Delivery.Vehicle := "regional van" and Vehicle.Fee := 10 credits and Vehicle.Travel := 90 min and Vehicle.Selection.status := "selected"
 
   Rule shelter.from.storm
   Priority 3
   If Vehicle.Selection.status = "pending" and Weather.Now = "storm"
-  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selection.status := "selected"
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 credits and Vehicle.Travel := 40 min and Vehicle.Selection.status := "selected"
 
   Rule oversized.parcel
   Priority 4
   If Vehicle.Selection.status = "pending" and Parcel.Size = "large"
-  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selection.status := "selected"
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 credits and Vehicle.Travel := 40 min and Vehicle.Selection.status := "selected"
 
   Rule very.fancy.drone
   Priority 5
-  If Vehicle.Selection.status = "pending" and Route.Zone = "neighbourhood" and Parcel.Size = "small" and Parcel.Drone.status = "allowed" and Destination.Drone.status = "allowed" and Flight.Status = "available" and Service.Priority = 3
-  Then Delivery.Vehicle := "drone" and Vehicle.Fee := 15 and Vehicle.Travel.minutes := 8 and Vehicle.Selection.status := "selected"
+  If Vehicle.Selection.status = "pending" and Route.Zone = "neighbourhood" and Parcel.Size = "small" and Parcel.Drone.status = "allowed" and Destination.Drone.status = "allowed" and Flight.Status = "available" and Service.Priority = 3 points
+  Then Delivery.Vehicle := "drone" and Vehicle.Fee := 15 credits and Vehicle.Travel := 8 min and Vehicle.Selection.status := "selected"
 
   Rule locker.round
   Priority 6
   If Vehicle.Selection.status = "pending" and Recipient.Location = "parcel locker"
-  Then Delivery.Vehicle := "locker shuttle" and Vehicle.Fee := 4 and Vehicle.Travel.minutes := 60 and Vehicle.Selection.status := "selected"
+  Then Delivery.Vehicle := "locker shuttle" and Vehicle.Fee := 4 credits and Vehicle.Travel := 60 min and Vehicle.Selection.status := "selected"
 
   Rule local.bicycle
   Priority 7
   If Vehicle.Selection.status = "pending" and Route.Zone = "neighbourhood" and Parcel.Size = "small"
-  Then Delivery.Vehicle := "bike courier" and Vehicle.Fee := 3 and Vehicle.Travel.minutes := 20 and Vehicle.Selection.status := "selected"
+  Then Delivery.Vehicle := "bike courier" and Vehicle.Fee := 3 credits and Vehicle.Travel := 20 min and Vehicle.Selection.status := "selected"
 
   Rule van.fallback
   Priority 8
-  If Vehicle.Selection.status = "pending" and Service.Priority >= 1
-  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 and Vehicle.Travel.minutes := 40 and Vehicle.Selection.status := "selected"
+  If Vehicle.Selection.status = "pending" and Service.Priority >= 1 points
+  Then Delivery.Vehicle := "delivery van" and Vehicle.Fee := 8 credits and Vehicle.Travel := 40 min and Vehicle.Selection.status := "selected"
 
 
 RuleContainer Customer.Membership
@@ -166,44 +166,44 @@ RuleContainer Customer.Membership
   Rule visitor
   Priority 1
   If Customer.Membership = "visitor"
-  Then Customer.Discount.credits := 0
+  Then Customer.Discount := 0 credits
 
   Rule regular
   Priority 2
   If Customer.Membership = "regular"
-  Then Customer.Discount.credits := 1
+  Then Customer.Discount := 1 credits
 
   Rule neighbourhood.hero
   Priority 3
   If Customer.Membership = "neighbourhood hero"
-  Then Customer.Discount.credits := 2
+  Then Customer.Discount := 2 credits
 
 
 RuleContainer Parcel.Cover
 
   Rule ordinary
   Priority 1
-  If Parcel.Declared.value <= 50
-  Then Cover.Level := "basic" and Cover.Fee := 0
+  If Parcel.Declared.value <= 50 credits
+  Then Cover.Level := "basic" and Cover.Fee := 0 credits
 
   Rule valuable
   Priority 2
-  If Parcel.Declared.value > 50 and Parcel.Declared.value <= 250
-  Then Cover.Level := "extra" and Cover.Fee := 2
+  If Parcel.Declared.value > 50 credits and Parcel.Declared.value <= 250 credits
+  Then Cover.Level := "extra" and Cover.Fee := 2 credits
 
   Rule treasure
   Priority 3
-  If Parcel.Declared.value > 250
-  Then Cover.Level := "treasure" and Cover.Fee := 6
+  If Parcel.Declared.value > 250 credits
+  Then Cover.Level := "treasure" and Cover.Fee := 6 credits
 
 
 RuleContainer Quote.Calculation
 
   Rule ready.to.dispatch
   Priority 1
-  If Service.Priority >= 1
+  If Service.Priority >= 1 points
   Then Quote.Subtotal := Vehicle.Fee + Route.Fee + Packing.Content.fee + Packing.Size.fee + Service.Fee + Cover.Fee
-     and Quote.Discount := Customer.Discount.credits
+     and Quote.Discount := Customer.Discount
      and Quote.Total := Quote.Subtotal - Quote.Discount
-     and Delivery.Estimated.minutes := Vehicle.Travel.minutes + Service.Wait.minutes + Weather.Delay.minutes
+     and Delivery.Estimated := Vehicle.Travel + Service.Wait + Weather.Delay
      and Delivery.Status := "ready to dispatch"
