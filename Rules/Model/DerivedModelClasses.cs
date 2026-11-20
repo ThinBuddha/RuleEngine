@@ -8,8 +8,7 @@ namespace Rules.Model
 {
     /// <summary>
     /// A node in the hierarchy formed by dotted fact IDs.
-    /// In other words: a model inferred from the rules, not explicitly defined beforehand.
-    /// It's not needed for evaluation of the rules, but it is useful for generating documentation and user interfaces.
+    /// In other words: a model inferred from the rules, not explicitly defined beforehand (<see cref="ExplicitModel"/> for that).
     /// </summary>
     public class DerivedModelClass
     {

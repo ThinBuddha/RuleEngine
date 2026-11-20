@@ -132,7 +132,7 @@ public sealed class RuleRuntimeService
             throw new RuleSyntaxException(parser.SyntaxErrors);
         }
 
-        // No syntax errors,lets see if we need to validate the rules against a model.
+        // No syntax errors, let's see if we need to validate the rules against a model.
         if (parser.ModelFileName != null)
         {
             if (modelSource == null || !string.Equals(parser.ModelFileName, modelFileName, StringComparison.Ordinal))

@@ -12,7 +12,7 @@ namespace Rules.QueryInterpreter
         /// </summary>
         /// <remarks>
         /// A query is a question or task request on an abstract level, where the answer or task result is derived
-        /// using the model (or value bag in case of no model), production rules and user answers.
+        /// using the value bag, production rules and user answers.
         /// </remarks>
         /// <param name="query"></param>
         /// <returns></returns>

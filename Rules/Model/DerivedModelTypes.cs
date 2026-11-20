@@ -40,10 +40,15 @@ namespace Rules.Model
             {
                 foreach (var rule in container.Rules)
                 {
-                    foreach (var condition in rule.Conditions) model.Compare(condition);
+                    foreach (var condition in rule.Conditions)
+                    {
+                        model.Compare(condition);
+                    }
                     foreach (var conclusion in rule.Conclusions)
+                    {
                         model.Merge(model.Id(conclusion.LeftExpr), conclusion.RightExpr == null
                             ? new Domain { Kind = "Boolean" } : model.Expression(conclusion.RightExpr));
+                    }
                 }
                 if (container.StopConditionExpr != null) model.Compare(container.StopConditionExpr);
             }
@@ -103,6 +108,7 @@ namespace Rules.Model
         private void Merge(Domain left, Domain right)
         {
             if (ReferenceEquals(left, right)) return;
+
             if (left.Kind != null && right.Kind != null && left.Kind != right.Kind)
             {
                 var id = _ids.FirstOrDefault(item => ReferenceEquals(item.Value, left) || ReferenceEquals(item.Value, right)).Key;
@@ -110,10 +116,14 @@ namespace Rules.Model
             }
             left.Kind ??= right.Kind;
             foreach (var value in right.Values)
+            {
                 if (!left.Values.Contains(value, StringComparer.Ordinal)) left.Values.Add(value);
+            }
             // Aliases share a domain, so later literals and type constraints reach both IDs.
             foreach (var id in _ids.Where(item => ReferenceEquals(item.Value, right)).Select(item => item.Key).ToList())
+            {
                 _ids[id] = left;
+            }
         }
 
         private sealed class Domain

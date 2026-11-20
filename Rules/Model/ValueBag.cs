@@ -8,12 +8,13 @@ namespace Rules.Model
 {
     /// <summary>
     /// Generic parameter to pass on to the rules Evaluate() method, giving the rules a context to work on.
-    /// The context is model-unaware, it's just a "bag of values".
+    /// 0The context is model-unaware, it's just a "bag of values". 
     /// </summary>
     /// <remarks>
-    /// A <see cref="RuleContainer"/> can supply a <see cref="ValueBag"/> "model" to a rule when there is no model explicitly defined (real models are FUTURE use).
-    /// Score calculating rules can return their score via the Score property.
-    /// Rules can return a stop flag as final conclusion via the Stop property.
+    /// A <see cref="RuleContainer"/> can supply a <see cref="ValueBag"/> "model" to a rule (there are no model instances to work on).
+    /// Models are used to verify rule syntax and supply choice values for a GUI, but they cannot explictly be instantiated to store values.
+    /// Score calculating rules can return their score via the Score property, not store them here
+    /// Rules can return a stop flag as final conclusion via the Stop property, not store them here.
     /// The values in the <see cref="ValueBag"/> are objects and should be "immutable" or at least care should be taken not to
     /// accidently change them when evaluating expressions etc.
     /// </remarks>
