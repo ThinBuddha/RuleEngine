@@ -13,8 +13,6 @@ namespace Rules.Rules
     {
         public readonly List<Rule> Rules = [];
 
-        [Obsolete("Choose the evaluation type for each call to Evaluate instead.")]
-        public EvaluationType EvaluationType { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
@@ -34,12 +32,6 @@ namespace Rules.Rules
                 EvaluationType.Deduction => new RuleEngine(this).EvaluateByDeduction(query, context),
                 _ => throw new ArgumentOutOfRangeException(nameof(evaluationType)),
             };
-        }
-
-        [Obsolete("Pass the evaluation type to Evaluate instead.")]
-        public RuleEvaluateResult Evaluate(ValueBag context, TCompareExpression query = null)
-        {
-            return Evaluate(context, EvaluationType, query);
         }
 
         public override string ToString()

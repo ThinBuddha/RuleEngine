@@ -12,8 +12,7 @@ namespace Rules.Tasks
     /// their rules, using a temporary combined container when there are multiple.
     /// </summary>
     /// <remarks>
-    /// Choose the evaluation type for each evaluation call. The legacy overload
-    /// retains container-configured types for existing callers.
+    /// Choose the evaluation type for each evaluation call.
     /// As a "strategical measure", a <see cref="RuleContainer"/> can request to stop the rest of the process. 
     /// If the request is honored, the remaining <see cref="RuleContainer"/>s are skipped.
     /// To prevent confusion with the Threading.Task class, this class is prefixed with a 'T'.
@@ -24,26 +23,7 @@ namespace Rules.Tasks
 
         public TaskEvaluateResults Evaluate(ValueBag context, EvaluationType evaluationType, TCompareExpression query = null)
         {
-            return EvaluateCore(context, query, evaluationType);
-        }
-
-        [Obsolete("Pass the evaluation type to Evaluate instead.")]
-        public TaskEvaluateResults Evaluate(ValueBag context, TCompareExpression query = null,
-            EvaluationType? requestedType = null)
-        {
-            return EvaluateCore(context, query, requestedType);
-        }
-
-        private TaskEvaluateResults EvaluateCore(ValueBag context, TCompareExpression query,
-            EvaluationType? requestedType)
-        {
-            // The legacy overload can still use the containers' configured modes.
-#pragma warning disable CS0618 // Compatibility with the obsolete container mode API.
-            bool deduction = requestedType == EvaluationType.Deduction ||
-                (requestedType == null && query != null &&
-                 RuleContainers.Containers.TrueForAll(container => container.EvaluationType == EvaluationType.Deduction));
-#pragma warning restore CS0618
-            if (deduction && RuleContainers.Containers.Count > 1)
+            if (evaluationType == EvaluationType.Deduction && RuleContainers.Containers.Count > 1)
             {
                 return EvaluateCombinedDeduction(context, query);
             }
@@ -52,14 +32,7 @@ namespace Rules.Tasks
             RuleEvaluateResult rulesResult = null;
             foreach (RuleContainer container in RuleContainers.Containers)
             {
-                rulesResult = requestedType switch
-                {
-                    EvaluationType.FireOnce => new RuleEngine(container).EvaluateOnce(context),
-                    EvaluationType.Iteration => new RuleEngine(container).EvaluateByIteration(context),
-                    EvaluationType.Deduction => new RuleEngine(container).EvaluateByDeduction(query, context),
-                    null => EvaluateLegacyContainer(container, context, query),
-                    _ => throw new ArgumentOutOfRangeException(nameof(requestedType)),
-                };
+                rulesResult = container.Evaluate(context, evaluationType, query);
                 taskResults.Evaluations.Add(new TaskTrace(container, rulesResult));
                 if (rulesResult.RuleGotFired)
                 {
@@ -83,20 +56,10 @@ namespace Rules.Tasks
             return taskResults;
         }
 
-        private static RuleEvaluateResult EvaluateLegacyContainer(RuleContainer container,
-            ValueBag context, TCompareExpression query)
-        {
-#pragma warning disable CS0618 // Preserve behavior for callers of the obsolete overload.
-            return container.Evaluate(context, query);
-#pragma warning restore CS0618
-        }
-
         private TaskEvaluateResults EvaluateCombinedDeduction(ValueBag context, TCompareExpression query)
         {
             const string combinedName = "All containers";
-#pragma warning disable CS0618 // Preserve the legacy mode on synthetic containers.
-            var combined = new RuleContainer { Name = combinedName, EvaluationType = EvaluationType.Deduction };
-#pragma warning restore CS0618
+            var combined = new RuleContainer { Name = combinedName };
             var origins = new Dictionary<Rule, string>(ReferenceEqualityComparer.Instance);
             foreach (var container in RuleContainers.Containers)
             {
@@ -145,9 +108,7 @@ namespace Rules.Tasks
 
             public TaskTrace(string containerName, RuleEvaluateResult ruleResult)
             {
-#pragma warning disable CS0618 // Preserve the legacy mode on synthetic traces.
-                RuleContainer = new RuleContainer { Name = containerName, EvaluationType = EvaluationType.Deduction };
-#pragma warning restore CS0618
+                RuleContainer = new RuleContainer { Name = containerName };
                 ContainerName = containerName;
                 RuleResult = ruleResult;
             }
