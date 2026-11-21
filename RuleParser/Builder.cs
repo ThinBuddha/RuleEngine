@@ -1,11 +1,11 @@
 ﻿using System;
-using Utilities.LinkedList;
+using System.Collections.Generic;
 
 namespace Rules.Parser
 {
     public class Builder
     {
-        protected TLinkedStack<Tuple<ParsedItem, object>> _stack = new TLinkedStack<Tuple<ParsedItem, object>>();
+        protected readonly Stack<Tuple<ParsedItem, object>> _stack = new();
 
         /// <summary>
         /// Last compiled object

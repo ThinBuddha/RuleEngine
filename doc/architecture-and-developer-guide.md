@@ -42,7 +42,7 @@ The [strategic and task-level note](Strategic%20and%20task%20level.txt) describe
 | `Rules.WebApi` | Stateless parse/evaluate/calculate operations and interactive WebSocket transport | [Program.cs](../Rules.WebApi/Program.cs), [RuleRuntimeService.cs](../Rules.WebApi/RuleRuntimeService.cs), [InteractiveEvaluation.cs](../Rules.WebApi/InteractiveEvaluation.cs) |
 | `Rules.WebApi.GUI` | Vue editor, browser-held facts, prompts, trace and proof presentation | [App.vue](../Rules.WebApi.GUI/src/App.vue), [runtime.js](../Rules.WebApi.GUI/src/runtime.js) |
 
-`RuleParser` references `Tokenizer`, `Rules`, and the sibling `../Utilities/Utilities.csproj`; `QueryInterpreter` references `RuleParser`; the shell and API depend on these libraries. `Rules.WebApi.GUI` reaches the engine only through the API. This is the dependency structure in the project files and [Rules.sln](../Rules.sln). The active query interpreter project is `Interpreter/QueryInterpreter/QueryInterpreter.csproj`; its parent `Interpreter` directory is only a folder. Tests are split among `TokenizerTest`, `RuleParserTest`, and `RuleTest`, with additional web tests in [Rules.WebApi.GUI/package.json](../Rules.WebApi.GUI/package.json).
+`RuleParser` references `Tokenizer` and `Rules`; `QueryInterpreter` references `RuleParser`; the shell and API depend on these libraries. The parser uses the .NET `Stack<T>` with local helpers for indexed peeking and top replacement. All referenced projects are included in this repository. `Rules.WebApi.GUI` reaches the engine only through the API. This is the dependency structure in the project files and [Rules.sln](../Rules.sln). The active query interpreter project is `Interpreter/QueryInterpreter/QueryInterpreter.csproj`; its parent `Interpreter` directory is only a folder. Tests are split among `TokenizerTest`, `RuleParserTest`, and `RuleTest`, with additional web tests in [Rules.WebApi.GUI/package.json](../Rules.WebApi.GUI/package.json).
 
 ```mermaid
 flowchart LR
@@ -54,7 +54,6 @@ flowchart LR
     API --> Parser
     Parser --> Tokenizer
     Parser --> Rules
-    Parser --> Utilities[Sibling Utilities project]
     API --> Rules
     Shell --> Rules
 ```
@@ -189,7 +188,7 @@ Current limits that matter when extending the system:
 
 ## First day in the codebase
 
-1. Install the .NET 10 SDK selected by [global.json](../global.json). Keep the sibling `../Utilities/Utilities.csproj` available; it is referenced by the solution. Install Node.js and npm for the Vue workbench; its interactive test script calls for Node.js 22 or newer.
+1. Install the .NET 10 SDK selected by [global.json](../global.json). All referenced projects are included in this repository. Install Node.js and npm for the Vue workbench; its interactive test script calls for Node.js 22 or newer.
 2. From the repository root, run `dotnet restore Rules.sln`, `dotnet build Rules.sln`, and `dotnet test Rules.sln`. The source test projects cover tokenizer, parser/builder, and runtime behavior. The web scripts in [package.json](../Rules.WebApi.GUI/package.json) include `npm run test:ui`, `npm run test:shell`, and `npm run test:interactive`.
 3. To work in the browser, start `dotnet run --project Rules.WebApi/Rules.WebApi.csproj --urls http://localhost:5215` in one terminal. In another, run `cd Rules.WebApi.GUI`, `npm install`, and `npm run dev`. Vite prints its browser URL and proxies `/api` to port 5215. For a console-only path, run `dotnet run --project CommandShell`; use `help`, then `lr`, `er`, `rt`, and `calc`.
 4. Read one rule in [the examples directory](../RuleParser/doc/Examples), follow its parse through `RuleParser` → `RulesBuilder`, then place a breakpoint in `TTask.Evaluate` and the chosen `RuleEngine` method. For a missing fact, follow `TId` → `MessageSink` → `RuleEngine.DeriveValue` → host prompt. For the web path, continue through `RuleRuntimeService.Evaluate` → `InteractiveEvaluation.HandleAsync` → `Rules.WebApi.GUI/src/runtime.js`.

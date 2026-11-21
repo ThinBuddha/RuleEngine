@@ -205,7 +205,6 @@ Current container order comes from the parsed file or the host's supplied collec
 
 ```mermaid
 flowchart TD
-    Utilities[External Utilities] --> RuleParser
     Tokenizer --> RuleParser
     Rules --> RuleParser
     RuleParser --> QueryInterpreter
@@ -218,7 +217,7 @@ flowchart TD
     RuleParser --> RuleTest
 ```
 
-`Rules.sln` references `..\Utilities\Utilities.csproj`, so the solution is not currently self-contained. The active query interpreter project is `Interpreter/QueryInterpreter/QueryInterpreter.csproj`; the parent `Interpreter` directory is only a folder.
+All projects referenced by `Rules.sln` are included in this repository. The parser uses the .NET `Stack<T>` with local helpers for indexed peeking and top replacement. The active query interpreter project is `Interpreter/QueryInterpreter/QueryInterpreter.csproj`; the parent `Interpreter` directory is only a folder.
 
 ## Current constraints
 

@@ -26,7 +26,8 @@ and wiki for changes.
 ## Requirements
 
 - .NET 10 SDK. The repository's [global.json](global.json) selects .NET 10 and rolls forward to the latest installed .NET 10 feature band.
-- The sibling project `..\Utilities\Utilities.csproj`. `Rules.sln` references this project outside the repository.
+
+All projects referenced by `Rules.sln` are included in this repository; no sibling checkout is required.
 
 ## Build and test
 

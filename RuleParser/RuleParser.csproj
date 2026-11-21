@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Utilities\Utilities.csproj" />
     <ProjectReference Include="..\Rules\Rules.csproj" />
     <ProjectReference Include="..\Tokenizer\Tokenizer.csproj" />
   </ItemGroup>
