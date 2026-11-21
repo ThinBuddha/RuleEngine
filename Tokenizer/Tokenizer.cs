@@ -252,6 +252,45 @@ namespace Lexical
             return result;
         }
 
+        /// <summary>Consumes an exact literal at a token boundary, in caller-supplied priority order.</summary>
+        public bool TryGetLiteral(IEnumerable<string> candidates, out string literal)
+        {
+            var start = _position;
+            while (start <= _EOFIndex)
+            {
+                if (IsWhiteSpace(Input[start])) { start++; continue; }
+                if (start < _EOFIndex && Input[start] == '/' && Input[start + 1] == '*')
+                {
+                    var close = Input.IndexOf("*/", start + 2, StringComparison.Ordinal);
+                    if (close < 0) break;
+                    start = close + 2;
+                    continue;
+                }
+                if (start < _EOFIndex && Input[start] == '/' && Input[start + 1] == '/')
+                {
+                    while (start <= _EOFIndex && Input[start] != '\r' && Input[start] != '\n') start++;
+                    continue;
+                }
+                break;
+            }
+            foreach (var candidate in candidates)
+            {
+                var end = start + candidate.Length;
+                if (end > _EOFIndex ||
+                    string.CompareOrdinal(Input, start, candidate, 0, candidate.Length) != 0 ||
+                    !IsDelimiter(Input[end])) continue;
+
+                for (var i = _position; i < start; i++)
+                    if (Input[i] == '\n' || (Input[i] == '\r' && Input[i + 1] != '\n')) Line++;
+                _position = end;
+                _parseMode = ParseMode.None;
+                literal = candidate;
+                return true;
+            }
+            literal = null;
+            return false;
+        }
+
         /// <summary>
         /// Add custom token (keyword, ordinal) or override (a limited set of) predefined tokens for a literal
         /// </summary>

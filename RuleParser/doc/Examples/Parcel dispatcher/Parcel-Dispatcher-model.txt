@@ -1,6 +1,4 @@
 unit Credits of real with short = "credits"
-unit Kilometres of real with short = "km"
-unit Minutes of integer with short = "min"
 unit PriorityPoints of integer with short = "points"
 
 type Parcel.Contents of string with values = ["books", "electronics", "flowers", "ice cream"]
@@ -12,7 +10,7 @@ type Parcel.Declared.value of Credits with min = 0
 type Packing.Content.fee of Credits with min = 0
 type Packing.Size.fee of Credits with min = 0
 
-type Delivery.Distance of Kilometres with min = 0
+type Delivery.Distance of Kilometers with min = 0
 type Delivery.Urgency of string with values = ["relaxed", "today", "express"]
 type Delivery.Handoff of string with values = ["ring the doorbell", "leave at reception", "send a locker code", "hand over chilled parcel in person"]
 type Delivery.Vehicle of string with values = ["refrigerated van", "regional van", "delivery van", "drone", "locker shuttle", "bike courier"]

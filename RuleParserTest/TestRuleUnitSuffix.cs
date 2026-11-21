@@ -10,8 +10,8 @@ namespace RuleParserTest
         private static ExplicitModel Model()
         {
             var parser = new ModelParser();
-            parser.Parse("unit Kilogram of real with short = \"kg\" unit Seconds of integer with short = \"sec\" " +
-                "type Weight of Kilogram type Duration of Seconds class Item has Weight of Weight Other of Weight Duration of Duration Count of integer Ready of boolean");
+            parser.Parse("unit Ticks of integer with short = \"ticks\" " +
+                "type Weight of Kilograms type Duration of Ticks class Item has Weight of Weight Other of Weight Duration of Duration Count of integer Ready of boolean");
             Assert.Empty(parser.SyntaxErrors);
             Assert.Empty(parser.Model.Validate());
             return parser.Model;
@@ -35,12 +35,12 @@ namespace RuleParserTest
         [InlineData("Item.Weight > 5", "Item.Weight := 2 kg", "kg")]
         [InlineData("5 < Item.Weight", "Item.Weight := 2 kg", "kg")]
         [InlineData("Item.Ready", "Item.Weight := 0", "kg")]
-        [InlineData("Item.Ready", "Item.Weight := 2 sec", "Kilogram")]
+        [InlineData("Item.Ready", "Item.Weight := 2 s", "Kilograms")]
         [InlineData("Item.Ready", "Item.Weight := 2 KG", "KG")]
-        [InlineData("Item.Ready", "Item.Weight := 2 Kilogram", "Kilogram")]
+        [InlineData("Item.Ready", "Item.Weight := 2 Kilograms", "Kilograms")]
         [InlineData("Item.Ready", "Item.Weight := Item.Other + 1", "units")]
         [InlineData("Item.Ready", "Item.Count := 2 kg", "no unit")]
-        [InlineData("Item.Ready", "Item.Duration := 2.5 sec", "integer")]
+        [InlineData("Item.Ready", "Item.Duration := 2.5 ticks", "integer")]
         public void RejectsMissingOrIncorrectUnits(string condition, string conclusion, string error)
         {
             Assert.Contains(Validate(condition, conclusion), message => message.Contains(error));

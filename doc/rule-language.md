@@ -66,7 +66,7 @@ Integers and floating-point values are supported. Arithmetic between an integer 
 
 ### Unit suffixes with an enforced model
 
-When a rule file starts with `enforce model "model.txt"`, numeric literals used for a unit-bearing property must include that unit's exact, case-sensitive short name, separated from the number by whitespace. For a type based on `unit Kilogram of real with short = "kg"`, write `Parcel.Weight > 5 kg` and `Parcel.Weight := 2.5 kg`. Bare `5`, a full unit name, an unknown short name, and a different unit are rejected. Zero also requires its suffix.
+When a rule file starts with `enforce model "model.txt"`, numeric literals used for a unit-bearing property must include that unit's exact, case-sensitive short name, separated from the number by whitespace. Standard units are predefined in every model: declare `type Weight of Kilograms` and write `Parcel.Weight > 5 kg` and `Parcel.Weight := 2.5 kg`. Other examples are `1.5 min`, `25 %`, `20 °C`, and `80 km/h`. User declarations cannot redefine standard unit names or symbols. Bare `5`, a full unit name, an unknown short name, and a different unit are rejected. Zero also requires its suffix.
 
 Identifiers already obtain their units from the model: `Parcel.Weight := Other.Weight` needs no suffix. Addition and subtraction require matching units (`Parcel.Weight + 1 kg`); multiplication and division by a unitless scalar remain valid (`Parcel.Weight * 2`). Numeric properties without a unit use bare literals. Model declaration bounds and numeric answers supplied through the GUI/API remain plain numbers.
 

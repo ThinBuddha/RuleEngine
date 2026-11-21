@@ -18,12 +18,12 @@ namespace RuleParserTest
 
             Assert.Empty(parser.SyntaxErrors);
             Assert.NotNull(((ModelBuilder)parser.Builder).Model);
-            Assert.Equal(2, Count(parser.ParseTree, "UnitDecl("));
+            Assert.Equal(1, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(10, Count(parser.ParseTree, "TypeDecl("));
-            Assert.Contains("Short(kg)", parser.ParseTree);
+            Assert.Contains("Short(points)", parser.ParseTree);
             Assert.Contains("Min(Compare(>)Integer(100))", parser.ParseTree);
             Assert.Contains("Max(Compare(<)Integer(10))", parser.ParseTree);
-            Assert.Contains("TypeDecl(Id(AnyWeight)BaseType(Kilogram))", parser.ParseTree);
+            Assert.Contains("TypeDecl(Id(AnyWeight)BaseType(Kilograms))", parser.ParseTree);
             Assert.Contains("Values(String(relaxed)String(today)String(express))", parser.ParseTree);
         }
 
@@ -39,7 +39,7 @@ namespace RuleParserTest
 
             Assert.Empty(parser.SyntaxErrors);
             Assert.Empty(((ModelBuilder)parser.Builder).Model.Validate());
-            Assert.Equal(4, Count(parser.ParseTree, "UnitDecl("));
+            Assert.Equal(2, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(33, Count(parser.ParseTree, "TypeDecl("));
             Assert.Equal(19, Count(parser.ParseTree, "ClassDecl("));
             Assert.Equal(39, Count(parser.ParseTree, "Property("));
@@ -73,7 +73,7 @@ namespace RuleParserTest
             parser.Parse(source);
 
             Assert.Empty(parser.SyntaxErrors);
-            Assert.Equal(1, Count(parser.ParseTree, "UnitDecl("));
+            Assert.Equal(0, Count(parser.ParseTree, "UnitDecl("));
             Assert.Equal(19, Count(parser.ParseTree, "TypeDecl("));
             Assert.Equal(19, Count(parser.ParseTree, "ClassDecl("));
             Assert.Equal(26, Count(parser.ParseTree, "Property("));

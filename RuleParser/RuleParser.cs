@@ -1,6 +1,7 @@
 ﻿using Lexical;
 using System;
 using System.Diagnostics;
+using Rules.Model;
 
 namespace Rules.Parser
 {
@@ -369,7 +370,12 @@ namespace Rules.Parser
 
         private void UnitSuffix()
         {
-            if (ModelFileName != null && LookAheadHasAnyOf(Token.Identifier, out var suffix))
+            if (ModelFileName == null) return;
+            if (_tokenizer.TryGetLiteral(MetaModelUnits.Symbols, out var standardSymbol))
+            {
+                _parseTree.Add(ParsedItem.UnitSuffix, standardSymbol);
+            }
+            else if (LookAheadHasAnyOf(Token.Identifier, out var suffix))
             {
                 _tokenizer.GetNextToken();
                 _parseTree.Add(ParsedItem.UnitSuffix, suffix);

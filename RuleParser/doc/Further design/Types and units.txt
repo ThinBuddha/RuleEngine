@@ -1,11 +1,10 @@
-unit Kilogram of real with short = "kg"
 unit Points of integer with short = "points"
   
-type Weight of Kilogram with min = 0 and max = 100
-type SuperWeight of Kilogram with min > 100 and max = 1000
-type Lightweight of Kilogram with min = 0 and max < 10
-type HeavyWeight of Kilogram with min > 1000
-type AnyWeight of Kilogram
+type Weight of Kilograms with min = 0 and max = 100
+type SuperWeight of Kilograms with min > 100 and max = 1000
+type Lightweight of Kilograms with min = 0 and max < 10
+type HeavyWeight of Kilograms with min > 1000
+type AnyWeight of Kilograms
 
 type Priority of Points with min = 0 and max = 5
 type Score of Points with min = 0 and max = 100

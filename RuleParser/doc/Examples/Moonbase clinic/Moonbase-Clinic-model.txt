@@ -1,4 +1,3 @@
-unit Hours of real with short = "h"
 
 type Syndrome.Glow.status of string with values = ["matched", "unmatched"]
 type Syndrome.Echo.status of string with values = ["matched", "unmatched"]

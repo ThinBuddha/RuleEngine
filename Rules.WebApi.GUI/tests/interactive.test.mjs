@@ -182,8 +182,24 @@ test('enforced model rejects absent files, unknown IDs and out-of-domain values'
   assert.deepEqual(inferred.body.modelTypes, {})
 })
 
+test('predefined units reject redefinitions and supply fractional numeric input metadata', async () => {
+  const modelSource = 'type Duration of Minutes with min = 0 class Sample has Duration of Duration Ready of boolean'
+  const source = 'enforce model "duration.txt" RuleContainer C Rule R If Sample.Duration > 1 min Then Sample.Ready'
+  const invalid = await parse(source, 'unit Minutes of integer with short = "min" ' + modelSource, 'duration.txt')
+  assert.equal(invalid.status, 400)
+  assert.ok(invalid.body.syntaxErrors.some(error => error.includes('predefined')))
+  const response = await run('evaluate', { source, modelSource, modelFileName: 'duration.txt', mode: 'once' }, (name, socket, choices, why, inputType) => {
+    assert.equal(name, 'Sample.Duration')
+    assert.equal(inputType.kind, 'real')
+    assert.equal(inputType.unit, 'min')
+    return 1.5
+  })
+  assert.equal(response.result.context['Sample.Duration'], 1.5)
+  assert.equal(response.result.context['Sample.Ready'], true)
+})
+
 test('unit suffixes are required only with an enforced model', async () => {
-  const modelSource = 'unit Kilogram of real with short = "kg" type Weight of Kilogram class Item has Weight of Weight'
+  const modelSource = 'type Weight of Kilograms class Item has Weight of Weight'
   const header = 'enforce model "weight.txt" '
   const rule = 'RuleContainer C Rule R If Item.Weight > 1 kg Then Item.Weight := 2.5 kg'
   assert.equal((await parse(header + rule, modelSource, 'weight.txt')).status, 200)

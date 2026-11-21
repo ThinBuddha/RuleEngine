@@ -15,6 +15,11 @@ namespace Rules.Model
         public Dictionary<string, ModelType> Types { get; } = new(StringComparer.Ordinal);
         public Dictionary<string, ModelClass> Classes { get; } = new(StringComparer.Ordinal);
 
+        public ExplicitModel()
+        {
+            foreach (var unit in MetaModelUnits.All) Units.Add(unit.Name, unit);
+        }
+
         public ModelType Resolve(string id)
         {
             var parts = id.Split('.');

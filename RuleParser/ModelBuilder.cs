@@ -70,7 +70,11 @@ namespace Rules.Parser
             switch (_scope.Pop())
             {
                 case ParsedItem.UnitDecl:
-                    if (_name != null && _base != null && _short != null && !Model.Units.TryAdd(_name, new ModelUnit(_name, _base, _short)))
+                    if (MetaModelUnits.IsReservedName(_name))
+                        Errors.Add($"Unit '{_name}' is predefined and cannot be declared");
+                    else if (MetaModelUnits.IsReservedSymbol(_short))
+                        Errors.Add($"Unit short name '{_short}' is reserved for a predefined unit");
+                    else if (_name != null && _base != null && _short != null && !Model.Units.TryAdd(_name, new ModelUnit(_name, _base, _short)))
                         Errors.Add($"Duplicate unit '{_name}'");
                     break;
                 case ParsedItem.TypeDecl:
