@@ -487,6 +487,9 @@ $RECYCLE.BIN/
 # Local rule concepts spreadsheet
 /doc/Rule concepts.xlsx
 
+# Local EBNF visualizer
+/RuleParser/visualizer/
+
 # Local OpenAI configuration
 /.openai/
 
