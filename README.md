@@ -16,6 +16,7 @@ Strategies that organize multiple tasks are a future vision; the current system 
 - [Architecture](doc/architecture.md) explains the projects, runtime components, and evaluation flows.
 - [Rule language](doc/rule-language.md) describes the supported syntax with examples.
 - [Web workbench](Rules.WebApi.GUI/README.md) explains the Vue GUI and its browser runtime.
+- [Illustrated Workbench walkthrough](doc/workbench-walkthrough.md) shows how to load rules, derive models, run evaluations, and inspect explanations.
 
 To browse the architecture guide and existing Graphify wiki together, run
 `mkdocs serve --dev-addr 127.0.0.1:8000` from the repository root and open

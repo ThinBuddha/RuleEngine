@@ -8,7 +8,8 @@ import { splitModelSource } from '../src/modelSource.js'
 
 for (const stem of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']) {
   test(`${stem} splits into types and classes without losing text`, () => {
-    const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${stem}-model.txt`, import.meta.url), 'utf8')
+    const folder = { 'Parcel-Dispatcher': 'Parcel dispatcher', 'Computer-Assembly': 'Computer assembly', 'Moonbase-Clinic': 'Moonbase clinic' }[stem]
+    const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${folder}/${stem}-model.txt`, import.meta.url), 'utf8')
     const { types, classes } = splitModelSource(source)
 
     assert.match(types, /^unit /)

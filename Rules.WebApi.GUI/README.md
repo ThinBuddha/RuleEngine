@@ -1,5 +1,7 @@
 # Rule Engine Workbench
 
+For a guided tour with screenshots, see the [illustrated Workbench walkthrough](../doc/workbench-walkthrough.md).
+
 This folder contains the Vue GUI companion to `CommandShell`. It keeps the shell's core workflow visible in a browser and calls `Rules.WebApi` for all rule logic:
 
 - edit or import a rule file, selecting its companion model file at the same time when it uses `enforce model`;
@@ -50,6 +52,8 @@ Each evaluation has its own engines, parsed rules, fact context (`ValueBag`), in
 For rules without `enforce model`, parsing derives `modelTypes`, mapping each string ID to distinct literals encountered in comparisons and assignments. Interactive prompts use these derived `choices`: the GUI shows a select box when choices exist and a text field otherwise. Numeric-looking and Boolean-looking string choices remain strings. Empty derived literals are omitted because an empty free-text answer means no value. Computed string fragments are not offered as complete values. Conflicting known scalar types for an ID are reported as syntax errors. The calculator can receive the loaded rule source through its optional `source` field to use the same choices.
 
 For enforced rules, each interactive prompt includes `inputType` resolved through the explicit classes and types. The popup uses declared string values, a true/false selector, or a numeric field with the declared integer/real kind and bounds. It displays the unit label and checks entered values before submitting. Explicit string lists may include an empty string as a selectable value. The API checks submitted values against the same model.
+
+After successfully importing or parsing rules without `enforce model`, click **Derive model** beside **Parse source** to populate the Model workspace's Types and Classes tabs. This replaces the workspace text and opens the Types tab. The button is hidden while parsing, after a failed parse or clearing rules, and whenever the source differs from the successfully parsed text. Rules with an enforced model do not offer this action. The generated text is an editable draft: numeric properties use the primitive real type, unknown types and unqualified facts are marked for review, and known string values are copied from the rules. The action does not add `enforce model` to the rules.
 
 The parse response also includes a `model` tree built from dotted fact IDs. The GUI's **Model** workspace displays types and classes imported from an explicit model file.
 

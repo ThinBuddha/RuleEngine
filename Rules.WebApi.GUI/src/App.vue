@@ -8,6 +8,7 @@ import ProofStory from './ProofStory.vue'
 import TraceStory from './TraceStory.vue'
 import ModelWorkspace from './ModelWorkspace.vue'
 import { splitModelSource } from './modelSource'
+import { useDerivedModel } from './derivedModel'
 
 const valuePrompt = ref(null)
 const ruleEditor = ref(null)
@@ -24,6 +25,7 @@ const modelSource = computed(() => [typesSource.value, classesSource.value].filt
 let loadSequence = 0
 
 const source = ref(starterRules()); const mode = ref('once'); const query = ref('Travel.by.train'); const view = ref('workspace'); const containers = ref([]); const context = ref({}); const trace = ref([]); const result = ref(null); const error = ref(''); const status = ref('Ready'); const calcInput = ref('2 + 3 * 4'); const calcResult = ref(''); const picker = ref(null)
+const { canDeriveModel, clearDerivedModel, acceptDerivedModel, createDerivedModelDraft } = useDerivedModel(source)
 const modes = [{ value: 'once', label: 'Fire once', hint: 'Priority order' }, { value: 'iteration', label: 'Iteration', hint: 'Forward chaining' }, { value: 'deduction', label: 'Deduction', hint: 'Backward chaining' }]
 const ruleCount = computed(() => containers.value.reduce((n, c) => n + c.rules.length, 0)); const factCount = computed(() => Object.keys(context.value).length); const modeLabel = computed(() => modes.find((m) => m.value === mode.value)?.label); const resultLabel = computed(() => result.value === null ? 'No query' : result.value ? 'Proven' : 'Not proven')
 const traceModeLabel = computed(() => modes.find(item => item.value === traceMode.value)?.label)
@@ -36,6 +38,7 @@ async function requestValue(id, choices, signal, why, inputType) {
 async function load() {
   const sequence = ++loadSequence
   const text = source.value
+  clearDerivedModel()
   proofs.value = []
   containers.value = []
   trace.value = []
@@ -46,6 +49,7 @@ async function load() {
     const parsed = await parseRules(text, modelSource.value || undefined, typesFileName.value || undefined)
     if (sequence !== loadSequence) return
     containers.value = parsed.containers || []
+    acceptDerivedModel(text, parsed)
     status.value = `Loaded ${containers.value.length} container${containers.value.length === 1 ? '' : 's'}`
     view.value = 'rules'
   } catch (e) {
@@ -55,6 +59,17 @@ async function load() {
   }
 }
 const completedRuns = ref(0)
+function pasteDerivedModel() {
+  const draft = createDerivedModelDraft()
+  if (!draft) return
+  const { types, classes } = draft
+  typesSource.value = types
+  classesSource.value = classes
+  typesFileName.value = ''
+  modelTab.value = 'types'
+  view.value = 'model-workspace'
+  status.value = 'Derived model pasted into Model workspace'
+}
 async function execute(fresh = false) {
   if (busy.value) return
   const runMode = mode.value
@@ -110,7 +125,7 @@ async function readFile(event) {
   source.value = rules.text
   void load()
 }
-function clearContext() { proofs.value = []; context.value = {}; result.value = null; status.value = 'Context cleared' }; function clearRules() { loadSequence++; proofs.value = []; containers.value = []; trace.value = []; result.value = null; status.value = 'Rules cleared' }; async function calc() { if (busy.value) return; busy.value = true; try { const value = await calculate(calcInput.value, context.value, requestValue, containers.value.length ? source.value : undefined, modelSource.value || undefined, typesFileName.value || undefined); calcResult.value = String(value); error.value = '' } catch (e) { error.value = e.message; calcResult.value = '' } finally { busy.value = false } }; function reset() { source.value = starterRules(); query.value = 'Travel.by.train'; clearContext(); void load() }
+function clearContext() { proofs.value = []; context.value = {}; result.value = null; status.value = 'Context cleared' }; function clearRules() { loadSequence++; clearDerivedModel(); proofs.value = []; containers.value = []; trace.value = []; result.value = null; status.value = 'Rules cleared' }; async function calc() { if (busy.value) return; busy.value = true; try { const value = await calculate(calcInput.value, context.value, requestValue, containers.value.length ? source.value : undefined, modelSource.value || undefined, typesFileName.value || undefined); calcResult.value = String(value); error.value = '' } catch (e) { error.value = e.message; calcResult.value = '' } finally { busy.value = false } }; function reset() { source.value = starterRules(); query.value = 'Travel.by.train'; clearContext(); void load() }
 void load()
 </script>
 
@@ -125,7 +140,7 @@ void load()
         <ModelWorkspace v-if="view === 'model-workspace'" v-model:types-source="typesSource"
           v-model:classes-source="classesSource"
           v-model:file-name="typesFileName" v-model:tab="modelTab" />
-        <template v-if="view === 'workspace' || view === 'rules'"><div class="top-grid"><article class="panel editor"><header><div><label>01</label><h2>Rule source</h2></div><div><button class="text-btn" @click="picker.click()">Import file</button><input ref="picker" type="file" accept=".txt,.rules" multiple hidden @change="readFile"><button class="outline-btn" @click="ruleEditor?.formatAll()">Auto format</button><button class="outline-btn" @click="load">Parse source</button></div></header><ContainerRuleEditor ref="ruleEditor" v-model="source" /><footer><span>● Rule syntax</span><span>{{ source.split('\n').length }} lines</span></footer></article><article class="panel execute"><header><div><label>02</label><h2>Run model</h2></div><span class="chip">{{ modeLabel }}</span></header><div class="modes"><button v-for="item in modes" :key="item.value" :class="{ selected: mode === item.value }" @click="mode = item.value"><i></i><span><strong>{{ item.label }}</strong><small>{{ item.hint }}</small></span></button></div><label v-if="mode === 'deduction'" class="field">Query<input v-model="query" placeholder="e.g. Travel.by.train"></label><button class="primary" :disabled="busy" @click="execute()">{{ busy ? 'Executing…' : 'Execute rules' }} <b>↗</b></button><button class="outline-btn fresh-run" :disabled="busy" @click="execute(true)">Start fresh</button><p class="helper">Execute reuses saved facts. Start fresh clears them and asks for values again.</p></article></div><div class="bottom-grid"><article class="panel"><header><div><label>03</label><h2>Loaded containers</h2></div><button class="text-btn" @click="clearRules">Clear</button></header><div v-if="containers.length" class="container-list"><div v-for="c in containers" :key="c.name" class="container-row"><span>◫</span><div><strong>{{ c.name }}</strong><small>{{ c.rules.length }} rules · priority-aware</small></div><b>→</b></div></div><div v-else class="empty">Parse a rule source to see its containers.</div></article><article class="panel result"><header><div><label>04</label><h2>Last result</h2></div><span :class="['badge', { proven: result === true, unknown: result === null }]">{{ resultLabel }}</span></header><strong>{{ result === null ? '—' : result ? 'YES' : 'NO' }}</strong><p>{{ trace.length ? `${trace.length} rule${trace.length === 1 ? '' : 's'} contributed to the last evaluation.` : 'Execute a model to populate the decision trace.' }}</p></article></div></template>
+        <template v-if="view === 'workspace' || view === 'rules'"><div class="top-grid"><article class="panel editor"><header><div><label>01</label><h2>Rule source</h2></div><div><button class="text-btn" @click="picker.click()">Import file</button><input ref="picker" type="file" accept=".txt,.rules" multiple hidden @change="readFile"><button class="outline-btn" @click="ruleEditor?.formatAll()">Auto format</button><button class="outline-btn" @click="load">Parse source</button><button v-if="canDeriveModel" class="outline-btn" @click="pasteDerivedModel">Derive model</button></div></header><ContainerRuleEditor ref="ruleEditor" v-model="source" /><footer><span>● Rule syntax</span><span>{{ source.split('\n').length }} lines</span></footer></article><article class="panel execute"><header><div><label>02</label><h2>Run model</h2></div><span class="chip">{{ modeLabel }}</span></header><div class="modes"><button v-for="item in modes" :key="item.value" :class="{ selected: mode === item.value }" @click="mode = item.value"><i></i><span><strong>{{ item.label }}</strong><small>{{ item.hint }}</small></span></button></div><label v-if="mode === 'deduction'" class="field">Query<input v-model="query" placeholder="e.g. Travel.by.train"></label><button class="primary" :disabled="busy" @click="execute()">{{ busy ? 'Executing…' : 'Execute rules' }} <b>↗</b></button><button class="outline-btn fresh-run" :disabled="busy" @click="execute(true)">Start fresh</button><p class="helper">Execute reuses saved facts. Start fresh clears them and asks for values again.</p></article></div><div class="bottom-grid"><article class="panel"><header><div><label>03</label><h2>Loaded containers</h2></div><button class="text-btn" @click="clearRules">Clear</button></header><div v-if="containers.length" class="container-list"><div v-for="c in containers" :key="c.name" class="container-row"><span>◫</span><div><strong>{{ c.name }}</strong><small>{{ c.rules.length }} rules · priority-aware</small></div><b>→</b></div></div><div v-else class="empty">Parse a rule source to see its containers.</div></article><article class="panel result"><header><div><label>04</label><h2>Last result</h2></div><span :class="['badge', { proven: result === true, unknown: result === null }]">{{ resultLabel }}</span></header><strong>{{ result === null ? '—' : result ? 'YES' : 'NO' }}</strong><p>{{ trace.length ? `${trace.length} rule${trace.length === 1 ? '' : 's'} contributed to the last evaluation.` : 'Execute a model to populate the decision trace.' }}</p></article></div></template>
         <section v-if="view === 'trace'" class="panel detail"><header><div><label>TRACE</label><h2>Evaluation trace</h2></div><div class="trace-actions"><span class="chip">{{ traceModeLabel }}</span><button v-if="traceMode !== 'deduction'" type="button" class="outline-btn" @click="traceView = traceView === 'list' ? 'story' : 'list'">{{ traceView === 'list' ? 'Read as story' : 'Show rule list' }}</button><button class="primary compact" :disabled="busy" @click="execute()">{{ busy ? 'Executing…' : 'Execute again' }}</button><button class="outline-btn" :disabled="busy" @click="execute(true)">Start fresh</button></div></header><TraceStory v-if="traceMode !== 'deduction' && traceView === 'story'" :trace="trace" :mode="traceMode" /><div v-else-if="trace.length" class="trace-list"><div v-for="(item, i) in trace" :key="`${item.rule}-${i}`"><label>{{ String(i + 1).padStart(2, '0') }}</label><span><strong>{{ item.rule }}</strong><small>{{ item.container }} · because {{ item.conditions?.join(' and ') || item.reason }}</small></span><b>✓</b></div></div><div v-else-if="!proofs.length" class="empty large">Nothing traced yet. Choose a mode and execute the loaded rules.</div></section>
         <section v-if="view === 'context'" class="panel detail"><header><div><label>FACTS</label><h2>Fact context</h2></div><button class="text-btn" @click="clearContext">Clear context</button></header><div v-if="factCount" class="facts"><div v-for="(value, key) in context" :key="key"><small>{{ key }}</small><strong>{{ String(value) }}</strong></div></div><div v-else class="empty large">No facts have been established. Execute a rule set to build the context.</div></section>
         <section v-if="view === 'calculator'" class="panel detail calculator"><header><div><label>CALC</label><h2>Expression calculator</h2></div><span class="chip">Uses current context</span></header><label class="field">Expression<textarea v-model="calcInput" rows="3" spellcheck="false"></textarea></label><button class="primary compact" @click="calc">Calculate <b>↗</b></button><div class="calc-result"><small>Result</small><strong>{{ calcResult || '—' }}</strong></div></section>
