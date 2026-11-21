@@ -218,7 +218,7 @@ flowchart TD
     RuleParser --> RuleTest
 ```
 
-`Rules.sln` references `..\Utilities\Utilities.csproj`, so the solution is not currently self-contained. The older `Interpreter` project is present in the repository but is not a solution project.
+`Rules.sln` references `..\Utilities\Utilities.csproj`, so the solution is not currently self-contained. The active query interpreter project is `Interpreter/QueryInterpreter/QueryInterpreter.csproj`; the parent `Interpreter` directory is only a folder.
 
 ## Current constraints
 
@@ -236,5 +236,4 @@ flowchart TD
 
 ## Legacy and experimental areas
 
-- `Interpreter/Interpreter.csproj` is an older project alongside the active `Interpreter/QueryInterpreter` project. It is not in the solution and currently has recursive source-inclusion and missing-reference problems when built independently.
 - The Markdown documentation in `doc` describes behavior verified against the current source. `RuleParser/doc/Examples` contains sample rule files; `RuleParser/doc/Further design` contains exploratory linked-rule sketches.

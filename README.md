@@ -104,4 +104,3 @@ If a required value cannot be derived from another rule, the command shell asks 
 | `TokenizerTest` | Tokenizer tests. |
 | `RuleParserTest` | Parser and builder tests. |
 | `RuleTest` | Expression and inference tests. |
-| `Interpreter` | Legacy interpreter project; not included in `Rules.sln`. |
