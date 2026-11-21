@@ -28,6 +28,8 @@ flowchart LR
 
 The **compiler boundary** is textual source to executable rule objects. The **evaluation boundary** is a `TTask.Evaluate` call with a `ValueBag`, mode, and optional parsed query. The **host boundary** resolves unknown facts and decides whether facts survive into another run. These boundaries are visible in [RuleParser.cs](../RuleParser/RuleParser.cs), [RulesBuilder.cs](../RuleParser/RulesBuilder.cs), [Task.cs](../Rules/Tasks/Task.cs), [RuleEngine.cs](../Rules/Rules/RuleEngine.cs), and [MessageSink.cs](../Rules/MessageSink.cs).
 
+The [strategic and task-level note](Strategic%20and%20task%20level.txt) describes a future vision with an optional strategy layer organizing multiple tasks, each assigned rule containers. The current runtime has no such strategy layer or list of separate problem-solving tasks. `TTask` coordinates containers within one evaluation. Dynamic task creation, insertion, and reordering of tasks and containers belong to that future vision. Fire once, Iteration, and Deduction are current evaluation modes; calling them inference strategies does not imply support for the planned strategy layer. See [Current execution and future strategy/task levels](architecture.md#current-execution-and-future-strategytask-levels).
+
 ### Project map and dependency direction
 
 | Area | Responsibility | Principal source |

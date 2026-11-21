@@ -1,5 +1,11 @@
+A VISION of the final version of this project 
+Current system is NOT aware of strategies or multiple tasks
+-----------------------------------------------------------
+
+Hierarchy in a problem solving process:
+
 Strategy
-	
+
 	Task 1
 		RuleContainer 1
 		RuleContainer 2
@@ -13,9 +19,11 @@ Strategy
 		RuleContainer 3
 
 
-On strategy level, the highest of all levels of perception, we can dynamically create a task
+On strategy level --the most abstract level-- we can dynamically create a task
 and place it in the task list at a destined position. The task can be assigned one or more rule containers.
 
-Initially, the order of tasks, rule containers and rules withing a container are defined by how they are stored in files.
-The strategy level is optional and can be used to reorder tasks and containers as the need arises to change the execution path
-of a problem solving process.
+Currently, the order of tasks, rule containers and rules withing a container are defined by how they are stored in files.
+Actually there are no separate tasks yet in the current version of the project.
+
+The future strategy level is supposed to be optional and can be used to reorder tasks and containers as the need arises 
+to dynamically change the execution path of a problem solving process.

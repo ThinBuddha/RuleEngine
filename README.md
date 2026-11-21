@@ -8,6 +8,8 @@ RuleEngine is an experimental production-rule system written in C# and targeting
 
 The repository also contains an interactive command shell, a query interpreter, and xUnit test projects.
 
+Strategies that organize multiple tasks are a future vision; the current system evaluates rule containers through `TTask` without a strategy layer or a list of separate problem-solving tasks. The inference strategies above are evaluation modes. See [Current execution and future strategy/task levels](doc/architecture.md#current-execution-and-future-strategytask-levels).
+
 ## Documentation
 
 - [Architecture and developer guide](doc/architecture-and-developer-guide.md) follows the runtime from source text through evaluation, hosts, and proof output.
@@ -94,7 +96,7 @@ If a required value cannot be derived from another rule, the command shell asks 
 | --- | --- |
 | `Tokenizer` | Converts rule text into lexical tokens. |
 | `RuleParser` | Parses tokens and builds executable rule/expression objects. |
-| `Rules` | Contains expressions, facts, rules, inference engines, traces, and task orchestration. |
+| `Rules` | Contains expressions, facts, rules, inference engines, traces, and container evaluation through `TTask`. |
 | `Interpreter/QueryInterpreter` | Converts a textual query into a comparison expression. |
 | `CommandShell` | Interactive console application. |
 | `Rules.WebApi.GUI` | Vue workbench providing the browser equivalent of the command-shell workflow. |

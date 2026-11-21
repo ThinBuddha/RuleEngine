@@ -193,6 +193,14 @@ The command shell prints deduction proofs after evaluation and on the `how` comm
 
 `TTask.Evaluate(context, evaluationType, query)` selects the mode for that run. The Web API passes `EvaluateRequest.Mode` as this argument. `RuleContainer.Evaluate(context, evaluationType, query)` supports the same per-call choice for one container. `RuleContainer.EvaluationType` and the overloads that omit the mode are obsolete compatibility APIs; callers should pass the mode explicitly. For Fire once and Iteration, `TTask` evaluates containers in their stored order using a shared context. A validated container stop condition can prevent later containers from running. For Deduction, a single query is evaluated against a temporary combined rule set instead of querying each container in turn. Stop conditions are not part of the deduction path. In the current parser, evaluation types and container stop conditions are configured by the host rather than by rule-file syntax.
 
+### Current execution and future strategy/task levels
+
+The [strategic and task-level vision](Strategic%20and%20task%20level.txt) describes a future hierarchy: Strategy → Tasks → RuleContainers → Rules. The current system has no strategy layer or list of separate problem-solving tasks. Despite its name, `TTask` currently coordinates the containers for one evaluation; its presence does not implement that planned hierarchy.
+
+In the vision, an optional strategy layer could create tasks dynamically, insert them at chosen positions in a task list, assign one or more containers to each task, and reorder tasks and containers to change the execution path. These are future capabilities.
+
+Current container order comes from the parsed file or the host's supplied collection. Rule order follows the evaluation mode described above, including priority sorting for Fire once. The existing term “evaluation strategy” means Fire once, Iteration, or Deduction; it does not refer to the future strategy layer.
+
 ## Project dependencies
 
 ```mermaid
