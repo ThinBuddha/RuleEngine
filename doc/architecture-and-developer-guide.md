@@ -175,7 +175,7 @@ These are documented session decisions in [architecture.md](architecture.md) and
 
 ## Design choices, gaps, and extension points
 
-The parse-tree event builder separates grammar recognition from constructing executable objects; this is an **observed separation** in `RuleParser`, `ParseTree`, and `RulesBuilder`. A likely benefit is that grammar and object construction can evolve independently, but that benefit is an **architectural hypothesis**, not a stated design requirement. When changing syntax, inspect tokenizer recognition, parser events, builder handling, language documentation, and parser tests together. When changing model syntax, update `ModelParser`, `ModelBuilder`, `ExplicitModel`, and `RuleModelValidator` as one path.
+The parse-tree event builder separates grammar recognition from constructing executable objects, which is a separation of concerns into isolated code. See `RuleParser`, `ParseTree`, and `RulesBuilder`. When changing syntax, inspect tokenizer recognition, parser events, builder handling, language documentation, and parser tests together. When changing model syntax, update `ModelParser`, `ModelBuilder`, `ExplicitModel`, and `RuleModelValidator` as one path.
 
 Mode selection per call, request-owned contexts, and prompt-time proof snapshots are **documented decisions** in [architecture.md](architecture.md), [rule-language.md](rule-language.md), and [api-proof-snapshots.md](api-proof-snapshots.md), and are verified by source. A new inference strategy must be wired through `EvaluationType`, `RuleContainer`/`TTask`, the API mode parser, and the shell/UI choice. A new proof field must be added to the core recorder, transport snapshot, and browser renderers; the fired-rule trace alone cannot explain failed deduction paths.
 
