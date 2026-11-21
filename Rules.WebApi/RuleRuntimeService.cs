@@ -19,7 +19,8 @@ public sealed class RuleRuntimeService
             Containers: GetContainersSummary(containers),
             ParseTree: parser.ParseTree,
             ModelTypes: derivedModelTypes?.StringValues,
-            Model: derivedModelTypes is null ? null : DerivedModelDeriver.Derive(derivedModelTypes));
+            Model: derivedModelTypes is null ? null : DerivedModelDeriver.Derive(derivedModelTypes),
+            Warnings: containers.ValidationWarnings);
 
         static List<ContainerSummary> GetContainersSummary(RuleContainers containers) =>
             [.. containers.Containers.Select(container =>
@@ -296,7 +297,8 @@ public sealed record ParseResponse(
     List<ContainerSummary> Containers,
     string ParseTree,
     IReadOnlyDictionary<string, IReadOnlyList<string>>? ModelTypes,
-    DerivedModelClass? Model);
+    DerivedModelClass? Model,
+    IReadOnlyList<string> Warnings);
 public sealed record ContainerSummary(string Name, List<RuleSummary> Rules);
 public sealed record RuleSummary(string Name, int Priority);
 public sealed record EvaluateResponse(bool? QueryResult, List<TraceEntry> Trace, int Rounds,

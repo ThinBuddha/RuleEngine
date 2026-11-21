@@ -12,6 +12,8 @@ namespace Rules.Parser
     {
         private readonly ExplicitModel _model;
         private readonly List<string> _errors = [];
+        private readonly HashSet<string> _usedUnits = new(StringComparer.Ordinal);
+        public IReadOnlyList<string> Warnings { get; private set; } = Array.Empty<string>();
         private string _location;
 
         public RuleModelValidator(ExplicitModel model) { _model = model; }
@@ -19,6 +21,8 @@ namespace Rules.Parser
         public IReadOnlyList<string> Validate(RuleContainers containers)
         {
             _errors.Clear();
+            _usedUnits.Clear();
+            Warnings = Array.Empty<string>();
             foreach (var container in containers.Containers)
             {
                 _location = $"Container '{container.Name}' stop condition";
@@ -34,10 +38,17 @@ namespace Rules.Parser
                         {
                             if (target.Kind != null && target.Kind != "boolean") Error($"'{conclusion.LeftExpr}' must be boolean for a bare conclusion");
                         }
-                        else Compatible(target, Expression(conclusion.RightExpr), conclusion.RightExpr.ToString());
+                        else Compatible(target, Expression(conclusion.RightExpr), conclusion.RightExpr.ToString(),
+                            conversion => conclusion.RightExpr.ResultConversion = conversion);
                     }
                 }
             }
+            Warnings = _usedUnits.Select(name => _model.Units[name]).Where(unit => unit.Quantity != null)
+                .GroupBy(unit => unit.Quantity).Where(group => group.Count() > 1)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => $"Mixed units for {group.Key}: {string.Join(", ", group.Select(unit => unit.ShortName).OrderBy(symbol => symbol, StringComparer.Ordinal))}. Compatible values are converted automatically.")
+                .ToArray();
+            containers.ValidationWarnings = Warnings;
             return _errors.Distinct(StringComparer.Ordinal).ToArray();
         }
 
@@ -50,7 +61,7 @@ namespace Rules.Parser
                 return;
             }
             var right = Expression(comparison.RightExpr);
-            Compatible(left, right, comparison.RightExpr.ToString());
+            Compatible(left, right, comparison.RightExpr.ToString(), conversion => comparison.RightExpr.ResultConversion = conversion);
             if (left.Type == null && right.Type != null) Compatible(right, left, comparison.LeftExpr.ToString());
             if (comparison.Operator is not (TCompareOperator.Equal or TCompareOperator.Unequal) &&
                 (left.Kind == "boolean" || right.Kind == "boolean")) Error("boolean values cannot be ordered");
@@ -58,6 +69,7 @@ namespace Rules.Parser
 
         private Domain Expression(TExpression expression)
         {
+            expression.ResultConversion = null;
             var terms = expression.Terms.Select(Term).ToArray();
             if (terms.Length == 0) return new Domain(null, null);
             var result = terms[0];
@@ -69,6 +81,7 @@ namespace Rules.Parser
                 else
                 {
                     Numeric(result, next, expression.ToString());
+                    next = ConvertDomain(next, result.Unit, conversion => expression.Terms[i].ResultConversion = conversion);
                     if (result.Unit != next.Unit)
                         Error($"Arithmetic mixes units '{result.Unit}' and '{next.Unit}' in '{expression}'");
                     result = new Domain("numeric", result.Unit ?? next.Unit, IsInteger: result.IsInteger && next.IsInteger);
@@ -84,6 +97,8 @@ namespace Rules.Parser
 
         private Domain Term(TTerm term)
         {
+            term.ResultConversion = null;
+            term.UseRealArithmetic = false;
             var factors = term.Factors.Select(Factor).ToArray();
             if (factors.Length == 0) return new Domain(null, null);
             var result = factors[0];
@@ -96,6 +111,7 @@ namespace Rules.Parser
                 result = new Domain("numeric", result.Unit ?? factors[i].Unit,
                     IsInteger: term.Operators[i - 1] == TMulDivOperator.Multiply && result.IsInteger && factors[i].IsInteger);
             }
+            term.UseRealArithmetic = result.Unit != null && _model.Units[result.Unit].Kind == "real";
             return result;
         }
 
@@ -123,6 +139,7 @@ namespace Rules.Parser
             }
             if (units[0].Kind == "integer" && !domain.IsInteger)
                 Error($"Value with unit '{domain.UnitShortName}' must be an integer");
+            _usedUnits.Add(units[0].Name);
             return domain with { Unit = units[0].Name };
         }
 
@@ -143,6 +160,7 @@ namespace Rules.Parser
                 return new Domain(null, null);
             }
             var unit = type.Kind == null ? _model.Units.GetValueOrDefault(type.BaseName) : null;
+            if (unit != null) _usedUnits.Add(unit.Name);
             return new Domain(type.Kind switch { "integer" or "real" => "numeric", null => "numeric", var kind => kind },
                 unit?.Name, Type: type, IsInteger: type.Kind == "integer" || unit?.Kind == "integer");
         }
@@ -153,10 +171,29 @@ namespace Rules.Parser
                 Error($"Arithmetic requires numbers in '{expression}'");
         }
 
-        private void Compatible(Domain target, Domain value, string expression)
+        private Domain ConvertDomain(Domain value, string targetUnit, Action<ModelUnitConversion> apply = null)
+        {
+            if (value.Kind != "numeric" || value.Unit == null || targetUnit == null || value.Unit == targetUnit ||
+                !_model.Units[value.Unit].TryGetConversionTo(_model.Units[targetUnit], out var conversion)) return value;
+
+            apply?.Invoke(conversion);
+            var number = value.Number.HasValue ? conversion.Convert(value.Number.Value) : (double?)null;
+            if (number.HasValue && !double.IsFinite(number.Value)) Error("Unit conversion produced a non-finite value");
+            return value with
+            {
+                Unit = targetUnit,
+                Number = number,
+                Type = null,
+                IsInteger = number.HasValue ? number.Value == Math.Truncate(number.Value)
+                    : conversion.Target.Kind == "integer" || (value.IsInteger && conversion.PreservesIntegers)
+            };
+        }
+
+        private void Compatible(Domain target, Domain value, string expression, Action<ModelUnitConversion> apply = null)
         {
             if (target.Kind == null || value.Kind == null) return;
             if (target.Kind != value.Kind) { Error($"'{expression}' is {value.Kind} but expected {target.Kind}"); return; }
+            value = ConvertDomain(value, target.Unit, apply);
             if (target.Kind == "numeric" && target.Unit != value.Unit)
             {
                 if (target.Unit != null && value.Unit == null)

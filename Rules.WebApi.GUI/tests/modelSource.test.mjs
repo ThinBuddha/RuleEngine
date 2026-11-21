@@ -12,7 +12,7 @@ for (const stem of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']
     const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${folder}/${stem}-model.txt`, import.meta.url), 'utf8')
     const { types, classes } = splitModelSource(source)
 
-    assert.match(types, /^unit /)
+    assert.match(types, /^\s*(unit|type) /)
     assert.match(classes, /^class /)
     assert.equal(types + classes, source)
   })

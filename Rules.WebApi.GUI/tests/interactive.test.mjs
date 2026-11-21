@@ -213,6 +213,35 @@ test('unit suffixes are required only with an enforced model', async () => {
   assert.equal(result.result.context['Item.Weight'], 2.5)
 })
 
+for (const mode of ['once', 'iteration', 'deduction']) {
+  test(`related units warn and convert through ${mode} execution`, async () => {
+    const modelSource = 'type Small of Millimeters type Large of Centimeters class Input has Length of Small class Output has Length of Large Ready of boolean'
+    const source = 'enforce model "lengths.txt" RuleContainer C Rule measure If Input.Length >= 1 cm Then Output.Length := Input.Length + 5 mm Rule ready If Output.Length = 1.5 cm Then Output.Ready'
+    const parsed = await parse(source, modelSource, 'lengths.txt')
+    assert.equal(parsed.status, 200, JSON.stringify(parsed.body))
+    assert.equal(parsed.body.warnings.length, 1)
+    assert.match(parsed.body.warnings[0], /Mixed units for length: cm, mm/)
+    const response = await run('evaluate', { source, modelSource, modelFileName: 'lengths.txt', mode, query: 'Output.Ready', context: { 'Input.Length': 10 } },
+      () => assert.fail('Known lengths must not prompt'))
+    assert.equal(response.type, 'result', JSON.stringify(response))
+    assert.equal(response.result.context['Output.Length'], 1.5)
+    assert.equal(response.result.context['Output.Ready'], true)
+    assert.equal(response.result.context['Input.Length'], 10)
+  })
+}
+
+test('converted conditions preserve the declared input unit in prompts', async () => {
+  const modelSource = 'type Small of Millimeters class Sample has Length of Small Ready of boolean'
+  const source = 'enforce model "lengths.txt" RuleContainer C Rule R If Sample.Length >= 1 cm Then Sample.Ready'
+  const response = await run('evaluate', { source, modelSource, modelFileName: 'lengths.txt', mode: 'once' }, (name, socket, choices, why, inputType) => {
+    assert.equal(inputType.unit, 'mm')
+    return 10
+  })
+  assert.equal(response.type, 'result', JSON.stringify(response))
+  assert.equal(response.result.context['Sample.Length'], 10)
+  assert.equal(response.result.context['Sample.Ready'], true)
+})
+
 for (const demo of ['Parcel-Dispatcher', 'Computer-Assembly', 'Moonbase-Clinic']) {
   test(`auto formatted ${demo} has the same parsed rules and model choices`, async () => {
     const source = readFileSync(new URL(`../../RuleParser/doc/Examples/${({ "Parcel-Dispatcher": "Parcel dispatcher", "Computer-Assembly": "Computer assembly", "Moonbase-Clinic": "Moonbase clinic" })[demo]}/${demo}.txt`, import.meta.url), 'utf8')

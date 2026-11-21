@@ -87,7 +87,31 @@ namespace Rules.Model
         }
     }
 
-    public sealed record ModelUnit(string Name, string Kind, string ShortName);
+    /// <summary>Canonical value = value * Scale + Offset. A null quantity denotes an unrelated custom unit.</summary>
+    public sealed record ModelUnit(string Name, string Kind, string ShortName,
+        string Quantity = null, double Scale = 1, double Offset = 0)
+    {
+        public bool TryGetConversionTo(ModelUnit target, out ModelUnitConversion conversion)
+        {
+            conversion = null;
+            if (target == null || (Name != target.Name && (Quantity == null || Quantity != target.Quantity))) return false;
+            conversion = new ModelUnitConversion(this, target, Scale / target.Scale, (Offset - target.Offset) / target.Scale);
+            return true;
+        }
+    }
+
+    public sealed record ModelUnitConversion(ModelUnit Source, ModelUnit Target, double Factor, double Offset)
+    {
+        public double Convert(double value)
+        {
+            if (Source == Target) return value;
+            // A direct ratio avoids overflowing the intermediate reference value.
+            if (Source.Offset == 0 && Target.Offset == 0) return value * Factor;
+            // Shift before scaling to avoid cancellation around temperature reference points.
+            return (value + Source.Offset / Source.Scale) * Source.Scale / Target.Scale - Target.Offset / Target.Scale;
+        }
+        public bool PreservesIntegers => Factor == Math.Truncate(Factor) && Offset == Math.Truncate(Offset);
+    }
     public sealed record ModelBound(double Value, bool Inclusive, bool IsInteger);
 
     public sealed class ModelType

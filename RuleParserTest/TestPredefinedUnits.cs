@@ -43,7 +43,7 @@ namespace RuleParserTest
             parser.Parse(source);
             Assert.Empty(parser.SyntaxErrors);
             Assert.Contains(((ModelBuilder)parser.Builder).Errors, message => message.Contains(error));
-            Assert.Equal(new ModelUnit("Minutes", "real", "min"), parser.Model.Units["Minutes"]);
+            Assert.Equal(MetaModelUnits.All.Single(unit => unit.Name == "Minutes"), parser.Model.Units["Minutes"]);
         }
 
         [Fact]
@@ -84,15 +84,19 @@ namespace RuleParserTest
         }
 
         [Fact]
-        public void DoesNotConvertDifferentUnitsImplicitly()
+        public void ConvertsRelatedUnitsWithAWarning()
         {
             var model = new ModelParser();
             model.Parse("type Distance of Kilometers class Sample has Distance of Distance Ready of boolean");
             var rules = new RuleParser(RulePart.RuleContainer);
             rules.Parse("enforce model \"model.txt\" RuleContainer C Rule R If Sample.Ready Then Sample.Distance := 1000 m");
             Assert.Empty(rules.SyntaxErrors);
-            Assert.Contains(new RuleModelValidator(model.Model).Validate(((RulesBuilder)rules.Builder).RuleContainers),
-                error => error.Contains("expected 'Kilometers'"));
+            var validator = new RuleModelValidator(model.Model);
+            Assert.Empty(validator.Validate(((RulesBuilder)rules.Builder).RuleContainers));
+            Assert.Single(validator.Warnings);
+            var context = new ValueBag();
+            ((RulesBuilder)rules.Builder).RuleContainers.Containers.Single().Rules.Single().Conclusions.Single().Evaluate(context);
+            Assert.Equal(1, Assert.IsType<Rules.Expression.TConstantNumValue>(context.GetValue("Sample.Distance")).Value.DoubleValue);
         }
     }
 }

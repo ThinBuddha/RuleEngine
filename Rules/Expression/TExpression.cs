@@ -169,6 +169,8 @@ namespace Rules.Expression
 
     public class TExpression : TFactor
     {
+        // Set by explicit-model validation; preserves the original expression and source text.
+        public ModelUnitConversion ResultConversion { get; set; }
         public List<TTerm> Terms { get; } = new List<TTerm>();
         public List<TPlusMinOperator> Operators { get; } = new List<TPlusMinOperator>();
         private bool _isNegated;
@@ -245,7 +247,7 @@ namespace Rules.Expression
                 result = result.Clone();
                 result.ApplyMinusSign();
             }
-            return result;
+            return ConvertResult(result, ResultConversion);
         }
 
         private TConstantValue ApplyOperator(TConstantValue leftResult, TTerm term, TPlusMinOperator op, ValueBag context)
@@ -261,6 +263,8 @@ namespace Rules.Expression
 
     public class TTerm
     {
+        public ModelUnitConversion ResultConversion { get; set; }
+        public bool UseRealArithmetic { get; set; }
         public List<TFactor> Factors { get; } = new List<TFactor>();
         public List<TMulDivOperator> Operators { get; } = new List<TMulDivOperator>();
 
@@ -306,6 +310,8 @@ namespace Rules.Expression
             int j = 0;
             TFactor factor = Factors[i++];
             TConstantValue result = factor.Evaluate(context);
+            if (UseRealArithmetic && result is TConstantNumValue number && number.Value.ValueType == TConstantNumValue.IntType)
+                result = new TConstantNumValue((double)number.Value.IntValue);
             while (i < Factors.Count)
             {
                 if (j < Operators.Count)
@@ -314,7 +320,7 @@ namespace Rules.Expression
                     j++;
                 }
             }
-            return result;
+            return TFactor.ConvertResult(result, ResultConversion);
         }
 
         private TConstantValue ApplyOperator(TConstantValue leftResult, TFactor factor, TMulDivOperator op, ValueBag context)
@@ -340,6 +346,23 @@ namespace Rules.Expression
 
     public class TFactor
     {
+        internal static TConstantValue ConvertResult(TConstantValue value, ModelUnitConversion conversion)
+        {
+            if (conversion == null) return value;
+            if (value is not TConstantNumValue number || number.Value.ValueType == TConstantNumValue.BoolType)
+                throw new TExprException("Unit conversion requires a numeric value");
+            var result = conversion.Convert(number.Value.ValueType == TConstantNumValue.IntType
+                ? number.Value.IntValue : number.Value.DoubleValue);
+            if (!double.IsFinite(result)) throw new TExprException("Unit conversion produced a non-finite value");
+            if (conversion.Target.Kind == "integer")
+            {
+                if (result != Math.Truncate(result))
+                    throw new TExprException($"Conversion to '{conversion.Target.Name}' must produce an integer");
+                if (result >= int.MinValue && result <= int.MaxValue) return new TConstantNumValue((int)result);
+            }
+            return new TConstantNumValue(result);
+        }
+
         public virtual TConstantValue Evaluate(ValueBag context)
         {
             return null;
@@ -392,7 +415,7 @@ namespace Rules.Expression
                 }
                 else if (ShouldBeMinused && castedValue.Value.ValueType != TConstantNumValue.BoolType)
                 {
-                    castedValue.Value.IntValue = -castedValue.Value.IntValue;
+                    castedValue.ApplyMinusSign();
                 }
             }
             proof?.Complete(result);

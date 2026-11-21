@@ -66,13 +66,14 @@ namespace Rules.Expression
 
         public override string ToString()
         {
-            switch (Value.ValueType)
+            var text = Value.ValueType switch
             {
-                case IntType: return Value.IntValue.ToString();
-                case DoubleType: return Value.DoubleValue.ToString();
-                case BoolType: return Value.BoolValue.ToString();
-                default: throw new TExprException("Unknown value type");
-            }
+                IntType => Value.IntValue.ToString(),
+                DoubleType => Value.DoubleValue.ToString(),
+                BoolType => Value.BoolValue.ToString(),
+                _ => throw new TExprException("Unknown value type")
+            };
+            return UnitShortName == null ? text : $"{text} {UnitShortName}";
         }
 
         public override void ApplyMinusSign()

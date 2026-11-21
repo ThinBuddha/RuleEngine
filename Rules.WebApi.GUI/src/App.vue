@@ -21,6 +21,7 @@ const typesSource = ref('')
 const classesSource = ref('')
 const typesFileName = ref('')
 const modelTab = ref('types')
+const warnings = ref([])
 const modelSource = computed(() => [typesSource.value, classesSource.value].filter(Boolean).join('\n'))
 let loadSequence = 0
 
@@ -44,11 +45,13 @@ async function load() {
   trace.value = []
   result.value = null
   error.value = ''
+  warnings.value = []
   status.value = 'Parsing rules…'
   try {
     const parsed = await parseRules(text, modelSource.value || undefined, typesFileName.value || undefined)
     if (sequence !== loadSequence) return
     containers.value = parsed.containers || []
+    warnings.value = parsed.warnings || []
     acceptDerivedModel(text, parsed)
     status.value = `Loaded ${containers.value.length} container${containers.value.length === 1 ? '' : 's'}`
     view.value = 'rules'
@@ -125,7 +128,7 @@ async function readFile(event) {
   source.value = rules.text
   void load()
 }
-function clearContext() { proofs.value = []; context.value = {}; result.value = null; status.value = 'Context cleared' }; function clearRules() { loadSequence++; clearDerivedModel(); proofs.value = []; containers.value = []; trace.value = []; result.value = null; status.value = 'Rules cleared' }; async function calc() { if (busy.value) return; busy.value = true; try { const value = await calculate(calcInput.value, context.value, requestValue, containers.value.length ? source.value : undefined, modelSource.value || undefined, typesFileName.value || undefined); calcResult.value = String(value); error.value = '' } catch (e) { error.value = e.message; calcResult.value = '' } finally { busy.value = false } }; function reset() { source.value = starterRules(); query.value = 'Travel.by.train'; clearContext(); void load() }
+function clearContext() { proofs.value = []; context.value = {}; result.value = null; status.value = 'Context cleared' }; function clearRules() { warnings.value = []; loadSequence++; clearDerivedModel(); proofs.value = []; containers.value = []; trace.value = []; result.value = null; status.value = 'Rules cleared' }; async function calc() { if (busy.value) return; busy.value = true; try { const value = await calculate(calcInput.value, context.value, requestValue, containers.value.length ? source.value : undefined, modelSource.value || undefined, typesFileName.value || undefined); calcResult.value = String(value); error.value = '' } catch (e) { error.value = e.message; calcResult.value = '' } finally { busy.value = false } }; function reset() { source.value = starterRules(); query.value = 'Travel.by.train'; clearContext(); void load() }
 void load()
 </script>
 
@@ -137,6 +140,10 @@ void load()
       <aside class="sidebar"><span class="eyebrow">Workspace</span><nav><button :class="{ active: view === 'model-workspace' }" @click="view = 'model-workspace'">▦ <span>Model</span></button><button :class="{ active: view === 'workspace' || view === 'rules' }" @click="view = 'workspace'">⌘ <span>Rule workspace</span></button><button :class="{ active: view === 'trace' }" @click="view = 'trace'">↳ <span>Evaluation trace</span><b v-if="trace.length">{{ trace.length }}</b></button><button :class="{ active: view === 'context' }" @click="view = 'context'">◈ <span>Fact context</span><b>{{ factCount }}</b></button><button :class="{ active: view === 'calculator' }" @click="view = 'calculator'">∑ <span>Calculator</span></button></nav><div class="sidebar-bottom"><div class="mini-card"><small>Loaded model</small><strong>{{ ruleCount }} <em>rules</em></strong><span>{{ containers.length }} container{{ containers.length === 1 ? '' : 's' }}</span></div><small class="version">GUI foundation · v0.1</small></div></aside>
       <section class="content"><div class="heading"><div><span class="eyebrow">Production rules / control room</span></div><span class="local"><i></i> Rules.WebApi connected</span></div>
         <div v-if="error" class="error" role="alert"><b>!</b>{{ error }}<button @click="error = ''">×</button></div>
+        <div v-if="warnings.length" class="validation-warnings" role="status">
+          <strong>Warnings</strong>
+          <ul><li v-for="warning in warnings" :key="warning">{{ warning }}</li></ul>
+        </div>
         <ModelWorkspace v-if="view === 'model-workspace'" v-model:types-source="typesSource"
           v-model:classes-source="classesSource"
           v-model:file-name="typesFileName" v-model:tab="modelTab" />

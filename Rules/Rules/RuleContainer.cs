@@ -63,6 +63,7 @@ namespace Rules.Rules
     /// </summary>
     public class RuleContainers
     {
+        public IReadOnlyList<string> ValidationWarnings { get; set; } = Array.Empty<string>();
         public readonly List<RuleContainer> Containers = new List<RuleContainer>();
 
         public void AddRuleContainer(RuleContainer ruleContainer)

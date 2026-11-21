@@ -215,6 +215,7 @@ namespace Rules.CommandShell
                             foreach (var error in modelErrors) Console.WriteLine(error);
                             return;
                         }
+                        foreach (var warning in containers.ValidationWarnings) Console.WriteLine($"Warning: {warning}");
                     }
                     Console.WriteLine("Successfully loaded file");
                     _ruleContainers = containers;
