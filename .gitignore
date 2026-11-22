@@ -487,6 +487,10 @@ $RECYCLE.BIN/
 # Local rule concepts spreadsheet
 /doc/Rule concepts.xlsx
 
+# Local syntax notes and ruleset illustration
+/RuleParser/doc/Higher Level Syntax ideas.txt
+/RuleParser/doc/Simple ruleset - why question.png
+
 # Local EBNF visualizer
 /RuleParser/visualizer/
 
